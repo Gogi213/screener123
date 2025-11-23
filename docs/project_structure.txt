@@ -20,8 +20,6 @@
 | |- src
 | | |- SpreadAggregator.Application
 | | | |- Abstractions
-| | | | |- IBidAskLogger.cs
-| | | | |- IBidBidLogger.cs
 | | | | |- IDataWriter.cs
 | | | | |- IExchangeClient.cs
 | | | | |- IWebSocketServer.cs
@@ -61,8 +59,7 @@
 | | |- SpreadAggregator.Infrastructure
 | | | |- Services
 | | | | |- Charts
-| | | | | |- OpportunityFilterService.cs
-| | | | | `- ParquetReaderService.cs
+| | | | | `- OpportunityFilterService.cs
 | | | | |- Exchanges
 | | | | | |- Base
 | | | | | | |- ExchangeClientBase.cs
@@ -78,15 +75,11 @@
 | | | | | |- KucoinExchangeClient.cs
 | | | | | |- MexcExchangeClient.cs
 | | | | | `- OkxExchangeClient.cs
-| | | | |- BidAskLogger.cs
-| | | | |- BidBidLogger.cs
 | | | | |- FleckWebSocketServer.cs
-| | | | |- ParquetDataWriter.cs
-| | | | `- WebSocketLogger.cs
+| | | | `- ParquetDataWriter.cs
 | | | `- SpreadAggregator.Infrastructure.csproj
 | | `- SpreadAggregator.Presentation
 | |   |- Controllers
-| |   | |- DashboardController.cs
 | |   | |- DiagnosticsController.cs
 | |   | |- HealthController.cs
 | |   | |- HomeController.cs
@@ -1063,6 +1056,16 @@
 | | |- Mexc.Net.sln
 | | |- README.md
 | | `- rd.xml
+| |- collections
+| | |- AUDIT
+| | | |- LOGGING_INVENTORY.md
+| | | |- README.md
+| | | `- REFACTORING_AUDIT_2025-11-23.md
+| | |- PROPOSALS
+| | | `- QUESTDB_INTEGRATION.md
+| | |- HANDOVER_CONTEXT.md
+| | |- PROJECT_STATISTICS.md
+| | `- README.md
 | |- gemini3
 | | |- code
 | | | `- phase2_rolling_window_changes.cs
