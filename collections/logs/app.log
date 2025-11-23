@@ -1,0 +1,988 @@
+nohup: ignoring input
+11/23/2025 00:44:43 [Info] Server started at ws://0.0.0.0:8181 (actual port 8181) 
+[ERROR] No client found for exchange: _comment_Binance
+[ERROR] No client found for exchange: _comment_BingX
+[ERROR] No client found for exchange: _comment_Bitget
+[ERROR] No client found for exchange: _comment_Bybit
+[ERROR] No client found for exchange: _comment_GateIo
+[ERROR] No client found for exchange: _comment_Kucoin
+[ERROR] No client found for exchange: _comment_OKX
+[Orchestration] Started 1 exchange subscription tasks
+info: SpreadAggregator.Presentation.OrchestrationServiceHost[0]
+      [OrchestrationHost] Starting orchestration service...
+info: SpreadAggregator.Application.Services.DataCollectorService[0]
+      [DataCollector] Starting background data collection...
+info: SpreadAggregator.Presentation.RollingWindowServiceHost[0]
+      [RollingWindowHost] Starting rolling window service...
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      RollingWindowService started, waiting for data...
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [TradeScreener] Starting screener. Min Value: $10,000
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://0.0.0.0:5000
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/giorgioisitalii/screener123/collections/src/SpreadAggregator.Presentation
+[Mexc] Received 2443 tickers and 2443 symbol info objects.
+[Mexc] 316 symbols passed the volume filter.
+[Mexc] Adding trade subscription task...
+[Mexc] Awaiting 1 subscription tasks...
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_LINKUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SUIUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SEDAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_MERLUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_RDACUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_DOGEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_MOVEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_AVNTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_NEXSAYUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_AIXUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_REZUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SUIUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_LGCTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_MINAUSDT
+[Mexc] All subscription tasks completed
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_MBGUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_MAVUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_KILOUSDC
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:44:47.159 | MEXC | MAVUSDT | Buy | Price: 0.04106 | Qty: 487143 | Value: $20,002.09
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_LINKUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BSVUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_DATASOULUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_UNIUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_GIGGLEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_FIOUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ALLOUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BGSCUSDT
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:44:47.416 | MEXC | BTCUSDT | Sell | Price: 84987.18 | Qty: 0.34623815 | Value: $29,425.80
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BTCUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_NTRNUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BDXUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_REALUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_WLDUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BLESSUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_CCUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_UNIUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_XPLUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ZECUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SSVUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SOONUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BNBUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ONDOUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_HYPEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_EIGENUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SLXUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ZORAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PYRUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ADAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ACTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_MXUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_XRPUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_AUREQUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_STRKUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ZENUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ADAUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ASSETMINTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SOLUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SEIUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_XECUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_LUNCUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_WUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_B2USDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ATUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_UCNUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_AINUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ZBCNUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_POLUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PORT3USDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_TRUSTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ZBTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_AIAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SANTOSUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_LTCUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ZENTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_FDUSDUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_USDCUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PROPSUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_DIGIUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_L3USDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BNBUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_CAKEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SOSOUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ETHUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_JUPUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ETCUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BURNRUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_TRXUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_RAREUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_INJUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_TAOUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_WLFIUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_TAOUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SOLUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_CFXUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_TNSRUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_MOGUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SOPHUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_RESOLVUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_HBARUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BABYUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_FFUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PENGUUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_TRUMPUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ETHWUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_AVAXUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ALICEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_VANAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ETHUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ZKCUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_FARTCOINUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PTBUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ALTLAYERUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_CAMPUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ICPUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_OPUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ASTERUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PAXGUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ETHFIUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_XRPUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_MNTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ORDIUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BTCUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PUMPUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_WXTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_WBTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PROMPTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_FLRUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_AAVEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PROUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ARBUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SOULLAYERUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PONKEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ZKUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ALGOUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SOMIUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_FTNUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_MANTAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_WBTCUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_1INCHUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_POPCATUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_LTCUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ENAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_XYOUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_OBTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_COAIUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ULTIMAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_METUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_API3USDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_CROUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PARTIUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_DMCUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PLKUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_FETUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_0GUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_USD1USDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_MOODENGUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SHIBUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BOBUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_REDUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_2ZUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_FETUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_NILUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_TIAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_NVAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_MXUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_NEARUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_RAYUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_FYNORUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BATUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_TONUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_CHISAIUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_WCTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_DAIUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ALEOUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_STEEMUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_FILUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_HUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_CORNUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_DEEPUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_HOODXUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PIEVERSEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_IDOLUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_XDCUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BEATUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_DUSKUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PHBUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BIOUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_MBLUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_JASMYUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_TRXUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_EPICUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_NXPCUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_TONUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_LAYERUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BCHUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_DASHUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BCHUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_WIFUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_FILUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_CRVUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_RVVUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_RAINUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ZANOUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_CRVUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PEPEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_HOTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_NULLORAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SAGAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_HYPERUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_EVAAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SIGNUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_IPUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PLUMEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PNUTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SPELLUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_MEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_INITUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_XAUTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ATHUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_GRASSUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SPKUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_XVGUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PIPPINUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_KAITOUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_NEWTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BOMEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_IDEXUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_DYMUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_MMTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ANIMEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_XMRUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SATSUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_DCRUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_VIRTUALUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ALPINEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ANTYUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_AEAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_AVAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_MIRAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_RECALLUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ZROUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_QNTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_GRTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_GALAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BGBUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_4USDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_JSTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_KAIAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_WMTXUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_GAIBUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_LUNAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_DOTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_XMRUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_NEOUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ICPUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_KGENUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_HFTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_QTUMUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_REAXAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_KMNOUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ATOMUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_USTCUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_BONKUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ELIZAOSUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_LDOUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ERAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ULTIMAUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_KITEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SPXUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_VETUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_XUSDUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_APTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_AUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_UAIUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_XAIUSDT
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:45:11.917 | MEXC | BTCUSDT | Sell | Price: 85015.09 | Qty: 0.3339397 | Value: $28,389.91
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_RWDUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_CHZUSDT
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:45:12.918 | MEXC | BTCUSDT | Sell | Price: 85015.09 | Qty: 0.22939086 | Value: $19,501.68
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PENDLEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_AIXBTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_WBTCUSDC
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:45:13.936 | MEXC | BTCUSDT | Sell | Price: 85015.13 | Qty: 0.27822191 | Value: $23,653.07
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:45:13.941 | MEXC | BTCUSDT | Sell | Price: 85015.2 | Qty: 0.24464511 | Value: $20,798.55
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:45:13.943 | MEXC | BTCUSDT | Buy | Price: 85015.17 | Qty: 0.13911801 | Value: $11,827.14
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:45:13.943 | MEXC | BTCUSDT | Buy | Price: 85015.18 | Qty: 0.31179871 | Value: $26,507.62
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:45:13.943 | MEXC | BTCUSDT | Sell | Price: 85015.16 | Qty: 0.15350807 | Value: $13,050.51
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_NMRUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_KERNELUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_TRUTHUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SHIBUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_USDEUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PIUSDT
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:45:18.441 | MEXC | BTCUSDT | Buy | Price: 85027.47 | Qty: 0.27603007 | Value: $23,470.14
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:45:18.441 | MEXC | BTCUSDT | Buy | Price: 85027.47 | Qty: 0.12806275 | Value: $10,888.85
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_WISPUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ENSUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_HTXUSDT
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:45:20.418 | MEXC | BTCUSDT | Buy | Price: 85036.56 | Qty: 0.25802074 | Value: $21,941.20
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_LABUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_OFTUSDT
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://34.84.161.193:5000/ - - -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'SpreadAggregator.Presentation.Controllers.HomeController.Index (SpreadAggregator.Presentation)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "Index", controller = "Home"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Index() on controller SpreadAggregator.Presentation.Controllers.HomeController (SpreadAggregator.Presentation).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ContentResultExecutor[1]
+      Executing ContentResult with HTTP Response ContentType of text/html
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action SpreadAggregator.Presentation.Controllers.HomeController.Index (SpreadAggregator.Presentation) in 35.2842ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'SpreadAggregator.Presentation.Controllers.HomeController.Index (SpreadAggregator.Presentation)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://34.84.161.193:5000/ - 200 2113 text/html 123.2099ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://34.84.161.193:5000/ws/realtime_charts - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'SpreadAggregator.Presentation.Controllers.RealTimeController.HandleWebSocket (SpreadAggregator.Presentation)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "HandleWebSocket", controller = "RealTime"}. Executing controller action with signature System.Threading.Tasks.Task HandleWebSocket() on controller SpreadAggregator.Presentation.Controllers.RealTimeController (SpreadAggregator.Presentation).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action SpreadAggregator.Presentation.Controllers.RealTimeController.HandleWebSocket (SpreadAggregator.Presentation) in 2.7028ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'SpreadAggregator.Presentation.Controllers.RealTimeController.HandleWebSocket (SpreadAggregator.Presentation)'
+fail: Microsoft.AspNetCore.Server.Kestrel[13]
+      Connection id "0HNHA56AOI5UU", Request id "0HNHA56AOI5UU:00000001": An unhandled exception was thrown by the application.
+      System.InvalidOperationException: Unable to resolve service for type 'SpreadAggregator.Infrastructure.Services.Charts.OpportunityFilterService' while attempting to activate 'SpreadAggregator.Presentation.Controllers.RealTimeController'.
+         at Microsoft.Extensions.DependencyInjection.ActivatorUtilities.ThrowHelperUnableToResolveService(Type type, Type requiredBy)
+         at lambda_method69(Closure, IServiceProvider, Object[])
+         at Microsoft.AspNetCore.Mvc.Controllers.ControllerFactoryProvider.<>c__DisplayClass6_0.<CreateControllerFactory>g__CreateController|0(ControllerContext controllerContext)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+      --- End of stack trace from previous location ---
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+         at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.HttpProtocol.ProcessRequests[TContext](IHttpApplication`1 application)
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://34.84.161.193:5000/ws/realtime_charts - 500 0 - 56.5318ms
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_AMPUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_AERISUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ARCSOLUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SPECUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_XLMUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_KASUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_LINEAUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_AEGISUSDT
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://34.84.161.193:5000/ - - -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'SpreadAggregator.Presentation.Controllers.HomeController.Index (SpreadAggregator.Presentation)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "Index", controller = "Home"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Index() on controller SpreadAggregator.Presentation.Controllers.HomeController (SpreadAggregator.Presentation).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ContentResultExecutor[1]
+      Executing ContentResult with HTTP Response ContentType of text/html
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action SpreadAggregator.Presentation.Controllers.HomeController.Index (SpreadAggregator.Presentation) in 0.6801ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'SpreadAggregator.Presentation.Controllers.HomeController.Index (SpreadAggregator.Presentation)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://34.84.161.193:5000/ - 200 2113 text/html 2.9226ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://34.84.161.193:5000/ws/realtime_charts - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'SpreadAggregator.Presentation.Controllers.RealTimeController.HandleWebSocket (SpreadAggregator.Presentation)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "HandleWebSocket", controller = "RealTime"}. Executing controller action with signature System.Threading.Tasks.Task HandleWebSocket() on controller SpreadAggregator.Presentation.Controllers.RealTimeController (SpreadAggregator.Presentation).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action SpreadAggregator.Presentation.Controllers.RealTimeController.HandleWebSocket (SpreadAggregator.Presentation) in 0.2578ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'SpreadAggregator.Presentation.Controllers.RealTimeController.HandleWebSocket (SpreadAggregator.Presentation)'
+fail: Microsoft.AspNetCore.Server.Kestrel[13]
+      Connection id "0HNHA56AOI5UV", Request id "0HNHA56AOI5UV:00000001": An unhandled exception was thrown by the application.
+      System.InvalidOperationException: Unable to resolve service for type 'SpreadAggregator.Infrastructure.Services.Charts.OpportunityFilterService' while attempting to activate 'SpreadAggregator.Presentation.Controllers.RealTimeController'.
+         at Microsoft.Extensions.DependencyInjection.ActivatorUtilities.ThrowHelperUnableToResolveService(Type type, Type requiredBy)
+         at lambda_method69(Closure, IServiceProvider, Object[])
+         at Microsoft.AspNetCore.Mvc.Controllers.ControllerFactoryProvider.<>c__DisplayClass6_0.<CreateControllerFactory>g__CreateController|0(ControllerContext controllerContext)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+      --- End of stack trace from previous location ---
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+         at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.HttpProtocol.ProcessRequests[TContext](IHttpApplication`1 application)
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://34.84.161.193:5000/ws/realtime_charts - 500 0 - 5.1400ms
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ASTUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_USELESSUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_FOLKSUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_IOTXUSDT
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:45:37.432 | MEXC | FDUSDUSDT | Sell | Price: 0.9968 | Qty: 11374.07 | Value: $11,337.67
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ARUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_AVAXUSDC
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_AITECHUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_ESCGUSDT
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_PMINDUSDT
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:45:51.917 | MEXC | BTCUSDT | Sell | Price: 84985.39 | Qty: 0.13492501 | Value: $11,466.65
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:45:54.417 | MEXC | BTCUSDT | Sell | Price: 84985.4 | Qty: 0.12433182 | Value: $10,566.39
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:45:54.418 | MEXC | BTCUSDT | Buy | Price: 84985.4 | Qty: 0.17348068 | Value: $14,743.32
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:02.381 | MEXC | ETHUSDT | Sell | Price: 2771.76 | Qty: 4.58323 | Value: $12,703.61
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:02.382 | MEXC | ETHUSDT | Buy | Price: 2771.76 | Qty: 8.07014 | Value: $22,368.49
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:06.382 | MEXC | ETHUSDT | Sell | Price: 2770.32 | Qty: 8.34233 | Value: $23,110.92
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:06.382 | MEXC | ETHUSDT | Buy | Price: 2770.32 | Qty: 6.52887 | Value: $18,087.06
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:06.893 | MEXC | SOLUSDT | Sell | Price: 127.84 | Qty: 114.474 | Value: $14,634.36
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:10.381 | MEXC | ETHUSDT | Buy | Price: 2770.49 | Qty: 4.11817 | Value: $11,409.35
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:10.660 | MEXC | MAVUSDT | Buy | Price: 0.0423 | Qty: 439861.15 | Value: $18,606.13
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:10.660 | MEXC | MAVUSDT | Sell | Price: 0.0423 | Qty: 236861.4 | Value: $10,019.24
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:11.416 | MEXC | BTCUSDT | Sell | Price: 84938.36 | Qty: 0.18072198 | Value: $15,350.23
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:11.417 | MEXC | BTCUSDT | Buy | Price: 84938.36 | Qty: 0.14257255 | Value: $12,109.88
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:11.881 | MEXC | ETHUSDT | Sell | Price: 2770.5 | Qty: 6.98062 | Value: $19,339.81
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:13.881 | MEXC | ETHUSDT | Sell | Price: 2770.5 | Qty: 3.64765 | Value: $10,105.81
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:17.417 | MEXC | BTCUSDT | Sell | Price: 84930.7 | Qty: 0.24546492 | Value: $20,847.51
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:17.417 | MEXC | BTCUSDT | Buy | Price: 84930.7 | Qty: 0.30449739 | Value: $25,861.18
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:17.417 | MEXC | BTCUSDT | Buy | Price: 84930.7 | Qty: 0.14914879 | Value: $12,667.31
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:27.381 | MEXC | ETHUSDT | Buy | Price: 2771.67 | Qty: 6.85903 | Value: $19,010.97
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:27.918 | MEXC | ETHUSDT | Buy | Price: 2771.68 | Qty: 3.76638 | Value: $10,439.20
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_XCNUSDT
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:49.918 | MEXC | BTCUSDT | Buy | Price: 84979.37 | Qty: 0.33131081 | Value: $28,154.58
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:49.919 | MEXC | BTCUSDT | Sell | Price: 84979.37 | Qty: 0.41699099 | Value: $35,435.63
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:46:49.919 | MEXC | BTCUSDT | Buy | Price: 84979.37 | Qty: 0.1827985 | Value: $15,534.10
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:06.410 | MEXC | ETHUSDT | Sell | Price: 2770.71 | Qty: 3.94171 | Value: $10,921.34
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:08.416 | MEXC | BTCUSDT | Buy | Price: 84946.72 | Qty: 0.17431957 | Value: $14,807.88
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:08.417 | MEXC | BTCUSDT | Buy | Price: 84946.72 | Qty: 0.70515886 | Value: $59,900.93
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:08.417 | MEXC | BTCUSDT | Buy | Price: 84946.72 | Qty: 0.34862501 | Value: $29,614.55
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:08.417 | MEXC | BTCUSDT | Buy | Price: 84946.72 | Qty: 0.24562634 | Value: $20,865.15
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_UTUSDT
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:10.429 | MEXC | BTCUSDT | Buy | Price: 84946.74 | Qty: 0.13635145 | Value: $11,582.61
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:10.429 | MEXC | BTCUSDT | Buy | Price: 84946.74 | Qty: 0.1178365 | Value: $10,009.83
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://34.84.161.193:5000/ - - -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'SpreadAggregator.Presentation.Controllers.HomeController.Index (SpreadAggregator.Presentation)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "Index", controller = "Home"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Index() on controller SpreadAggregator.Presentation.Controllers.HomeController (SpreadAggregator.Presentation).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ContentResultExecutor[1]
+      Executing ContentResult with HTTP Response ContentType of text/html
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action SpreadAggregator.Presentation.Controllers.HomeController.Index (SpreadAggregator.Presentation) in 6.3273ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'SpreadAggregator.Presentation.Controllers.HomeController.Index (SpreadAggregator.Presentation)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://34.84.161.193:5000/ - 200 2113 text/html 6.8932ms
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:21.890 | MEXC | ETHUSDT | Buy | Price: 2769.77 | Qty: 16.98089 | Value: $47,033.16
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:21.890 | MEXC | ETHUSDT | Sell | Price: 2769.77 | Qty: 8.21678 | Value: $22,758.59
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://34.84.161.193:5000/ws/realtime_charts - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'SpreadAggregator.Presentation.Controllers.RealTimeController.HandleWebSocket (SpreadAggregator.Presentation)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "HandleWebSocket", controller = "RealTime"}. Executing controller action with signature System.Threading.Tasks.Task HandleWebSocket() on controller SpreadAggregator.Presentation.Controllers.RealTimeController (SpreadAggregator.Presentation).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action SpreadAggregator.Presentation.Controllers.RealTimeController.HandleWebSocket (SpreadAggregator.Presentation) in 0.234ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'SpreadAggregator.Presentation.Controllers.RealTimeController.HandleWebSocket (SpreadAggregator.Presentation)'
+fail: Microsoft.AspNetCore.Server.Kestrel[13]
+      Connection id "0HNHA56AOI5V1", Request id "0HNHA56AOI5V1:00000001": An unhandled exception was thrown by the application.
+      System.InvalidOperationException: Unable to resolve service for type 'SpreadAggregator.Infrastructure.Services.Charts.OpportunityFilterService' while attempting to activate 'SpreadAggregator.Presentation.Controllers.RealTimeController'.
+         at Microsoft.Extensions.DependencyInjection.ActivatorUtilities.ThrowHelperUnableToResolveService(Type type, Type requiredBy)
+         at lambda_method69(Closure, IServiceProvider, Object[])
+         at Microsoft.AspNetCore.Mvc.Controllers.ControllerFactoryProvider.<>c__DisplayClass6_0.<CreateControllerFactory>g__CreateController|0(ControllerContext controllerContext)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+      --- End of stack trace from previous location ---
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+         at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.HttpProtocol.ProcessRequests[TContext](IHttpApplication`1 application)
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://34.84.161.193:5000/ws/realtime_charts - 500 0 - 17.6417ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://34.84.161.193:5000/ - - -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'SpreadAggregator.Presentation.Controllers.HomeController.Index (SpreadAggregator.Presentation)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "Index", controller = "Home"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Index() on controller SpreadAggregator.Presentation.Controllers.HomeController (SpreadAggregator.Presentation).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ContentResultExecutor[1]
+      Executing ContentResult with HTTP Response ContentType of text/html
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action SpreadAggregator.Presentation.Controllers.HomeController.Index (SpreadAggregator.Presentation) in 0.1962ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'SpreadAggregator.Presentation.Controllers.HomeController.Index (SpreadAggregator.Presentation)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://34.84.161.193:5000/ - 200 2113 text/html 8.7019ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://34.84.161.193:5000/ws/realtime_charts - - -
+info: Microsoft.AspNetCore.Cors.Infrastructure.CorsService[4]
+      CORS policy execution successful.
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'SpreadAggregator.Presentation.Controllers.RealTimeController.HandleWebSocket (SpreadAggregator.Presentation)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "HandleWebSocket", controller = "RealTime"}. Executing controller action with signature System.Threading.Tasks.Task HandleWebSocket() on controller SpreadAggregator.Presentation.Controllers.RealTimeController (SpreadAggregator.Presentation).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action SpreadAggregator.Presentation.Controllers.RealTimeController.HandleWebSocket (SpreadAggregator.Presentation) in 0.2329ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'SpreadAggregator.Presentation.Controllers.RealTimeController.HandleWebSocket (SpreadAggregator.Presentation)'
+fail: Microsoft.AspNetCore.Server.Kestrel[13]
+      Connection id "0HNHA56AOI5V2", Request id "0HNHA56AOI5V2:00000001": An unhandled exception was thrown by the application.
+      System.InvalidOperationException: Unable to resolve service for type 'SpreadAggregator.Infrastructure.Services.Charts.OpportunityFilterService' while attempting to activate 'SpreadAggregator.Presentation.Controllers.RealTimeController'.
+         at Microsoft.Extensions.DependencyInjection.ActivatorUtilities.ThrowHelperUnableToResolveService(Type type, Type requiredBy)
+         at lambda_method69(Closure, IServiceProvider, Object[])
+         at Microsoft.AspNetCore.Mvc.Controllers.ControllerFactoryProvider.<>c__DisplayClass6_0.<CreateControllerFactory>g__CreateController|0(ControllerContext controllerContext)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+      --- End of stack trace from previous location ---
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+         at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.HttpProtocol.ProcessRequests[TContext](IHttpApplication`1 application)
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://34.84.161.193:5000/ws/realtime_charts - 500 0 - 7.5942ms
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:23.920 | MEXC | BTCUSDT | Buy | Price: 84936.68 | Qty: 0.14934195 | Value: $12,684.61
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:23.920 | MEXC | BTCUSDT | Buy | Price: 84936.68 | Qty: 0.22667242 | Value: $19,252.80
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:27.417 | MEXC | BTCUSDT | Sell | Price: 84944.99 | Qty: 0.14762691 | Value: $12,540.17
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:32.154 | MEXC | BNBUSDT | Sell | Price: 833.92 | Qty: 13.861 | Value: $11,558.97
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_LXYUSDT
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:40.416 | MEXC | BTCUSDT | Sell | Price: 84932.12 | Qty: 0.31487201 | Value: $26,742.75
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:40.418 | MEXC | BTCUSDT | Sell | Price: 84932.12 | Qty: 0.33395431 | Value: $28,363.45
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:48.382 | MEXC | ETHUSDT | Sell | Price: 2769.31 | Qty: 3.73096 | Value: $10,332.18
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:52.427 | MEXC | BTCUSDT | Buy | Price: 84926.07 | Qty: 0.29959442 | Value: $25,443.38
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:52.427 | MEXC | BTCUSDT | Buy | Price: 84926.07 | Qty: 0.12890333 | Value: $10,947.25
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:47:52.428 | MEXC | BTCUSDT | Sell | Price: 84926.07 | Qty: 0.24734204 | Value: $21,005.79
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:48:02.382 | MEXC | ETHUSDT | Sell | Price: 2768.78 | Qty: 4.59978 | Value: $12,735.78
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:48:02.382 | MEXC | ETHUSDT | Sell | Price: 2768.77 | Qty: 4.02486 | Value: $11,143.91
+info: SpreadAggregator.Application.Services.RollingWindowService[0]
+      [RollingWindow] Created new trade window: MEXC_SUTUSDT
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:48:04.983 | MEXC | SUTUSDT | Buy | Price: 2.201 | Qty: 14465.26 | Value: $31,838.04
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:48:07.620 | MEXC | SUTUSDT | Buy | Price: 2.201 | Qty: 21399.74 | Value: $47,100.83
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:48:09.881 | MEXC | ETHUSDT | Sell | Price: 2769.31 | Qty: 7.22557 | Value: $20,009.84
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:48:12.078 | MEXC | SUTUSDT | Buy | Price: 2.201 | Qty: 7013.75 | Value: $15,437.26
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:48:15.758 | MEXC | SUTUSDT | Buy | Price: 2.201 | Qty: 13324.79 | Value: $29,327.86
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:48:23.919 | MEXC | BTCUSDT | Sell | Price: 84948.94 | Qty: 0.14065929 | Value: $11,948.86
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:48:28.893 | MEXC | SOLUSDT | Buy | Price: 127.62 | Qty: 104.586 | Value: $13,347.27
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:48:28.894 | MEXC | SOLUSDT | Sell | Price: 127.62 | Qty: 183.986 | Value: $23,480.29
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [WHALE] 2025-11-23 00:48:28.894 | MEXC | SOLUSDT | Buy | Price: 127.64 | Qty: 166.557 | Value: $21,259.34
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+info: SpreadAggregator.Application.Services.TradeScreenerService[0]
+      [TradeScreener] Screener stopped.
+info: SpreadAggregator.Presentation.RollingWindowServiceHost[0]
+      [RollingWindowHost] Stopping rolling window service gracefully...
+info: SpreadAggregator.Presentation.RollingWindowServiceHost[0]
+      [RollingWindowHost] Rolling window service stopped
+info: SpreadAggregator.Application.Services.DataCollectorService[0]
+      [DataCollector] Stopping gracefully, flushing buffers...
+info: SpreadAggregator.Application.Services.DataCollectorService[0]
+      [DataCollector] All data flushed successfully
+info: SpreadAggregator.Presentation.OrchestrationServiceHost[0]
+      [OrchestrationHost] Stopping orchestration service gracefully...
+[Orchestration] Stopping 1 exchange tasks...
+[Orchestration] Cancelling all operations...
+[Orchestration] Stopping all exchange client connections...
+[Orchestration] All exchange clients stopped
+[Orchestration] No active tasks to stop
+info: SpreadAggregator.Presentation.OrchestrationServiceHost[0]
+      [OrchestrationHost] Orchestration service stopped, channels completed
+dbug: Bybit.RestClient[0]
+      Disposing client

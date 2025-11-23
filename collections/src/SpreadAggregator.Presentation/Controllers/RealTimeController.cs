@@ -13,6 +13,7 @@ namespace SpreadAggregator.Presentation.Controllers;
 /// </summary>
 [ApiController]
 [Route("ws")]
+[Obsolete("Use TradeController for real-time trade streaming. This controller is for legacy arbitrage spreads.")]
 public class RealTimeController : ControllerBase
 {
     private readonly ILogger<RealTimeController> _logger;

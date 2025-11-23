@@ -1,17 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>High-Performance Spread Dashboard</title>
     <link rel="stylesheet" href="https://unpkg.com/uplot@1.6.26/dist/uPlot.min.css">
     <style>
-        body { font-family: sans-serif; padding: 1em; background-color: #1a1a1a; color: #eee; }
-        h1 { text-align: center; }
-        #dashboard { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        .chart-container { border: 1px solid #444; padding: 10px; background-color: #2a2a2a; border-radius: 5px; }
-        .chart-container h2 { margin-top: 0; font-size: 1.1em; text-align: center; }
-        .chart-wrapper { width: 100%; height: 450px; }
+        body {
+            font-family: sans-serif;
+            padding: 1em;
+            background-color: #1a1a1a;
+            color: #eee;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        #dashboard {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .chart-container {
+            border: 1px solid #444;
+            padding: 10px;
+            background-color: #2a2a2a;
+            border-radius: 5px;
+        }
+
+        .chart-container h2 {
+            margin-top: 0;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        .chart-wrapper {
+            width: 100%;
+            height: 450px;
+        }
+
         #controls button {
             padding: 8px 16px;
             font-size: 1em;
@@ -22,15 +52,18 @@
             border-radius: 4px;
             margin: 0 5px;
         }
+
         #controls button:hover {
             background-color: #444;
         }
     </style>
 </head>
+
 <body>
     <h1>High-Performance Spread Dashboard</h1>
     <div id="controls" style="text-align: center; margin-bottom: 1em;">
-        <button onclick="loadHttpStream('http://127.0.0.1:5000/api/dashboard_data')">Load Historical Analysis</button>
+        <button onclick="loadHttpStream('http://' + window.location.host + '/api/dashboard_data')">Load Historical
+            Analysis</button>
         <button onclick="connectWebSocket()">Load Real-time Window</button>
     </div>
     <div id="status">Select a data source to load the dashboard.</div>
@@ -51,10 +84,10 @@
             const symbol = chartData.symbol || chartData.Symbol || "Unknown";
             const ex1 = chartData.exchange1 || chartData.Exchange1 || "Ex1";
             const ex2 = chartData.exchange2 || chartData.Exchange2 || "Ex2";
-            
+
             // Log data for debugging
             if (!chartInstances.has(`${symbol}-${ex1}-${ex2}`)) {
-                console.log("Received Chart Data:", chartData); 
+                console.log("Received Chart Data:", chartData);
             }
 
             const dashboard = document.getElementById('dashboard');
@@ -131,9 +164,9 @@
                     const { done, value } = await reader.read();
                     if (done) {
                         if (buffer.trim()) {
-                           const chartData = JSON.parse(buffer);
-                           renderOrUpdateChart(chartData);
-                           chartCount++;
+                            const chartData = JSON.parse(buffer);
+                            renderOrUpdateChart(chartData);
+                            chartCount++;
                         }
                         break;
                     }
@@ -170,7 +203,7 @@
             dashboardEl.innerHTML = ''; // Clear previous charts
             chartInstances.clear();
 
-            const socketUrl = "ws://127.0.0.1:5000/ws/realtime_charts";
+            const socketUrl = "ws://" + window.location.host + "/ws/realtime_charts";
             const socket = new WebSocket(socketUrl);
             activeSocket = socket;
 
@@ -241,4 +274,5 @@
         }
     </script>
 </body>
+
 </html>

@@ -1,0 +1,278 @@
+﻿2025-11-23 01:49:35.476 | [MEXC] SubscribeToTickersAsync called with 317 symbols
+2025-11-23 01:49:35.481 | [MEXC] Creating 53 connection chunks
+2025-11-23 01:49:35.513 | [MEXC] Starting 53 connections...
+2025-11-23 01:49:35.531 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.626 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.627 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.628 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.628 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.629 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.629 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.629 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.630 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.630 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.630 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.630 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.631 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.631 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.631 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.632 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.632 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.632 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.633 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.633 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.633 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.633 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.633 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.634 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.634 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.634 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.634 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.634 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.635 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.635 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.636 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.636 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.636 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.637 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.638 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.639 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.639 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.639 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.639 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.640 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.640 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.641 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.641 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.641 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.642 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.642 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.642 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.643 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.643 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.644 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.644 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.645 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.645 | [MEXCExchangeClient] Subscribing to a chunk of 5 symbols.
+2025-11-23 01:49:35.651 | [MEXC] SubscribeToTradesAsync called with 317 symbols
+2025-11-23 01:49:35.736 | [MEXC] Creating 53 connection chunks (re-init for trades)
+2025-11-23 01:49:35.738 | [MEXC] Starting 53 connections (trades included)...
+2025-11-23 01:49:35.739 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.739 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.740 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.740 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.741 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.741 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.742 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.742 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.742 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.742 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.743 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.743 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.743 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.744 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.744 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.745 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.745 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.746 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.746 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.747 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.747 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.747 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.747 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.748 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.748 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.749 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.749 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.750 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.750 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.750 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.750 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.751 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.751 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.752 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.752 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.752 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.753 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.753 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.754 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.754 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.754 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.755 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.755 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.756 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.756 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.757 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.757 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.757 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.762 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.763 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.763 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.764 | [MEXCExchangeClient] Subscribing to a chunk of 6 symbols.
+2025-11-23 01:49:35.764 | [MEXCExchangeClient] Subscribing to a chunk of 5 symbols.
+2025-11-23 01:49:36.775 | [MEXC] Successfully subscribed to ticker chunk starting with MOODENGUSDT.
+2025-11-23 01:49:37.383 | [MEXC] Successfully subscribed to trade chunk starting with MOODENGUSDT.
+2025-11-23 01:49:37.404 | [MEXC] Successfully subscribed to ticker chunk starting with RDACUSDT.
+2025-11-23 01:49:37.409 | [MEXC] Successfully subscribed to ticker chunk starting with 2ZUSDT.
+2025-11-23 01:49:37.411 | [MEXC] Successfully subscribed to ticker chunk starting with PTBUSDT.
+2025-11-23 01:49:37.411 | [MEXC] Successfully subscribed to ticker chunk starting with AIXUSDT.
+2025-11-23 01:49:37.412 | [MEXC] Successfully subscribed to ticker chunk starting with NXPCUSDT.
+2025-11-23 01:49:37.417 | [MEXC] Successfully subscribed to ticker chunk starting with ALGOUSDT.
+2025-11-23 01:49:37.422 | [MEXC] Successfully subscribed to ticker chunk starting with LINKUSDC.
+2025-11-23 01:49:37.425 | [MEXC] Successfully subscribed to ticker chunk starting with PNUTUSDT.
+2025-11-23 01:49:37.450 | [MEXC] Successfully subscribed to trade chunk starting with RDACUSDT.
+2025-11-23 01:49:37.457 | [MEXC] Successfully subscribed to ticker chunk starting with PIEVERSEUSDT.
+2025-11-23 01:49:37.476 | [MEXC] Successfully subscribed to ticker chunk starting with SOONUSDT.
+2025-11-23 01:49:37.483 | [MEXC] Successfully subscribed to ticker chunk starting with BCHUSDT.
+2025-11-23 01:49:37.490 | [MEXC] Successfully subscribed to ticker chunk starting with FARTCOINUSDT.
+2025-11-23 01:49:37.499 | [MEXC] Successfully subscribed to trade chunk starting with ALGOUSDT.
+2025-11-23 01:49:37.508 | [MEXC] Successfully subscribed to ticker chunk starting with XUSDUSDT.
+2025-11-23 01:49:37.509 | [MEXC] Successfully subscribed to ticker chunk starting with AVAUSDT.
+2025-11-23 01:49:37.517 | [MEXC] Successfully subscribed to ticker chunk starting with ZBCNUSDT.
+2025-11-23 01:49:37.518 | [MEXC] Successfully subscribed to trade chunk starting with 2ZUSDT.
+2025-11-23 01:49:37.518 | [MEXC] Successfully subscribed to ticker chunk starting with HOTUSDT.
+2025-11-23 01:49:37.520 | [MEXC] Successfully subscribed to ticker chunk starting with QTUMUSDT.
+2025-11-23 01:49:37.526 | [MEXC] Successfully subscribed to ticker chunk starting with KAITOUSDT.
+2025-11-23 01:49:37.530 | [MEXC] Successfully subscribed to ticker chunk starting with ERAUSDT.
+2025-11-23 01:49:37.539 | [MEXC] Successfully subscribed to ticker chunk starting with AVAXUSDC.
+2025-11-23 01:49:37.547 | [MEXC] Successfully subscribed to ticker chunk starting with PUSDT.
+2025-11-23 01:49:37.552 | [MEXC] Successfully subscribed to ticker chunk starting with PROMPTUSDT.
+2025-11-23 01:49:37.560 | [MEXC] Successfully subscribed to ticker chunk starting with ICPUSDT.
+2025-11-23 01:49:37.571 | [MEXC] Successfully subscribed to trade chunk starting with SOONUSDT.
+2025-11-23 01:49:37.571 | [MEXC] Successfully subscribed to ticker chunk starting with MNTUSDT.
+2025-11-23 01:49:37.579 | [MEXC] Successfully subscribed to ticker chunk starting with RWDUSDT.
+2025-11-23 01:49:37.580 | [MEXC] Successfully subscribed to ticker chunk starting with DCRUSDT.
+2025-11-23 01:49:37.598 | [MEXC] Successfully subscribed to ticker chunk starting with HYPERUSDT.
+2025-11-23 01:49:37.601 | [MEXC] Successfully subscribed to ticker chunk starting with ZKUSDT.
+2025-11-23 01:49:37.608 | [MEXC] Successfully subscribed to trade chunk starting with PUSDT.
+2025-11-23 01:49:37.608 | [MEXC] Successfully subscribed to trade chunk starting with AVAXUSDC.
+2025-11-23 01:49:37.608 | [MEXC] Successfully subscribed to ticker chunk starting with ICPUSDC.
+2025-11-23 01:49:37.610 | [MEXC] Successfully subscribed to trade chunk starting with FARTCOINUSDT.
+2025-11-23 01:49:37.610 | [MEXC] Successfully subscribed to ticker chunk starting with FFUSDT.
+2025-11-23 01:49:37.612 | [MEXC] Successfully subscribed to trade chunk starting with QTUMUSDT.
+2025-11-23 01:49:37.614 | [MEXC] Successfully subscribed to ticker chunk starting with XPLUSDT.
+2025-11-23 01:49:37.625 | [MEXC] Successfully subscribed to ticker chunk starting with MBGUSDT.
+2025-11-23 01:49:37.625 | [MEXC] Successfully subscribed to trade chunk starting with HOTUSDT.
+2025-11-23 01:49:37.626 | [MEXC] Successfully subscribed to ticker chunk starting with PENGUUSDT.
+2025-11-23 01:49:37.630 | [MEXC] Successfully subscribed to ticker chunk starting with AIAUSDT.
+2025-11-23 01:49:37.632 | [MEXC] Successfully subscribed to ticker chunk starting with DOTUSDT.
+2025-11-23 01:49:37.644 | [MEXC] Successfully subscribed to trade chunk starting with ERAUSDT.
+2025-11-23 01:49:37.665 | [MEXC] Successfully subscribed to trade chunk starting with DCRUSDT.
+2025-11-23 01:49:37.738 | [MEXC] Successfully subscribed to trade chunk starting with RWDUSDT.
+2025-11-23 01:49:37.741 | [MEXC] Successfully subscribed to trade chunk starting with LINKUSDC.
+2025-11-23 01:49:37.758 | [MEXC] Successfully subscribed to ticker chunk starting with MAVUSDT.
+2025-11-23 01:49:37.761 | [MEXC] Successfully subscribed to trade chunk starting with KAITOUSDT.
+2025-11-23 01:49:37.764 | [MEXC] Successfully subscribed to trade chunk starting with AVAUSDT.
+2025-11-23 01:49:37.767 | [MEXC] Successfully subscribed to trade chunk starting with HYPERUSDT.
+2025-11-23 01:49:37.768 | [MEXC] Successfully subscribed to trade chunk starting with BCHUSDT.
+2025-11-23 01:49:37.772 | [MEXC] Successfully subscribed to trade chunk starting with PNUTUSDT.
+2025-11-23 01:49:37.772 | [MEXC] Successfully subscribed to trade chunk starting with ZKUSDT.
+2025-11-23 01:49:37.774 | [MEXC] Successfully subscribed to trade chunk starting with PTBUSDT.
+2025-11-23 01:49:37.774 | [MEXC] Successfully subscribed to trade chunk starting with AIXUSDT.
+2025-11-23 01:49:37.776 | [MEXC] Successfully subscribed to trade chunk starting with ICPUSDT.
+2025-11-23 01:49:37.777 | [MEXC] Successfully subscribed to trade chunk starting with PROMPTUSDT.
+2025-11-23 01:49:37.777 | [MEXC] Successfully subscribed to trade chunk starting with PIEVERSEUSDT.
+2025-11-23 01:49:37.784 | [MEXC] Successfully subscribed to trade chunk starting with MNTUSDT.
+2025-11-23 01:49:37.786 | [MEXC] Successfully subscribed to trade chunk starting with ICPUSDC.
+2025-11-23 01:49:37.787 | [MEXC] Successfully subscribed to trade chunk starting with NXPCUSDT.
+2025-11-23 01:49:37.788 | [MEXC] Successfully subscribed to trade chunk starting with XUSDUSDT.
+2025-11-23 01:49:37.791 | [MEXC] Successfully subscribed to trade chunk starting with ZBCNUSDT.
+2025-11-23 01:49:37.821 | [MEXC] Successfully subscribed to trade chunk starting with AIAUSDT.
+2025-11-23 01:49:37.829 | [MEXC] Successfully subscribed to trade chunk starting with DOTUSDT.
+2025-11-23 01:49:37.830 | [MEXC] Successfully subscribed to ticker chunk starting with WLFIUSDT.
+2025-11-23 01:49:37.844 | [MEXC] Successfully subscribed to trade chunk starting with FFUSDT.
+2025-11-23 01:49:37.879 | [MEXC] Successfully subscribed to ticker chunk starting with SIGNUSDT.
+2025-11-23 01:49:37.881 | [MEXC] Successfully subscribed to ticker chunk starting with CHISAIUSDT.
+2025-11-23 01:49:37.905 | [MEXC] Successfully subscribed to trade chunk starting with MAVUSDT.
+2025-11-23 01:49:37.916 | [MEXC] Successfully subscribed to trade chunk starting with MBGUSDT.
+2025-11-23 01:49:37.918 | [MEXC] Successfully subscribed to ticker chunk starting with FYNORUSDT.
+2025-11-23 01:49:37.918 | [MEXC] Successfully subscribed to ticker chunk starting with SOLUSDC.
+2025-11-23 01:49:37.924 | [MEXC] Successfully subscribed to trade chunk starting with CHISAIUSDT.
+2025-11-23 01:49:37.928 | [MEXC] Successfully subscribed to trade chunk starting with XPLUSDT.
+2025-11-23 01:49:37.929 | [MEXC] Successfully subscribed to trade chunk starting with SIGNUSDT.
+2025-11-23 01:49:37.935 | [MEXC] Successfully subscribed to trade chunk starting with WLFIUSDT.
+2025-11-23 01:49:37.939 | [MEXC] Successfully subscribed to ticker chunk starting with SEDAUSDT.
+2025-11-23 01:49:37.939 | [MEXC] Successfully subscribed to trade chunk starting with PENGUUSDT.
+2025-11-23 01:49:37.958 | [MEXC] Successfully subscribed to trade chunk starting with SOLUSDC.
+2025-11-23 01:49:37.960 | [MEXC] Successfully subscribed to trade chunk starting with FYNORUSDT.
+2025-11-23 01:49:37.960 | [MEXC] Successfully subscribed to ticker chunk starting with UCNUSDT.
+2025-11-23 01:49:37.966 | [MEXC] Successfully subscribed to ticker chunk starting with SOLUSDT.
+2025-11-23 01:49:37.968 | [MEXC] Successfully subscribed to ticker chunk starting with HBARUSDT.
+2025-11-23 01:49:37.974 | [MEXC] Successfully subscribed to trade chunk starting with SEDAUSDT.
+2025-11-23 01:49:37.992 | [MEXC] Successfully subscribed to trade chunk starting with UCNUSDT.
+2025-11-23 01:49:37.992 | [MEXC] Successfully subscribed to trade chunk starting with SOLUSDT.
+2025-11-23 01:49:37.994 | [MEXC] Successfully subscribed to ticker chunk starting with SOPHUSDT.
+2025-11-23 01:49:37.998 | [MEXC] Successfully subscribed to trade chunk starting with HBARUSDT.
+2025-11-23 01:49:38.029 | [MEXC] Successfully subscribed to trade chunk starting with SOPHUSDT.
+2025-11-23 01:49:38.042 | [MEXC] Successfully subscribed to ticker chunk starting with BOMEUSDT.
+2025-11-23 01:49:38.058 | [MEXC] Successfully subscribed to ticker chunk starting with PARTIUSDT.
+2025-11-23 01:49:38.058 | [MEXC] Successfully subscribed to ticker chunk starting with SUIUSDC.
+2025-11-23 01:49:38.059 | [MEXC] Successfully subscribed to ticker chunk starting with DASHUSDT.
+2025-11-23 01:49:38.065 | [MEXC] Successfully subscribed to ticker chunk starting with AUSDT.
+2025-11-23 01:49:38.076 | [MEXC] Successfully subscribed to trade chunk starting with BOMEUSDT.
+2025-11-23 01:49:38.098 | [MEXC] Successfully subscribed to trade chunk starting with PARTIUSDT.
+2025-11-23 01:49:38.098 | [MEXC] Successfully subscribed to ticker chunk starting with TIAUSDT.
+2025-11-23 01:49:38.099 | [MEXC] Successfully subscribed to trade chunk starting with DASHUSDT.
+2025-11-23 01:49:38.116 | [MEXC] Successfully subscribed to trade chunk starting with SUIUSDC.
+2025-11-23 01:49:38.134 | [MEXC] Successfully subscribed to trade chunk starting with AUSDT.
+2025-11-23 01:49:38.169 | [MEXC] Successfully subscribed to trade chunk starting with TIAUSDT.
+2025-11-23 01:49:38.169 | [MEXC] All connections started (with trades)
+2025-11-23 01:49:40.394 | [Binance] SubscribeToTickersAsync called with 175 symbols
+2025-11-23 01:49:40.395 | [Binance] Creating 9 connection chunks
+2025-11-23 01:49:40.405 | [Binance] Starting 9 connections...
+2025-11-23 01:49:40.405 | [BinanceExchangeClient] Subscribing to a chunk of 20 symbols.
+2025-11-23 01:49:40.433 | [BinanceExchangeClient] Subscribing to a chunk of 20 symbols.
+2025-11-23 01:49:40.435 | [BinanceExchangeClient] Subscribing to a chunk of 20 symbols.
+2025-11-23 01:49:40.436 | [BinanceExchangeClient] Subscribing to a chunk of 20 symbols.
+2025-11-23 01:49:40.436 | [BinanceExchangeClient] Subscribing to a chunk of 20 symbols.
+2025-11-23 01:49:40.437 | [BinanceExchangeClient] Subscribing to a chunk of 20 symbols.
+2025-11-23 01:49:40.438 | [BinanceExchangeClient] Subscribing to a chunk of 20 symbols.
+2025-11-23 01:49:40.438 | [BinanceExchangeClient] Subscribing to a chunk of 20 symbols.
+2025-11-23 01:49:40.439 | [BinanceExchangeClient] Subscribing to a chunk of 15 symbols.
+2025-11-23 01:49:40.441 | [Binance] SubscribeToTradesAsync called with 175 symbols
+2025-11-23 01:49:40.451 | [Binance] Creating 9 connection chunks (re-init for trades)
+2025-11-23 01:49:40.456 | [Binance] Starting 9 connections (trades included)...
+2025-11-23 01:49:40.457 | [BinanceExchangeClient] Subscribing to a chunk of 20 symbols.
+2025-11-23 01:49:40.459 | [BinanceExchangeClient] Subscribing to a chunk of 20 symbols.
+2025-11-23 01:49:40.461 | [BinanceExchangeClient] Subscribing to a chunk of 20 symbols.
+2025-11-23 01:49:40.463 | [BinanceExchangeClient] Subscribing to a chunk of 20 symbols.
+2025-11-23 01:49:40.464 | [BinanceExchangeClient] Subscribing to a chunk of 20 symbols.
+2025-11-23 01:49:40.464 | [BinanceExchangeClient] Subscribing to a chunk of 20 symbols.
+2025-11-23 01:49:40.468 | [BinanceExchangeClient] Subscribing to a chunk of 20 symbols.
+2025-11-23 01:49:40.472 | [BinanceExchangeClient] Subscribing to a chunk of 20 symbols.
+2025-11-23 01:49:40.477 | [BinanceExchangeClient] Subscribing to a chunk of 15 symbols.
+2025-11-23 01:49:40.659 | [Binance] Successfully subscribed to ticker chunk starting with SANTOSUSDT.
+2025-11-23 01:49:40.660 | [Binance] Successfully subscribed to ticker chunk starting with NOMUSDT.
+2025-11-23 01:49:40.672 | [Binance] Successfully subscribed to ticker chunk starting with TNSRUSDT.
+2025-11-23 01:49:40.672 | [Binance] Successfully subscribed to ticker chunk starting with ADAUSDC.
+2025-11-23 01:49:40.683 | [Binance] Successfully subscribed to ticker chunk starting with LAYERUSDT.
+2025-11-23 01:49:40.695 | [Binance] Successfully subscribed to ticker chunk starting with ETHUSDT.
+2025-11-23 01:49:40.701 | [Binance] Successfully subscribed to ticker chunk starting with SEIUSDT.
+2025-11-23 01:49:40.723 | [Binance] Successfully subscribed to ticker chunk starting with NEARUSDT.
+2025-11-23 01:49:40.736 | [Binance] Successfully subscribed to ticker chunk starting with BFUSDUSDT.
+2025-11-23 01:49:40.756 | [Binance] Successfully subscribed to trade chunk starting with SANTOSUSDT.
+2025-11-23 01:49:40.761 | [Binance] Successfully subscribed to trade chunk starting with NOMUSDT.
+2025-11-23 01:49:40.766 | [Binance] Successfully subscribed to trade chunk starting with ADAUSDC.
+2025-11-23 01:49:40.769 | [Binance] Successfully subscribed to trade chunk starting with TNSRUSDT.
+2025-11-23 01:49:40.782 | [Binance] Successfully subscribed to trade chunk starting with LAYERUSDT.
+2025-11-23 01:49:40.795 | [Binance] Successfully subscribed to trade chunk starting with ETHUSDT.
+2025-11-23 01:49:40.801 | [Binance] Successfully subscribed to trade chunk starting with SEIUSDT.
+2025-11-23 01:49:40.824 | [Binance] Successfully subscribed to trade chunk starting with NEARUSDT.
+2025-11-23 01:49:40.840 | [Binance] Successfully subscribed to trade chunk starting with BFUSDUSDT.
+2025-11-23 01:49:40.840 | [Binance] All connections started (with trades)
+2025-11-23 01:58:22.831 | [Binance] Stopping all connections...
+2025-11-23 01:58:23.549 | [Binance] All connections stopped
+2025-11-23 01:58:23.549 | [MEXC] Stopping all connections...
+2025-11-23 01:58:25.520 | [MEXC] All connections stopped
+2025-11-23 01:58:25.520 | [GateIo] Stopping all connections...
+2025-11-23 01:58:25.520 | [GateIo] All connections stopped
+2025-11-23 01:58:25.520 | [Kucoin] Stopping all connections...
+2025-11-23 01:58:25.520 | [Kucoin] All connections stopped
+2025-11-23 01:58:25.520 | [OKX] Stopping all connections...
+2025-11-23 01:58:25.521 | [OKX] All connections stopped
+2025-11-23 01:58:25.521 | [Bitget] Stopping all connections...
+2025-11-23 01:58:25.521 | [Bitget] All connections stopped
+2025-11-23 01:58:25.521 | [BingX] Stopping all connections...
+2025-11-23 01:58:25.521 | [BingX] All connections stopped
+2025-11-23 01:58:25.521 | [Bybit] Stopping all connections...
+2025-11-23 01:58:25.521 | [Bybit] All connections stopped

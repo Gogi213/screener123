@@ -24,7 +24,6 @@ public class OrchestrationService
     private readonly Channel<MarketData> _rollingWindowChannel;
     private readonly Channel<MarketData> _tradeScreenerChannel;
     private readonly IDataWriter? _dataWriter;
-    private readonly IBidAskLogger? _bidAskLogger;
     private readonly IExchangeHealthMonitor? _healthMonitor; // Task 0.5
 
     // PROPOSAL-2025-0095: Track symbols and tasks for cleanup
@@ -92,7 +91,6 @@ public class OrchestrationService
         Channel<MarketData> rawDataChannel,
         Channel<MarketData> rollingWindowChannel,
         IDataWriter? dataWriter = null,
-        IBidAskLogger? bidAskLogger = null,
         IExchangeHealthMonitor? healthMonitor = null,
         Channel<MarketData>? tradeScreenerChannel = null)
     {
@@ -104,7 +102,6 @@ public class OrchestrationService
         _rawDataChannel = rawDataChannel;
         _rollingWindowChannel = rollingWindowChannel;
         _dataWriter = dataWriter;
-        _bidAskLogger = bidAskLogger;
         _healthMonitor = healthMonitor;
         _tradeScreenerChannel = tradeScreenerChannel ?? Channel.CreateBounded<MarketData>(new BoundedChannelOptions(1000) { FullMode = BoundedChannelFullMode.DropOldest });
     }
@@ -158,6 +155,7 @@ public class OrchestrationService
 
         // Store tasks but don't await - they are long-running background subscriptions
         Console.WriteLine($"[Orchestration] Started {_exchangeTasks.Count} exchange subscription tasks");
+        await Task.CompletedTask;
     }
 
     private async Task ProcessExchange(IExchangeClient exchangeClient, string exchangeName, CancellationToken cancellationToken)
@@ -271,9 +269,9 @@ public class OrchestrationService
 
                 if (!_rollingWindowChannel.Writer.TryWrite(normalizedSpreadData))
                 {
-                    // TASK 1: Removed Console.WriteLine from hot path
                     // Console.WriteLine($"[Orchestration-WARN] Rolling window channel full (system overload), dropping spread data");
                 }
+                await Task.CompletedTask;
             }));
         }
 
@@ -299,10 +297,10 @@ public class OrchestrationService
                    // Console.WriteLine($"[Orchestration-WARN] Rolling window channel full (system overload), dropping trade data");
                 }
 
-                if (!_tradeScreenerChannel.Writer.TryWrite(tradeData))
                 {
                     // Drop silently if full
                 }
+                await Task.CompletedTask;
             }));
         }
 

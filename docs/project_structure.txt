@@ -1,44 +1,7 @@
 .
 |- analyzer
-| |- docs
-| | |- 1_architecture
-| | | `- architecture.md
-| | |- 2_backlog
-| | | `- backlog.md
-| | |- 3_main_process_flow
-| | | `- process_flow.md
-| | |- 4_metrics
-| | | `- metrics.md
-| | |- 5_mermaid
-| | | `- process_flow.mmd
-| | |- issues
-| | | `- issue.md
-| | |- proposals
-| | | |- PROPOSAL-2025-0076-FixAnalyzerSavePath.md
-| | | |- PROPOSAL-2025-0085-FixAnalyzerDefaultPath.md
-| | | `- PROPOSAL-2025-0090-ModularRefactoring.md
-| | |- roadmap.md
-| | `- role_definition.md
-| |- lib
-| | |- __init__.py
-| | |- analysis.py
-| | |- config.py
-| | |- data_loader.py
-| | `- discovery.py
-| |- summary_stats
-| | |- summary_stats_20251118_170538.csv
-| | `- summary_stats_20251119_125553.csv
-| |- tests
-| | |- __init__.py
-| | |- test_analysis.py
-| | |- test_config.py
-| | `- test_data_loader.py
-| |- README.md
-| |- config.yaml
-| |- requirements.txt
-| |- run_all_ultra.py
-| |- test_date_filter.py
-| `- test_normalization.py
+| `- summary_stats
+|   `- mock_stats.csv
 |- collections
 | |- TestBuild
 | | |- Program.cs
@@ -52,46 +15,8 @@
 | | | `- process_flow.md
 | | |- 4_metrics
 | | | `- metrics.md
-| | |- 5_mermaid
-| | | `- process_flow.mmd
-| | |- audit
-| | | |- AUDIT-2025-11-01-collections-architecture.md
-| | | |- AUDIT-SUMMARY.md
-| | | |- CLEANUP-LOG-2025-11-19.md
-| | | |- REFACTORING-LOG.md
-| | | |- REFACTORING-PLAN.md
-| | | |- changelog.md
-| | | |- critical-fixes.md
-| | | |- executive-summary.md
-| | | `- migration-report.md
-| | |- issues
-| | | `- ISSUE-001-find_opportunities_debug.md
-| | |- planning
-| | | `- backlog.md
-| | |- proposals
-| | | |- PROPOSAL-2025-0001-AddFileLogging.md
-| | | |- PROPOSAL-2025-0002-FixWebSocketRaceCondition.md
-| | | |- PROPOSAL-2025-0003-FixWebSocketRaceCondition-Simple.md
-| | | |- PROPOSAL-2025-0004-AddTradesStream.md
-| | | |- PROPOSAL-2025-0005-ConfigurableStreams.md
-| | | |- PROPOSAL-2025-0006-UnifiedDataChannel.md
-| | | |- PROPOSAL-2025-0007-LazyRefactoring.md
-| | | |- PROPOSAL-2025-0008-FixSubscriptionLogic.md
-| | | |- PROPOSAL-2025-0009-FixBybitReconnection.md
-| | | |- PROPOSAL-2025-0010-AddPriceStep.md
-| | | |- PROPOSAL-2025-0011-SimplifyRollingWindow.md
-| | | |- PROPOSAL-2025-0012-AddRollingWindowAPI.md
-| | | |- PROPOSAL-2025-0083-ConfigureCollectionsExchanges.md
-| | | |- PROPOSAL-2025-0084-ConfigurableSavePath.md
-| | | |- PROPOSAL-2025-0091-FixUnboundedChannels.md
-| | | |- PROPOSAL-2025-0092-FixSymbolDeduplication.md
-| | | |- PROPOSAL-2025-0093-HFT-OptimizeChannelArchitecture.md
-| | | `- PROPOSAL-2025-0094-LastTickMatching.md
-| | |- IMPLEMENTATION-SUMMARY-2025-0095.md
-| | |- PROPOSAL-2025-0095-ProductionReadiness.md
-| | |- README.md
-| | |- metrics.md
-| | `- role_definition.md
+| | `- 5_mermaid
+| |   `- process_flow.mmd
 | |- src
 | | |- SpreadAggregator.Application
 | | | |- Abstractions
@@ -102,7 +27,9 @@
 | | | | |- IWebSocketServer.cs
 | | | | `- TickerData.cs
 | | | |- Diagnostics
-| | | | `- DiagnosticCounters.cs
+| | | | |- DiagnosticCounters.cs
+| | | | |- DiagnosticLogger.cs
+| | | | `- PerformanceMonitor.cs
 | | | |- Helpers
 | | | | `- LruCache.cs
 | | | |- Services
@@ -112,7 +39,7 @@
 | | | | |- OrchestrationService.cs
 | | | | |- RollingWindowService.cs
 | | | | |- SignalDetector.cs
-| | | | `- TradeExecutor.cs
+| | | | `- TradeScreenerService.cs
 | | | |- Class1.cs
 | | | |- SpreadAggregator.Application.csproj
 | | | `- build.binlog
@@ -132,7 +59,6 @@
 | | | | `- VolumeFilter.cs
 | | | `- SpreadAggregator.Domain.csproj
 | | |- SpreadAggregator.Infrastructure
-| | | |- Helpers
 | | | |- Services
 | | | | |- Charts
 | | | | | |- OpportunityFilterService.cs
@@ -165,15 +91,20 @@
 | |   | |- HealthController.cs
 | |   | |- HomeController.cs
 | |   | |- RealTimeController.cs
-| |   | `- SignalsController.cs
+| |   | |- SignalsController.cs
+| |   | `- TradeController.cs
 | |   |- Models
 | |   | |- ChartDataDto.cs
 | |   | `- OpportunityDto.cs
 | |   |- wwwroot
-| |   | `- index.html
+| |   | |- css
+| |   | | `- screener.css
+| |   | |- js
+| |   | | `- screener.js
+| |   | |- index.html
+| |   | `- screener.html
 | |   |- Program.cs
 | |   |- SpreadAggregator.Presentation.csproj
-| |   |- appsettings.example.json
 | |   `- appsettings.json
 | |- tests
 | | `- SpreadAggregator.Tests
@@ -186,8 +117,6 @@
 | |   | `- Services
 | |   |   |- SpreadCalculatorTests.cs
 | |   |   `- VolumeFilterTests.cs
-| |   |- Helpers
-| |   |- Infrastructure
 | |   |- Integration
 | |   | `- SignalExecutionIntegrationTests.cs
 | |   |- Presentation
@@ -197,203 +126,963 @@
 | |   |- Sprint1_MemorySafetyTests.cs
 | |   |- Sprint2_LifecycleTests.cs
 | |   `- UnitTest1.cs
-| |- LIVE_TEST_INSTRUCTIONS.md
-| |- NETWORK-ACCESS.md
-| |- QUICK-START-EXTERNAL-ACCESS.md
+| |- tools
+| | `- PerformanceMonitor
+| |   |- PerformanceMonitor.csproj
+| |   |- Program.cs
+| |   `- README.md
+| |- CHANGELOG.md
 | |- README.md
 | |- SpreadAggregator.sln
-| |- build.log
-| |- build_log.txt
-| |- build_log_3.txt
-| |- run_error.txt
-| |- run_error_2.txt
-| |- run_error_3.txt
-| |- run_log.txt
-| |- run_log_2.txt
-| `- run_log_3.txt
+| |- TestClient.cs
+| |- monitor.ps1
+| `- test_client.py
 |- docs
+| |- Mexc.Net-main
+| | |- Examples
+| | | |- Mexc.Examples.Api
+| | | | |- Properties
+| | | | | `- launchSettings.json
+| | | | |- Mexc.Examples.Api.csproj
+| | | | |- Program.cs
+| | | | |- appsettings.Development.json
+| | | | `- appsettings.json
+| | | |- Mexc.Examples.Console
+| | | | |- Mexc.Examples.Console.csproj
+| | | | `- Program.cs
+| | | |- Mexc.Examples.OrderBook
+| | | | |- Mexc.Examples.OrderBook.csproj
+| | | | `- Program.cs
+| | | |- Mexc.Examples.Tracker
+| | | | |- Mexc.Examples.Tracker.csproj
+| | | | `- Program.cs
+| | | |- Examples.sln
+| | | `- README.md
+| | |- Mexc.Net
+| | | |- Clients
+| | | | |- FuturesApi
+| | | | | |- MexcRestClientFuturesApi.cs
+| | | | | |- MexcRestClientFuturesApiAccount.cs
+| | | | | |- MexcRestClientFuturesApiExchangeData.cs
+| | | | | |- MexcRestClientFuturesApiShared.cs
+| | | | | |- MexcRestClientFuturesApiTrading.cs
+| | | | | |- MexcSocketClientFuturesApi.cs
+| | | | | `- MexcSocketClientFuturesApiShared.cs
+| | | | |- SpotApi
+| | | | | |- MexcRestClientSpotApi.cs
+| | | | | |- MexcRestClientSpotApiAccount.cs
+| | | | | |- MexcRestClientSpotApiExchangeData.cs
+| | | | | |- MexcRestClientSpotApiShared.cs
+| | | | | |- MexcRestClientSpotApiSubAccount.cs
+| | | | | |- MexcRestClientSpotApiTrading.cs
+| | | | | |- MexcSocketClientSpotApi.cs
+| | | | | `- MexcSocketClientSpotApiShared.cs
+| | | | |- MexcRestClient.cs
+| | | | |- MexcSocketClient.cs
+| | | | `- MexcUserClientProvider.cs
+| | | |- Converters
+| | | | |- MexcSourceGenerationContext.cs
+| | | | `- ProtobufInclude.cs
+| | | |- Enums
+| | | | |- AccountType.cs
+| | | | |- ChangeType.cs
+| | | | |- ContractStatus.cs
+| | | | |- DepositStatus.cs
+| | | | |- FuturesBool.cs
+| | | | |- FuturesKlineInterval.cs
+| | | | |- FuturesOrderSide.cs
+| | | | |- FuturesOrderStatus.cs
+| | | | |- KlineInterval.cs
+| | | | |- KycStatus.cs
+| | | | |- MarginType.cs
+| | | | |- OrderCategory.cs
+| | | | |- OrderSide.cs
+| | | | |- OrderStatus.cs
+| | | | |- OrderType.cs
+| | | | |- PositionMode.cs
+| | | | |- PositionOpenType.cs
+| | | | |- PositionSide.cs
+| | | | |- PositionStatus.cs
+| | | | |- RiskLimitType.cs
+| | | | |- SymbolStatus.cs
+| | | | |- TimeInForce.cs
+| | | | |- TradeSidesStatus.cs
+| | | | |- TransferAccountType.cs
+| | | | |- TransferDirection.cs
+| | | | |- TransferStatus.cs
+| | | | |- TransferType.cs
+| | | | |- TriggerPriceType.cs
+| | | | |- TriggerSide.cs
+| | | | |- TriggerType.cs
+| | | | `- WithdrawStatus.cs
+| | | |- ExtensionMethods
+| | | | |- CryptoClientExtensions.cs
+| | | | `- ServiceCollectionExtensions.cs
+| | | |- Icon
+| | | | `- icon.png
+| | | |- Interfaces
+| | | | |- Clients
+| | | | | |- FuturesApi
+| | | | | | |- IMexcRestClientFuturesApi.cs
+| | | | | | |- IMexcRestClientFuturesApiAccount.cs
+| | | | | | |- IMexcRestClientFuturesApiExchangeData.cs
+| | | | | | |- IMexcRestClientFuturesApiShared.cs
+| | | | | | |- IMexcRestClientFuturesApiTrading.cs
+| | | | | | |- IMexcSocketClientFuturesApi.cs
+| | | | | | `- IMexcSocketClientFuturesApiShared.cs
+| | | | | |- SpotApi
+| | | | | | |- IMexcRestClientSpotApi.cs
+| | | | | | |- IMexcRestClientSpotApiAccount.cs
+| | | | | | |- IMexcRestClientSpotApiExchangeData.cs
+| | | | | | |- IMexcRestClientSpotApiShared.cs
+| | | | | | |- IMexcRestClientSpotApiSubAccount.cs
+| | | | | | |- IMexcRestClientSpotApiTrading.cs
+| | | | | | |- IMexcSocketClientSpotApi.cs
+| | | | | | `- IMexcSocketClientSpotApiShared.cs
+| | | | | |- IMexcRestClient.cs
+| | | | | |- IMexcSocketClient.cs
+| | | | | `- IMexcUserClientProvider.cs
+| | | | |- IMexcOrderBookFactory.cs
+| | | | `- IMexcTrackerFactory.cs
+| | | |- Objects
+| | | | |- Models
+| | | | | |- Futures
+| | | | | | |- MexcAdlUpdate.cs
+| | | | | | |- MexcContract.cs
+| | | | | | |- MexcFundingRate.cs
+| | | | | | |- MexcFundingRateHistoryPage.cs
+| | | | | | |- MexcFundingRateUpdate.cs
+| | | | | | |- MexcFundingRecord.cs
+| | | | | | |- MexcFuturesBalance.cs
+| | | | | | |- MexcFuturesBalanceUpdate.cs
+| | | | | | |- MexcFuturesFee.cs
+| | | | | | |- MexcFuturesKline.cs
+| | | | | | |- MexcFuturesKlines.cs
+| | | | | | |- MexcFuturesOrder.cs
+| | | | | | |- MexcFuturesOrderBook.cs
+| | | | | | |- MexcFuturesResponse.cs
+| | | | | | |- MexcFuturesStreamKline.cs
+| | | | | | |- MexcFuturesTicker.cs
+| | | | | | |- MexcFuturesTickerUpdate.cs
+| | | | | | |- MexcFuturesTrade.cs
+| | | | | | |- MexcFuturesTransfer.cs
+| | | | | | |- MexcFuturesTriggerOrder.cs
+| | | | | | |- MexcFuturesUserTrade.cs
+| | | | | | |- MexcIndexPrice.cs
+| | | | | | |- MexcLeverage.cs
+| | | | | | |- MexcMarkPrice.cs
+| | | | | | |- MexcPosition.cs
+| | | | | | |- MexcPositionModeUpdate.cs
+| | | | | | |- MexcPriceUpdate.cs
+| | | | | | |- MexcRiskFundBalance.cs
+| | | | | | |- MexcRiskFundBalanceHistoryPage.cs
+| | | | | | |- MexcRiskLimit.cs
+| | | | | | `- MexcStopOrder.cs
+| | | | | |- Protobuf
+| | | | | | |- MexcUpdate.cs
+| | | | | | |- ProtoAccountUpdate.cs
+| | | | | | |- ProtoAggOrderBookUpdate.cs
+| | | | | | |- ProtoOrderBookUpdate.cs
+| | | | | | |- ProtoOrderUpdate.cs
+| | | | | | |- ProtoStreamBookEntry.cs
+| | | | | | |- ProtoStreamBookTicker.cs
+| | | | | | |- ProtoStreamBookTickerUpdate.cs
+| | | | | | |- ProtoStreamKline.cs
+| | | | | | |- ProtoStreamTrade.cs
+| | | | | | |- ProtoTradeUpdate.cs
+| | | | | | |- ProtoUserTradeUpdate.cs
+| | | | | | `- SocketEvent.cs
+| | | | | |- Spot
+| | | | | | |- MexcAccountBalances.cs
+| | | | | | |- MexcAccountInfo.cs
+| | | | | | |- MexcAccountUpdate.cs
+| | | | | | |- MexcAggregatedTrade.cs
+| | | | | | |- MexcAveragePrice.cs
+| | | | | | |- MexcBookPrice.cs
+| | | | | | |- MexcDeductStatus.cs
+| | | | | | |- MexcDeposit.cs
+| | | | | | |- MexcDepositAddress.cs
+| | | | | | |- MexcDustLog.cs
+| | | | | | |- MexcDustResult.cs
+| | | | | | |- MexcEligibleDust.cs
+| | | | | | |- MexcEtf.cs
+| | | | | | |- MexcExchangeInfo.cs
+| | | | | | |- MexcId.cs
+| | | | | | |- MexcInternalTransfer.cs
+| | | | | | |- MexcKline.cs
+| | | | | | |- MexcKycStatus.cs
+| | | | | | |- MexcListenKey.cs
+| | | | | | |- MexcOrder.cs
+| | | | | | |- MexcOrderBook.cs
+| | | | | | |- MexcOrderBookEntry.cs
+| | | | | | |- MexcOrderResult.cs
+| | | | | | |- MexcPlaceOrderRequest.cs
+| | | | | | |- MexcPrice.cs
+| | | | | | |- MexcServerTime.cs
+| | | | | | |- MexcStreamBookTick.cs
+| | | | | | |- MexcStreamKline.cs
+| | | | | | |- MexcStreamMiniTick.cs
+| | | | | | |- MexcStreamOrderBook.cs
+| | | | | | |- MexcStreamTrade.cs
+| | | | | | |- MexcSubAccountApiKey.cs
+| | | | | | |- MexcSubUserAccount.cs
+| | | | | | |- MexcSubUserAccountApiDetail.cs
+| | | | | | |- MexcSubaccountResult.cs
+| | | | | | |- MexcSymbol.cs
+| | | | | | |- MexcTicker.cs
+| | | | | | |- MexcTrade.cs
+| | | | | | |- MexcTradeFee.cs
+| | | | | | |- MexcTransfer.cs
+| | | | | | |- MexcTransferId.cs
+| | | | | | |- MexcUniversalTransfer.cs
+| | | | | | |- MexcUniversalTransferResult.cs
+| | | | | | |- MexcUserAsset.cs
+| | | | | | |- MexcUserOrderUpdate.cs
+| | | | | | |- MexcUserTrade.cs
+| | | | | | |- MexcUserTradeUpdate.cs
+| | | | | | |- MexcWithdrawAddress.cs
+| | | | | | `- MexcWithdrawal.cs
+| | | | | |- ListenKeyRenewedEvent.cs
+| | | | | |- MexcPaginated.cs
+| | | | | |- MexcRateLimitError.cs
+| | | | | |- MexcResult.cs
+| | | | | `- MexcRows.cs
+| | | | |- Options
+| | | | | |- MexcOptions.cs
+| | | | | |- MexcOrderBookOptions.cs
+| | | | | |- MexcRestOptions.cs
+| | | | | `- MexcSocketOptions.cs
+| | | | |- Sockets
+| | | | | |- Models
+| | | | | | |- MexcFuturesRequest.cs
+| | | | | | |- MexcFuturesUpdate.cs
+| | | | | | |- MexcKlineUpdate.cs
+| | | | | | |- MexcRequest.cs
+| | | | | | |- MexcResponse.cs
+| | | | | | `- MexcStreamEvent.cs
+| | | | | |- Queries
+| | | | | | |- MexcFuturesPingQuery.cs
+| | | | | | |- MexcFuturesQuery.cs
+| | | | | | |- MexcPingQuery.cs
+| | | | | | `- MexcQuery.cs
+| | | | | `- Subscriptions
+| | | | |   |- MexcErrorSubscription.cs
+| | | | |   |- MexcFuturesSubscription.cs
+| | | | |   |- MexcFuturesUserSubscription.cs
+| | | | |   `- MexcSubscription.cs
+| | | | `- MexcApiAddresses.cs
+| | | |- SymbolOrderBooks
+| | | | |- MexcFuturesSymbolOrderBook.cs
+| | | | |- MexcOrderBookFactory.cs
+| | | | `- MexcSpotSymbolOrderBook.cs
+| | | |- AssemblyInfo.cs
+| | | |- Mexc.Net.csproj
+| | | |- Mexc.Net.xml
+| | | |- MexcAuthenticationProvider.cs
+| | | |- MexcEnvironment.cs
+| | | |- MexcErrors.cs
+| | | |- MexcExchange.cs
+| | | |- MexcFuturesAuthenticationProvider.cs
+| | | |- MexcTrackerFactory.cs
+| | | `- Usings.cs
+| | |- Mexc.Net.UnitTests
+| | | |- Endpoints
+| | | | |- FuturesApi
+| | | | | |- Account
+| | | | | | |- ChangeMargin.txt
+| | | | | | |- GetBalances.txt
+| | | | | | |- GetFundingHistory.txt
+| | | | | | |- GetLeverage.txt
+| | | | | | |- GetPositionMode.txt
+| | | | | | |- GetTradingFees.txt
+| | | | | | |- GetTransferHistory.txt
+| | | | | | |- SetLeverage.txt
+| | | | | | `- SetPositionMode.txt
+| | | | | |- ExchangeData
+| | | | | | |- GetFundingRate.txt
+| | | | | | |- GetFundingRateHistory.txt
+| | | | | | |- GetIndexPrice.txt
+| | | | | | |- GetMarkPrice.txt
+| | | | | | |- GetRecentTrades.txt
+| | | | | | |- GetRiskFundBalanceHistory.txt
+| | | | | | |- GetRiskFundBalances.txt
+| | | | | | `- GetTickers.txt
+| | | | | `- Trading
+| | | | |   |- GetOpenOrders.txt
+| | | | |   |- GetOrder.txt
+| | | | |   |- GetOrderByClientOrderId.txt
+| | | | |   |- GetOrderHistory.txt
+| | | | |   |- GetOrderTrades.txt
+| | | | |   |- GetOrdersById.txt
+| | | | |   |- GetPositionHistory.txt
+| | | | |   |- GetPositions.txt
+| | | | |   |- GetRiskLimits.txt
+| | | | |   |- GetStopOrders.txt
+| | | | |   |- GetTriggerOrders.txt
+| | | | |   `- GetUserTrades.txt
+| | | | `- SpotApi
+| | | |   |- Account
+| | | |   | |- CancelWithdraw.txt
+| | | |   | |- DustTransfer.txt
+| | | |   | |- GenerateDepositAddress.txt
+| | | |   | |- GetAccountInfo.txt
+| | | |   | |- GetAssetsForDustTransfer.txt
+| | | |   | |- GetDepositAddresses.txt
+| | | |   | |- GetDepositHistory.txt
+| | | |   | |- GetDustLog.txt
+| | | |   | |- GetInternalTransferHistory.txt
+| | | |   | |- GetKycStatus.txt
+| | | |   | |- GetMxDeductionStatus.txt
+| | | |   | |- GetTradeFeeAsync.txt
+| | | |   | |- GetTransfer.txt
+| | | |   | |- GetTransferHistory.txt
+| | | |   | |- GetUserAssets.txt
+| | | |   | |- GetWithdrawAddresses.txt
+| | | |   | |- GetWithdrawHistory.txt
+| | | |   | |- KeepAliveUserStream.txt
+| | | |   | |- SetMxDeduction.txt
+| | | |   | |- StartUserStream.txt
+| | | |   | |- StopUserStream.txt
+| | | |   | |- Transfer.txt
+| | | |   | |- TransferInternal.txt
+| | | |   | `- Withdraw.txt
+| | | |   |- ExchangeData
+| | | |   | |- GetAggregatedTradeHistory.txt
+| | | |   | |- GetApiSymbols.txt
+| | | |   | |- GetAveragePrice.txt
+| | | |   | |- GetBookPrices.txt
+| | | |   | |- GetExchangeInfo.txt
+| | | |   | |- GetKlines.txt
+| | | |   | |- GetOrderBook.txt
+| | | |   | |- GetPrices.txt
+| | | |   | |- GetRecentTrades.txt
+| | | |   | |- GetServerTime.txt
+| | | |   | |- GetTicker.txt
+| | | |   | `- GetTickers.txt
+| | | |   |- SubAccount
+| | | |   | |- CreateSubAccount.txt
+| | | |   | |- CreateSubAccountApiKey.txt
+| | | |   | |- DeleteSubAccountApiKey.txt
+| | | |   | |- GetSubAccountBalances.txt
+| | | |   | |- GetSubUserAccountApiDetails.txt
+| | | |   | |- GetSubUserAccounts.txt
+| | | |   | |- GetUniversalTransfers.txt
+| | | |   | `- UniversalTransfer.txt
+| | | |   `- Trading
+| | | |     |- CancelAllOrders.txt
+| | | |     |- CancelOrder.txt
+| | | |     |- GetOpenOrders.txt
+| | | |     |- GetOrder.txt
+| | | |     |- GetOrders.txt
+| | | |     |- GetUserTrades.txt
+| | | |     |- PlaceOrder.txt
+| | | |     `- PlaceTestOrder.txt
+| | | |- Helpers
+| | | | `- TestHelpers.cs
+| | | |- JsonResponses
+| | | | `- Spot
+| | | |   |- Account
+| | | |   | |- CancelWithdrawAsync.txt
+| | | |   | |- DustTransferAsync.txt
+| | | |   | |- GenerateDepositAddressAsync.txt
+| | | |   | |- GetAccountInfoAsync.txt
+| | | |   | |- GetAssetsForDustTransferAsync.txt
+| | | |   | |- GetDepositAddressesAsync.txt
+| | | |   | |- GetDepositHistoryAsync.txt
+| | | |   | |- GetDustLogAsync.txt
+| | | |   | |- GetTransferAsync.txt
+| | | |   | |- GetUserAssetsAsync.txt
+| | | |   | |- GetWithdrawAddressesAsync.txt
+| | | |   | |- GetWithdrawHistoryAsync.txt
+| | | |   | `- SetMxDeductionAsync.txt
+| | | |   |- ExchangeData
+| | | |   | |- GetAggregatedTradeHistoryAsync.txt
+| | | |   | |- GetAveragePriceAsync.txt
+| | | |   | |- GetBookPricesAsync.txt
+| | | |   | |- GetExchangeInfoAsync.txt
+| | | |   | |- GetKlinesAsync.txt
+| | | |   | |- GetOrderBookAsync.txt
+| | | |   | |- GetPricesAsync.txt
+| | | |   | |- GetRecentTradesAsync.txt
+| | | |   | `- GetTickersAsync.txt
+| | | |   `- Trading
+| | | |     |- CancelAllOrdersAsync.txt
+| | | |     |- CancelOrderAsync.txt
+| | | |     |- GetOrderAsync.txt
+| | | |     |- GetUserTradesAsync.txt
+| | | |     `- PlaceOrderAsync.txt
+| | | |- Subscriptions
+| | | | |- FuturesApi
+| | | | | |- Balance.txt
+| | | | | |- Book.txt
+| | | | | |- FundingRate.txt
+| | | | | |- IndexPrice.txt
+| | | | | |- Klines.txt
+| | | | | |- MarkPrice.txt
+| | | | | |- Order.txt
+| | | | | |- PartialBook.txt
+| | | | | |- Position.txt
+| | | | | |- Ticker.txt
+| | | | | |- Tickers.txt
+| | | | | `- Trades.txt
+| | | | `- SpotApi
+| | | |   |- Account.txt
+| | | |   |- Book.txt
+| | | |   |- BookTicker.txt
+| | | |   |- Klines.txt
+| | | |   |- MiniTicker.txt
+| | | |   |- Orders.txt
+| | | |   |- PartialBook.txt
+| | | |   |- Trades.txt
+| | | |   `- UserTrades.txt
+| | | |- GlobalUsings.cs
+| | | |- Mexc.Net.UnitTests.csproj
+| | | |- MexcClientTests.cs
+| | | |- MexcRestIntegrationTests.cs
+| | | |- MexcSocketIntegrationTests.cs
+| | | |- RestRequestTests.cs
+| | | `- SocketSubscriptionTests.cs
+| | |- docs
+| | | |- assets
+| | | | |- css
+| | | | | |- color-blue.css
+| | | | | |- color-brown.css
+| | | | | |- color-cyan.css
+| | | | | |- color-green.css
+| | | | | |- color-indigo.css
+| | | | | |- color-orange.css
+| | | | | |- color-purple.css
+| | | | | |- color-red.css
+| | | | | |- color-teal.css
+| | | | | |- color-yellow.css
+| | | | | `- stylesheet.css
+| | | | |- images
+| | | | | `- logo.png
+| | | | |- js
+| | | | | `- theme.js
+| | | | |- sass
+| | | | | |- bootstrap
+| | | | | | |- mixins
+| | | | | | | |- _alert.scss
+| | | | | | | |- _background-variant.scss
+| | | | | | | |- _badge.scss
+| | | | | | | |- _border-radius.scss
+| | | | | | | |- _box-shadow.scss
+| | | | | | | |- _breakpoints.scss
+| | | | | | | |- _buttons.scss
+| | | | | | | |- _caret.scss
+| | | | | | | |- _clearfix.scss
+| | | | | | | |- _deprecate.scss
+| | | | | | | |- _float.scss
+| | | | | | | |- _forms.scss
+| | | | | | | |- _gradients.scss
+| | | | | | | |- _grid-framework.scss
+| | | | | | | |- _grid.scss
+| | | | | | | |- _hover.scss
+| | | | | | | |- _image.scss
+| | | | | | | |- _list-group.scss
+| | | | | | | |- _lists.scss
+| | | | | | | |- _nav-divider.scss
+| | | | | | | |- _pagination.scss
+| | | | | | | |- _reset-text.scss
+| | | | | | | |- _resize.scss
+| | | | | | | |- _screen-reader.scss
+| | | | | | | |- _size.scss
+| | | | | | | |- _table-row.scss
+| | | | | | | |- _text-emphasis.scss
+| | | | | | | |- _text-hide.scss
+| | | | | | | |- _text-truncate.scss
+| | | | | | | |- _transition.scss
+| | | | | | | `- _visibility.scss
+| | | | | | |- utilities
+| | | | | | | |- _align.scss
+| | | | | | | |- _background.scss
+| | | | | | | |- _borders.scss
+| | | | | | | |- _clearfix.scss
+| | | | | | | |- _display.scss
+| | | | | | | |- _embed.scss
+| | | | | | | |- _flex.scss
+| | | | | | | |- _float.scss
+| | | | | | | |- _interactions.scss
+| | | | | | | |- _overflow.scss
+| | | | | | | |- _position.scss
+| | | | | | | |- _screenreaders.scss
+| | | | | | | |- _shadows.scss
+| | | | | | | |- _sizing.scss
+| | | | | | | |- _spacing.scss
+| | | | | | | |- _stretched-link.scss
+| | | | | | | |- _text.scss
+| | | | | | | `- _visibility.scss
+| | | | | | |- vendor
+| | | | | | | `- _rfs.scss
+| | | | | | |- _alert.scss
+| | | | | | |- _badge.scss
+| | | | | | |- _breadcrumb.scss
+| | | | | | |- _button-group.scss
+| | | | | | |- _buttons.scss
+| | | | | | |- _card.scss
+| | | | | | |- _carousel.scss
+| | | | | | |- _close.scss
+| | | | | | |- _code.scss
+| | | | | | |- _custom-forms.scss
+| | | | | | |- _dropdown.scss
+| | | | | | |- _forms.scss
+| | | | | | |- _functions.scss
+| | | | | | |- _grid.scss
+| | | | | | |- _images.scss
+| | | | | | |- _input-group.scss
+| | | | | | |- _jumbotron.scss
+| | | | | | |- _list-group.scss
+| | | | | | |- _media.scss
+| | | | | | |- _mixins.scss
+| | | | | | |- _modal.scss
+| | | | | | |- _nav.scss
+| | | | | | |- _navbar.scss
+| | | | | | |- _pagination.scss
+| | | | | | |- _popover.scss
+| | | | | | |- _print.scss
+| | | | | | |- _progress.scss
+| | | | | | |- _reboot.scss
+| | | | | | |- _root.scss
+| | | | | | |- _spinners.scss
+| | | | | | |- _tables.scss
+| | | | | | |- _toasts.scss
+| | | | | | |- _tooltip.scss
+| | | | | | |- _transitions.scss
+| | | | | | |- _type.scss
+| | | | | | |- _utilities.scss
+| | | | | | |- _variables.scss
+| | | | | | |- bootstrap-grid.scss
+| | | | | | |- bootstrap-reboot.scss
+| | | | | | `- bootstrap.scss
+| | | | | |- _elements.scss
+| | | | | |- _extras.scss
+| | | | | |- _footer.scss
+| | | | | |- _header.scss
+| | | | | |- _helpers.scss
+| | | | | |- _layouts.scss
+| | | | | |- _mixins.scss
+| | | | | |- _reset.scss
+| | | | | |- _variables.scss
+| | | | | |- color-blue.scss
+| | | | | |- color-brown.scss
+| | | | | |- color-cyan.scss
+| | | | | |- color-green.scss
+| | | | | |- color-indigo.scss
+| | | | | |- color-orange.scss
+| | | | | |- color-purple.scss
+| | | | | |- color-red.scss
+| | | | | |- color-teal.scss
+| | | | | |- color-yellow.scss
+| | | | | `- stylesheet.scss
+| | | | `- vendor
+| | | |   |- bootstrap
+| | | |   | |- css
+| | | |   | | |- bootstrap-grid.css
+| | | |   | | |- bootstrap-grid.css.map
+| | | |   | | |- bootstrap-grid.min.css
+| | | |   | | |- bootstrap-grid.min.css.map
+| | | |   | | |- bootstrap-reboot.css
+| | | |   | | |- bootstrap-reboot.css.map
+| | | |   | | |- bootstrap-reboot.min.css
+| | | |   | | |- bootstrap-reboot.min.css.map
+| | | |   | | |- bootstrap.css
+| | | |   | | |- bootstrap.css.map
+| | | |   | | |- bootstrap.min.css
+| | | |   | | `- bootstrap.min.css.map
+| | | |   | `- js
+| | | |   |   |- bootstrap.bundle.js
+| | | |   |   |- bootstrap.bundle.js.map
+| | | |   |   |- bootstrap.bundle.min.js
+| | | |   |   |- bootstrap.bundle.min.js.map
+| | | |   |   |- bootstrap.js
+| | | |   |   |- bootstrap.js.map
+| | | |   |   |- bootstrap.min.js
+| | | |   |   `- bootstrap.min.js.map
+| | | |   |- font-awesome
+| | | |   | |- css
+| | | |   | | |- all.css
+| | | |   | | |- all.min.css
+| | | |   | | |- brands.css
+| | | |   | | |- brands.min.css
+| | | |   | | |- fontawesome.css
+| | | |   | | |- fontawesome.min.css
+| | | |   | | |- regular.css
+| | | |   | | |- regular.min.css
+| | | |   | | |- solid.css
+| | | |   | | |- solid.min.css
+| | | |   | | |- svg-with-js.css
+| | | |   | | |- svg-with-js.min.css
+| | | |   | | |- v4-shims.css
+| | | |   | | `- v4-shims.min.css
+| | | |   | |- js
+| | | |   | | |- all.js
+| | | |   | | |- all.min.js
+| | | |   | | |- brands.js
+| | | |   | | |- brands.min.js
+| | | |   | | |- conflict-detection.js
+| | | |   | | |- conflict-detection.min.js
+| | | |   | | |- fontawesome.js
+| | | |   | | |- fontawesome.min.js
+| | | |   | | |- regular.js
+| | | |   | | |- regular.min.js
+| | | |   | | |- solid.js
+| | | |   | | |- solid.min.js
+| | | |   | | |- v4-shims.js
+| | | |   | | `- v4-shims.min.js
+| | | |   | `- webfonts
+| | | |   |   |- fa-brands-400.eot
+| | | |   |   |- fa-brands-400.svg
+| | | |   |   |- fa-brands-400.ttf
+| | | |   |   |- fa-brands-400.woff
+| | | |   |   |- fa-brands-400.woff2
+| | | |   |   |- fa-regular-400.eot
+| | | |   |   |- fa-regular-400.svg
+| | | |   |   |- fa-regular-400.ttf
+| | | |   |   |- fa-regular-400.woff
+| | | |   |   |- fa-regular-400.woff2
+| | | |   |   |- fa-solid-900.eot
+| | | |   |   |- fa-solid-900.svg
+| | | |   |   |- fa-solid-900.ttf
+| | | |   |   |- fa-solid-900.woff
+| | | |   |   `- fa-solid-900.woff2
+| | | |   |- highlight.js
+| | | |   | |- languages
+| | | |   | | |- lib
+| | | |   | | | `- ecmascript.js
+| | | |   | | |- 1c.js
+| | | |   | | |- abnf.js
+| | | |   | | |- accesslog.js
+| | | |   | | |- actionscript.js
+| | | |   | | |- ada.js
+| | | |   | | |- angelscript.js
+| | | |   | | |- apache.js
+| | | |   | | |- applescript.js
+| | | |   | | |- arcade.js
+| | | |   | | |- arduino.js
+| | | |   | | |- armasm.js
+| | | |   | | |- asciidoc.js
+| | | |   | | |- aspectj.js
+| | | |   | | |- autohotkey.js
+| | | |   | | |- autoit.js
+| | | |   | | |- avrasm.js
+| | | |   | | |- awk.js
+| | | |   | | |- axapta.js
+| | | |   | | |- bash.js
+| | | |   | | |- basic.js
+| | | |   | | |- bnf.js
+| | | |   | | |- brainfuck.js
+| | | |   | | |- c-like.js
+| | | |   | | |- c.js
+| | | |   | | |- cal.js
+| | | |   | | |- capnproto.js
+| | | |   | | |- ceylon.js
+| | | |   | | |- clean.js
+| | | |   | | |- clojure-repl.js
+| | | |   | | |- clojure.js
+| | | |   | | |- cmake.js
+| | | |   | | |- coffeescript.js
+| | | |   | | |- coq.js
+| | | |   | | |- cos.js
+| | | |   | | |- cpp.js
+| | | |   | | |- crmsh.js
+| | | |   | | |- crystal.js
+| | | |   | | |- csharp.js
+| | | |   | | |- csp.js
+| | | |   | | |- css.js
+| | | |   | | |- d.js
+| | | |   | | |- dart.js
+| | | |   | | |- delphi.js
+| | | |   | | |- diff.js
+| | | |   | | |- django.js
+| | | |   | | |- dns.js
+| | | |   | | |- dockerfile.js
+| | | |   | | |- dos.js
+| | | |   | | |- dsconfig.js
+| | | |   | | |- dts.js
+| | | |   | | |- dust.js
+| | | |   | | |- ebnf.js
+| | | |   | | |- elixir.js
+| | | |   | | |- elm.js
+| | | |   | | |- erb.js
+| | | |   | | |- erlang-repl.js
+| | | |   | | |- erlang.js
+| | | |   | | |- excel.js
+| | | |   | | |- fix.js
+| | | |   | | |- flix.js
+| | | |   | | |- fortran.js
+| | | |   | | |- fsharp.js
+| | | |   | | |- gams.js
+| | | |   | | |- gauss.js
+| | | |   | | |- gcode.js
+| | | |   | | |- gherkin.js
+| | | |   | | |- glsl.js
+| | | |   | | |- gml.js
+| | | |   | | |- go.js
+| | | |   | | |- golo.js
+| | | |   | | |- gradle.js
+| | | |   | | |- groovy.js
+| | | |   | | |- haml.js
+| | | |   | | |- handlebars.js
+| | | |   | | |- haskell.js
+| | | |   | | |- haxe.js
+| | | |   | | |- hsp.js
+| | | |   | | |- htmlbars.js
+| | | |   | | |- http.js
+| | | |   | | |- hy.js
+| | | |   | | |- inform7.js
+| | | |   | | |- ini.js
+| | | |   | | |- irpf90.js
+| | | |   | | |- isbl.js
+| | | |   | | |- java.js
+| | | |   | | |- javascript.js
+| | | |   | | |- jboss-cli.js
+| | | |   | | |- json.js
+| | | |   | | |- julia-repl.js
+| | | |   | | |- julia.js
+| | | |   | | |- kotlin.js
+| | | |   | | |- lasso.js
+| | | |   | | |- latex.js
+| | | |   | | |- ldif.js
+| | | |   | | |- leaf.js
+| | | |   | | |- less.js
+| | | |   | | |- lisp.js
+| | | |   | | |- livecodeserver.js
+| | | |   | | |- livescript.js
+| | | |   | | |- llvm.js
+| | | |   | | |- lsl.js
+| | | |   | | |- lua.js
+| | | |   | | |- makefile.js
+| | | |   | | |- markdown.js
+| | | |   | | |- mathematica.js
+| | | |   | | |- matlab.js
+| | | |   | | |- maxima.js
+| | | |   | | |- mel.js
+| | | |   | | |- mercury.js
+| | | |   | | |- mipsasm.js
+| | | |   | | |- mizar.js
+| | | |   | | |- mojolicious.js
+| | | |   | | |- monkey.js
+| | | |   | | |- moonscript.js
+| | | |   | | |- n1ql.js
+| | | |   | | |- nginx.js
+| | | |   | | |- nim.js
+| | | |   | | |- nix.js
+| | | |   | | |- nsis.js
+| | | |   | | |- objectivec.js
+| | | |   | | |- ocaml.js
+| | | |   | | |- openscad.js
+| | | |   | | |- oxygene.js
+| | | |   | | |- parser3.js
+| | | |   | | |- perl.js
+| | | |   | | |- pf.js
+| | | |   | | |- pgsql.js
+| | | |   | | |- php-template.js
+| | | |   | | |- php.js
+| | | |   | | |- plaintext.js
+| | | |   | | |- pony.js
+| | | |   | | |- powershell.js
+| | | |   | | |- processing.js
+| | | |   | | |- profile.js
+| | | |   | | |- prolog.js
+| | | |   | | |- properties.js
+| | | |   | | |- protobuf.js
+| | | |   | | |- puppet.js
+| | | |   | | |- purebasic.js
+| | | |   | | |- python-repl.js
+| | | |   | | |- python.js
+| | | |   | | |- q.js
+| | | |   | | |- qml.js
+| | | |   | | |- r.js
+| | | |   | | |- reasonml.js
+| | | |   | | |- rib.js
+| | | |   | | |- roboconf.js
+| | | |   | | |- routeros.js
+| | | |   | | |- rsl.js
+| | | |   | | |- ruby.js
+| | | |   | | |- ruleslanguage.js
+| | | |   | | |- rust.js
+| | | |   | | |- sas.js
+| | | |   | | |- scala.js
+| | | |   | | |- scheme.js
+| | | |   | | |- scilab.js
+| | | |   | | |- scss.js
+| | | |   | | |- shell.js
+| | | |   | | |- smali.js
+| | | |   | | |- smalltalk.js
+| | | |   | | |- sml.js
+| | | |   | | |- sqf.js
+| | | |   | | |- sql.js
+| | | |   | | |- stan.js
+| | | |   | | |- stata.js
+| | | |   | | |- step21.js
+| | | |   | | |- stylus.js
+| | | |   | | |- subunit.js
+| | | |   | | |- swift.js
+| | | |   | | |- taggerscript.js
+| | | |   | | |- tap.js
+| | | |   | | |- tcl.js
+| | | |   | | |- thrift.js
+| | | |   | | |- tp.js
+| | | |   | | |- twig.js
+| | | |   | | |- typescript.js
+| | | |   | | |- vala.js
+| | | |   | | |- vbnet.js
+| | | |   | | |- vbscript-html.js
+| | | |   | | |- vbscript.js
+| | | |   | | |- verilog.js
+| | | |   | | |- vhdl.js
+| | | |   | | |- vim.js
+| | | |   | | |- x86asm.js
+| | | |   | | |- xl.js
+| | | |   | | |- xml.js
+| | | |   | | |- xquery.js
+| | | |   | | |- yaml.js
+| | | |   | | `- zephir.js
+| | | |   | |- lib
+| | | |   | | |- html_renderer.js
+| | | |   | | |- mode_compiler.js
+| | | |   | | |- modes.js
+| | | |   | | |- regex.js
+| | | |   | | |- response.js
+| | | |   | | |- token_tree.js
+| | | |   | | `- utils.js
+| | | |   | |- styles
+| | | |   | | |- a11y-dark.css
+| | | |   | | |- a11y-light.css
+| | | |   | | |- agate.css
+| | | |   | | |- an-old-hope.css
+| | | |   | | |- androidstudio.css
+| | | |   | | |- arduino-light.css
+| | | |   | | |- arta.css
+| | | |   | | |- ascetic.css
+| | | |   | | |- atelier-cave-dark.css
+| | | |   | | |- atelier-cave-light.css
+| | | |   | | |- atelier-dune-dark.css
+| | | |   | | |- atelier-dune-light.css
+| | | |   | | |- atelier-estuary-dark.css
+| | | |   | | |- atelier-estuary-light.css
+| | | |   | | |- atelier-forest-dark.css
+| | | |   | | |- atelier-forest-light.css
+| | | |   | | |- atelier-heath-dark.css
+| | | |   | | |- atelier-heath-light.css
+| | | |   | | |- atelier-lakeside-dark.css
+| | | |   | | |- atelier-lakeside-light.css
+| | | |   | | |- atelier-plateau-dark.css
+| | | |   | | |- atelier-plateau-light.css
+| | | |   | | |- atelier-savanna-dark.css
+| | | |   | | |- atelier-savanna-light.css
+| | | |   | | |- atelier-seaside-dark.css
+| | | |   | | |- atelier-seaside-light.css
+| | | |   | | |- atelier-sulphurpool-dark.css
+| | | |   | | |- atelier-sulphurpool-light.css
+| | | |   | | |- atom-one-dark-reasonable.css
+| | | |   | | |- atom-one-dark.css
+| | | |   | | |- atom-one-light.css
+| | | |   | | |- brown-paper.css
+| | | |   | | |- brown-papersq.png
+| | | |   | | |- codepen-embed.css
+| | | |   | | |- color-brewer.css
+| | | |   | | |- darcula.css
+| | | |   | | |- dark.css
+| | | |   | | |- default.css
+| | | |   | | |- docco.css
+| | | |   | | |- dracula.css
+| | | |   | | |- far.css
+| | | |   | | |- foundation.css
+| | | |   | | |- github-gist.css
+| | | |   | | |- github.css
+| | | |   | | |- gml.css
+| | | |   | | |- googlecode.css
+| | | |   | | |- gradient-dark.css
+| | | |   | | |- grayscale.css
+| | | |   | | |- gruvbox-dark.css
+| | | |   | | |- gruvbox-light.css
+| | | |   | | |- hopscotch.css
+| | | |   | | |- hybrid.css
+| | | |   | | |- idea.css
+| | | |   | | |- ir-black.css
+| | | |   | | |- isbl-editor-dark.css
+| | | |   | | |- isbl-editor-light.css
+| | | |   | | |- kimbie.dark.css
+| | | |   | | |- kimbie.light.css
+| | | |   | | |- lightfair.css
+| | | |   | | |- magula.css
+| | | |   | | |- mono-blue.css
+| | | |   | | |- monokai-sublime.css
+| | | |   | | |- monokai.css
+| | | |   | | |- night-owl.css
+| | | |   | | |- nord.css
+| | | |   | | |- obsidian.css
+| | | |   | | |- ocean.css
+| | | |   | | |- paraiso-dark.css
+| | | |   | | |- paraiso-light.css
+| | | |   | | |- pojoaque.css
+| | | |   | | |- pojoaque.jpg
+| | | |   | | |- purebasic.css
+| | | |   | | |- qtcreator_dark.css
+| | | |   | | |- qtcreator_light.css
+| | | |   | | |- railscasts.css
+| | | |   | | |- rainbow.css
+| | | |   | | |- routeros.css
+| | | |   | | |- school-book.css
+| | | |   | | |- school-book.png
+| | | |   | | |- shades-of-purple.css
+| | | |   | | |- solarized-dark.css
+| | | |   | | |- solarized-light.css
+| | | |   | | |- srcery.css
+| | | |   | | |- sunburst.css
+| | | |   | | |- tomorrow-night-blue.css
+| | | |   | | |- tomorrow-night-bright.css
+| | | |   | | |- tomorrow-night-eighties.css
+| | | |   | | |- tomorrow-night.css
+| | | |   | | |- tomorrow.css
+| | | |   | | |- vs.css
+| | | |   | | |- vs2015.css
+| | | |   | | |- xcode.css
+| | | |   | | |- xt256.css
+| | | |   | | `- zenburn.css
+| | | |   | |- vendor
+| | | |   | | `- deep_freeze.js
+| | | |   | |- highlight.js
+| | | |   | `- highlight.min.js
+| | | |   |- jquery
+| | | |   | `- jquery.min.js
+| | | |   |- jquery.easing
+| | | |   | |- jquery.easing.js
+| | | |   | `- jquery.easing.min.js
+| | | |   `- magnific-popup
+| | | |     |- jquery.magnific-popup.js
+| | | |     |- jquery.magnific-popup.min.js
+| | | |     |- magnific-popup.css
+| | | |     `- magnific-popup.min.css
+| | | |- README.md
+| | | |- _config.yml
+| | | `- index.html
+| | |- LICENSE
+| | |- Mexc.Net.sln
+| | |- README.md
+| | `- rd.xml
 | |- gemini3
-| | |- proposals
-| | | |- PROPOSAL_001_STALE_DATA_FIX.md
-| | | |- PROPOSAL_002_EXTERNAL_CONFIG.md
-| | | |- PROPOSAL_003_CIRCUIT_BREAKER.md
-| | | `- PROPOSAL_004_ANALYZER_FEEDBACK.md
+| | |- code
+| | | `- phase2_rolling_window_changes.cs
 | | |- roadmap
-| | | |- archive
-| | | | |- phase-0.5-backtesting.md
-| | | | |- phase-2-security.md
-| | | | |- phase-3-sight.md
-| | | | `- phase-6-monolith.md
 | | | |- README.md
 | | | |- phase-0-foundation.md
 | | | |- phase-1-brain.md
+| | | |- phase-1-screener.md
 | | | |- phase-2-monitoring.md
+| | | |- phase-2-screener-refinement.md
 | | | |- phase-3-latency.md
 | | | |- phase-4-automation.md
 | | | `- phase-5-webui.md
-| | `- handoff_to_next_session.md
+| | |- GEMINI_SCREENER_DEV.md
+| | `- HANDOVER_CONTEXT.md
 | |- issues
-| | `- ISSUE-001-realtime-charts-not-showing.md
-| |- overall_architecture
-| | `- architecture.md
-| |- overall_mermaid
-| | `- system_diagram.mmd
-| |- overall_process_flow
-| | `- process_flow.md
-| |- completion_report.md
-| |- dependencies.md
-| |- glossary.md
-| |- project_structure.txt
-| `- task_progress_update.md
-|- trader
-| |- docs
-| | |- 1_architecture
-| | | `- architecture.md
-| | |- 2_backlog
-| | | `- backlog.md
-| | |- 3_main_process_flow
-| | | |- main_process_flow.md
-| | | `- process_flow.md
-| | |- 4_metrics
-| | | |- balance_cycle_metrics_flow.md
-| | | `- metrics.md
-| | |- 5_mermaid
-| | | |- convergent_trader_flow.mmd
-| | | |- legacy_arbitrage_flow.mmd
-| | | `- process_flow.mmd
-| | |- audit
-| | | `- audit_report.md
-| | |- issues
-| | | |- ISSUE-001-bybit-order-value.md
-| | | |- ISSUE-002-gateio-market-sell-fail.md
-| | | |- ISSUE-003-gateio-market-sell-debug.md
-| | | |- ISSUE-004-leg1-usdt-balance-debug.md
-| | | |- ISSUE-005-leg2-logic-flaw.md
-| | | |- leg2_orderbook_issue_status.md
-| | | `- quantity_flow_analysis.md
-| | |- proposals
-| | | |- archive
-| | | | |- PROPOSAL-2025-0039.md
-| | | | |- PROPOSAL-2025-0040.md
-| | | | `- PROPOSAL-2025-0041.md
-| | | |- PROPOSAL-2025-0008.md
-| | | |- PROPOSAL-2025-0009.md
-| | | |- PROPOSAL-2025-0010.md
-| | | |- PROPOSAL-2025-0011.md
-| | | |- PROPOSAL-2025-0012.md
-| | | |- PROPOSAL-2025-0013.md
-| | | |- PROPOSAL-2025-0014.md
-| | | |- PROPOSAL-2025-0015.md
-| | | |- PROPOSAL-2025-0016.md
-| | | |- PROPOSAL-2025-0017.md
-| | | |- PROPOSAL-2025-0018.md
-| | | |- PROPOSAL-2025-0019.md
-| | | |- PROPOSAL-2025-0020.md
-| | | |- PROPOSAL-2025-0021.md
-| | | |- PROPOSAL-2025-0022.md
-| | | |- PROPOSAL-2025-0023.md
-| | | |- PROPOSAL-2025-0024.md
-| | | |- PROPOSAL-2025-0026.md
-| | | |- PROPOSAL-2025-0027.md
-| | | |- PROPOSAL-2025-0028.md
-| | | |- PROPOSAL-2025-0029.md
-| | | |- PROPOSAL-2025-0030.md
-| | | |- PROPOSAL-2025-0031.md
-| | | |- PROPOSAL-2025-0032.md
-| | | |- PROPOSAL-2025-0036.md
-| | | |- PROPOSAL-2025-0037.md
-| | | |- PROPOSAL-2025-0038.md
-| | | |- PROPOSAL-2025-0042.md
-| | | |- PROPOSAL-2025-0043.md
-| | | |- PROPOSAL-2025-0044.md
-| | | |- PROPOSAL-2025-0045.md
-| | | |- PROPOSAL-2025-0046.md
-| | | |- PROPOSAL-2025-0047.md
-| | | |- PROPOSAL-2025-0048.md
-| | | |- PROPOSAL-2025-0049.md
-| | | |- PROPOSAL-2025-0050.md
-| | | |- PROPOSAL-2025-0051-revised.md
-| | | |- PROPOSAL-2025-0051.md
-| | | |- PROPOSAL-2025-0052.md
-| | | |- PROPOSAL-2025-0053.md
-| | | |- PROPOSAL-2025-0054.md
-| | | |- PROPOSAL-2025-0055.md
-| | | |- PROPOSAL-2025-0056.md
-| | | |- PROPOSAL-2025-0057.md
-| | | |- PROPOSAL-2025-0058-FixWebSocketServerStart.md
-| | | |- PROPOSAL-2025-0059-FixLongRunningTasks.md
-| | | |- PROPOSAL-2025-0060-ImplementOrPartitioningLogic.md
-| | | |- PROPOSAL-2025-0061-FixMemoryLeakInDataCollector.md
-| | | |- PROPOSAL-2025-0062-ReplaceParquetWithCsvForLowMemory.md
-| | | |- PROPOSAL-2025-0063-FixChartLookaheadBias-final.md
-| | | |- PROPOSAL-2025-0063-FixChartLookaheadBias-revised.md
-| | | |- PROPOSAL-2025-0063-FixChartLookaheadBias.md
-| | | |- PROPOSAL-2025-0095-FixUnboundedChannels.md
-| | | |- PROPOSAL-2025-0096-ReduceRollingWindowSize.md
-| | | |- PROPOSAL-2025-0097-FixEventHandlersLeak.md
-| | | |- PROPOSAL-2025-0099-update_context.md
-| | | `- PROPOSAL-2025-0100-SpecializeTraderRole.md
-| | |- sprints
-| | | |- sprint5_spread_trading_plan.md
-| | | `- sprint6_oom_hotfix_plan.md
-| | |- backlog.md
-| | |- roadmap.md
-| | `- role_definition.md
-| |- src
-| | |- Core
-| | | |- Configuration
-| | | | `- TradingSettings.cs
-| | | |- ArbitrageCycleState.cs
-| | | |- ArbitrageTrader.cs
-| | | |- ConvergentTrader.cs
-| | | |- FileLogger.cs
-| | | |- IExchange.cs
-| | | |- ITrader.cs
-| | | |- NewOrderType.cs
-| | | |- OrderSide.cs
-| | | |- SpreadData.cs
-| | | |- SpreadListener.cs
-| | | |- TraderBot.Core.csproj
-| | | |- TrailingTrader.cs
-| | | `- msbuild.log
-| | |- Exchanges
-| | | |- Bybit
-| | | | |- Adapters.cs
-| | | | |- BybitExchange.cs
-| | | | |- BybitLowLatencyWs.cs
-| | | | |- BybitTrailingTrader.cs
-| | | | `- TraderBot.Exchanges.Bybit.csproj
-| | | `- GateIo
-| | |   |- Adapters.cs
-| | |   |- GateIoExchange.cs
-| | |   `- TraderBot.Exchanges.GateIo.csproj
-| | `- Host
-| |   |- trader
-| |   |- ExchangeConfig.cs
-| |   |- Program.cs
-| |   |- TraderBot.Host.csproj
-| |   `- appsettings.json
-| |- tests
-| | `- TestResults
-| |   |- Deploy_Georgiy 2025-11-17 18_39_25
-| |   | `- In
-| |   |   `- DESKTOP-E9IC9QV
-| |   |- Deploy_Georgiy 20251117T204200
-| |   | |- In
-| |   | | `- DESKTOP-E9IC9QV
-| |   | `- Out
-| |   |- Deploy_Georgiy 20251117T210439
-| |   | |- In
-| |   | | `- DESKTOP-E9IC9QV
-| |   | `- Out
-| |   `- Deploy_Georgiy 20251117T222712
-| |     |- In
-| |     | `- DESKTOP-E9IC9QV
-| |     `- Out
-| |- BYBIT_MARKET_SELL_FIX.md
-| |- TEST_BYBIT.md
-| `- TraderBot.sln
-|- DEVELOPMENT_CYCLE.md
+| | |- BUILD_ISSUES.md
+| | `- MSB3552_RESOLUTION.md
+| |- GEMINI_DEV.md
+| `- project_structure.txt
 |- GEMINI.md
 |- dotnet-install.sh
 |- gemini_exclude.txt

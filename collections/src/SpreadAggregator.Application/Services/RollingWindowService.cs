@@ -25,7 +25,6 @@ public class RollingWindowService : IDisposable
     private readonly TimeSpan _windowSize = TimeSpan.FromMinutes(30); // Rolling window: 30 minutes (Screener mode)
     private readonly LruCache<string, RollingWindowData> _windows;
     private readonly Timer _cleanupTimer;
-    private readonly Abstractions.IBidBidLogger? _bidBidLogger;
     private readonly ILogger<RollingWindowService> _logger;
     private bool _disposed;
 
@@ -48,12 +47,10 @@ public class RollingWindowService : IDisposable
 
     public RollingWindowService(
         Channel<MarketData> channel,
-        Abstractions.IBidBidLogger? bidBidLogger = null,
         ILogger<RollingWindowService>? logger = null,
         PerformanceMonitor? perfMonitor = null)
     {
         _channelReader = channel.Reader;
-        _bidBidLogger = bidBidLogger;
         _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<RollingWindowService>.Instance;
 
         _windows = new LruCache<string, RollingWindowData>(MAX_WINDOWS);
@@ -432,7 +429,7 @@ public class RollingWindowService : IDisposable
     public List<TradeData> GetTrades(string symbol, string exchange = "MEXC")
     {
         var windowKey = $"{exchange}_{symbol}";
-        if (_windows.TryGetValue(windowKey, out var window))
+        if (_windows.TryGetValue(windowKey, out var window) && window != null)
         {
             lock (window.Trades)
             {

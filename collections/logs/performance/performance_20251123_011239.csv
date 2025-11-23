@@ -1,0 +1,3 @@
+Timestamp,Elapsed_sec,CPU%,Memory_MB,Events/sec,Freeze_ms,Activity,CpuSpikes,MemLeaks,EventStorms
+01:12:40,1.4,15.5,78,0,248,Startup,0,0,0
+01:12:41,2.2,14.1,82,0,0,Startup,0,0,0

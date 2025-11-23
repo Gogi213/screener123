@@ -8,6 +8,7 @@ using SpreadAggregator.Domain.Entities;
 using SpreadAggregator.Domain.Services;
 using SpreadAggregator.Infrastructure.Services;
 using SpreadAggregator.Infrastructure.Services.Exchanges;
+using SpreadAggregator.Infrastructure.Services.Charts;
 using System;
 using System.Text.Json;
 using System.Threading.Channels;
@@ -17,6 +18,8 @@ using BingX.Net.Clients;
 using Bybit.Net.Interfaces.Clients;
 using Bybit.Net.Clients;
 using SpreadAggregator.Application.Diagnostics;
+using Serilog;
+using Serilog.Formatting.Json;
 
 namespace SpreadAggregator.Presentation;
 
@@ -44,15 +47,27 @@ class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Configure logging
-        builder.Logging.AddFilter("System.Net.Http.HttpClient", LogLevel.Warning);
-        builder.Logging.AddFilter("BingX", LogLevel.Warning);
-        builder.Logging.AddFilter("Bybit", LogLevel.Debug);
+        // Configure Serilog
+        builder.Host.UseSerilog((context, services, configuration) => configuration
+            .ReadFrom.Configuration(context.Configuration)
+            .ReadFrom.Services(services)
+            .Enrich.FromLogContext()
+            .WriteTo.Console()
+            .WriteTo.File(
+                path: "logs/app.log",
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 30)
+            .WriteTo.File(
+                path: "logs/app.jsonl",
+                formatter: new JsonFormatter(),
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 30)
+        );
 
         // Configure application services
         
         // PERFORMANCE MONITOR: Initialize before anything else
-        var perfMonitor = new PerformanceMonitor(@"C:\visual projects\arb1\collections\logs\performance");
+        var perfMonitor = new PerformanceMonitor(@"/home/giorgioisitalii/screener123/collections/logs/performance");
         builder.Services.AddSingleton(perfMonitor);
 
         ConfigureServices(builder.Services, builder.Configuration);
@@ -130,17 +145,16 @@ class Program
         services.AddSingleton<IDataWriter>(sp => new NullDataWriter());
 
         // BidAsk Logger (Null implementation for Screener Mode)
-        services.AddSingleton<IBidAskLogger>(sp => new NullBidAskLogger());
+
 
         // BidBid Logger removed for Screener Mode
 
         services.AddSingleton<RollingWindowService>(sp =>
         {
             var rollingChannel = sp.GetRequiredService<RollingWindowChannel>().Channel;
-            var bidBidLogger = sp.GetService<IBidBidLogger>(); // Optional
             var logger = sp.GetRequiredService<ILogger<RollingWindowService>>();
             var perfMonitor = sp.GetRequiredService<PerformanceMonitor>();
-            return new RollingWindowService(rollingChannel, bidBidLogger, logger, perfMonitor);
+            return new RollingWindowService(rollingChannel, logger, perfMonitor);
         });
 
         // Task 0.5: Register ExchangeHealthMonitor
@@ -168,7 +182,6 @@ class Program
                 rawChannel,
                 rollingChannel,
                 sp.GetRequiredService<IDataWriter>(),
-                sp.GetRequiredService<IBidAskLogger>(),
                 sp.GetRequiredService<IExchangeHealthMonitor>(),
                 sp.GetRequiredService<TradeScreenerChannel>().Channel
             );
@@ -182,10 +195,25 @@ class Program
             return new TradeScreenerService(channelReader, config, logger);
         });
 
-        // Chart API Services removed (legacy arbitrage HFT code)
+
+
+        // Chart API Services
+        services.AddSingleton<OpportunityFilterService>(sp =>
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            var logger = sp.GetRequiredService<ILogger<OpportunityFilterService>>();
+            var statsPath = config["Analyzer:StatsPath"] 
+                ?? throw new InvalidOperationException("Analyzer:StatsPath not configured");
+            return new OpportunityFilterService(statsPath, logger);
+        });
 
         services.AddHostedService<OrchestrationServiceHost>();
-        services.AddHostedService<DataCollectorService>();
+        
+        if (configuration.GetValue<bool>("Recording:Enabled", false))
+        {
+            services.AddHostedService<DataCollectorService>();
+        }
+        
         services.AddHostedService<RollingWindowServiceHost>();
         services.AddHostedService<TradeScreenerService>();
     }
@@ -294,7 +322,4 @@ public class NullDataWriter : IDataWriter
     public Task FlushAsync() => Task.CompletedTask;
 }
 
-public class NullBidAskLogger : IBidAskLogger
-{
-    public Task LogAsync(SpreadData spreadData, DateTime localTimestamp) => Task.CompletedTask;
-}
+

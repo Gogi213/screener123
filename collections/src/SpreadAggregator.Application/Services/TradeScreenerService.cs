@@ -16,7 +16,6 @@ public class TradeScreenerService : BackgroundService
     private readonly ChannelReader<MarketData> _channelReader;
     private readonly ILogger<TradeScreenerService> _logger;
     private readonly decimal _minTradeValueUsd;
-    private readonly string _logFilePath;
 
     public TradeScreenerService(
         ChannelReader<MarketData> channelReader,
@@ -26,8 +25,6 @@ public class TradeScreenerService : BackgroundService
         _channelReader = channelReader;
         _logger = logger;
         _minTradeValueUsd = configuration.GetValue<decimal>("ScreenerSettings:MinTradeValueUsd", 10000);
-        _logFilePath = configuration.GetValue<string>("ScreenerSettings:LogFilePath") 
-                       ?? Path.Combine("..", "..", "logs", "screener_trades.log");
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -36,12 +33,7 @@ public class TradeScreenerService : BackgroundService
 
         try
         {
-            // Ensure log directory exists
-            var logDir = Path.GetDirectoryName(_logFilePath);
-            if (!string.IsNullOrEmpty(logDir))
-            {
-                Directory.CreateDirectory(logDir);
-            }
+            // Serilog handles log directory creation automatically
 
             await foreach (var data in _channelReader.ReadAllAsync(stoppingToken))
             {
@@ -65,21 +57,19 @@ public class TradeScreenerService : BackgroundService
         }
     }
 
-    private async Task LogWhaleTradeAsync(TradeData trade, decimal value)
+    private Task LogWhaleTradeAsync(TradeData trade, decimal value)
     {
-        var message = $"{trade.Timestamp:yyyy-MM-dd HH:mm:ss.fff} | {trade.Exchange} | {trade.Symbol} | {trade.Side} | Price: {trade.Price} | Qty: {trade.Quantity} | Value: ${value:N2}";
-        
-        // Log to console/logger
-        _logger.LogInformation($"[WHALE] {message}");
+        // Structured logging for Serilog (JSON support)
+        _logger.LogInformation(
+            "[WHALE] {Timestamp:yyyy-MM-dd HH:mm:ss.fff} | {Exchange} | {Symbol} | {Side} | Price: {Price} | Qty: {Quantity} | Value: ${Value:N2}",
+            trade.Timestamp,
+            trade.Exchange,
+            trade.Symbol,
+            trade.Side,
+            trade.Price,
+            trade.Quantity,
+            value);
 
-        // Log to file
-        try
-        {
-            await File.AppendAllTextAsync(_logFilePath, message + Environment.NewLine);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError($"[TradeScreener] Failed to write to log file: {ex.Message}");
-        }
+        return Task.CompletedTask;
     }
 }

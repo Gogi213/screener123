@@ -30,7 +30,7 @@ public class TradeController : ControllerBase
     {
         var windows = _rollingWindow.GetAllWindows();
         var symbols = windows
-            .Where(w => w.Trades.Count > 0)
+            .Where(w => w.Trades.Count > 0 && w.Exchange == "MEXC") // Filter only MEXC
             .Select(w => new { w.Symbol, w.Exchange, TradeCount = w.Trades.Count })
             .OrderByDescending(x => x.TradeCount)
             .ToList();

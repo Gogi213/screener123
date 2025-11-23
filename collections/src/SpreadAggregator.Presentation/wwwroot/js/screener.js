@@ -48,7 +48,7 @@ function createCard(symbol, initialCount) {
     div.innerHTML = `
         <div class="card-header">
             <span class="symbol-name">${symbol}</span>
-            <span class="trade-stats" id="stats-${symbol}" title="Trades in last 30 minutes">${initialCount} trades (30m)</span>
+            <span class="trade-stats" id="stats-${symbol}" title="Trades per minute">0/1m</span>
         </div>
         <div class="chart-wrapper">
             <canvas id="canvas-${symbol}"></canvas>
@@ -192,7 +192,7 @@ function connectWebSocket(symbol, chart) {
             chart.update();
 
             // Update stats immediately
-            updateCardStats(symbol, buys.length + sells.length);
+            updateCardStats(symbol, chart);
         }
         else if (msg.type === 'update') {
             const t = msg.trade;
@@ -216,9 +216,8 @@ function connectWebSocket(symbol, chart) {
 
             chart.update('none');
 
-            // Update stats dynamic
-            const totalPoints = chart.data.datasets[0].data.length + chart.data.datasets[1].data.length;
-            updateCardStats(symbol, totalPoints);
+            // Update stats dynamic (last 1 minute)
+            updateCardStats(symbol, chart);
         }
     };
 
@@ -227,9 +226,17 @@ function connectWebSocket(symbol, chart) {
     };
 }
 
-function updateCardStats(symbol, count) {
+function updateCardStats(symbol, chart) {
     const el = document.getElementById(`stats-${symbol}`);
-    if (el) el.textContent = `${count} trades (30m)`;
+    if (!el) return;
+
+    // Count trades in last 1 minute (sliding window)
+    const oneMinuteAgo = Date.now() - 60 * 1000;
+    const buyCount = chart.data.datasets[0].data.filter(p => p.x >= oneMinuteAgo).length;
+    const sellCount = chart.data.datasets[1].data.filter(p => p.x >= oneMinuteAgo).length;
+    const totalCount = buyCount + sellCount;
+
+    el.textContent = `${totalCount}/1m`;
 }
 
 // Start
