@@ -178,10 +178,11 @@ class MexcTradesViewer {
 
             const containerWidth = container.clientWidth || 300;
 
+
             // Initialize lightweight chart with actual container width
             const chart = LightweightCharts.createChart(container, {
                 width: containerWidth,
-                height: 180,
+                height: 280,
                 layout: {
                     background: { color: '#0a0e27' },
                     textColor: '#6b7a99',
@@ -192,15 +193,19 @@ class MexcTradesViewer {
                 },
                 timeScale: {
                     timeVisible: true,
-                    secondsVisible: false,
+                    secondsVisible: true,
                     borderColor: '#2a3150',
                 },
                 rightPriceScale: {
                     borderColor: '#2a3150',
+                    scaleMargins: {
+                        top: 0.1,
+                        bottom: 0.1,
+                    },
                 },
             });
 
-            const series = chart.addLineSeries({
+            const series = chart.addSeries(LightweightCharts.LineSeries, {
                 color: '#00d4aa',
                 lineWidth: 2,
             });

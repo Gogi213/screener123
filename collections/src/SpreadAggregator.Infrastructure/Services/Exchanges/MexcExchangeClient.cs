@@ -77,28 +77,7 @@ public class MexcExchangeClient : ExchangeClientBase<MexcRestClient, MexcSocketC
             return _spotApi.UnsubscribeAllAsync();
         }
 
-        public async Task<object> SubscribeToTickerUpdatesAsync(
-            IEnumerable<string> symbols,
-            Func<SpreadData, Task> onData)
-        {
-            var result = await _spotApi.SubscribeToBookTickerUpdatesAsync(
-                symbols,
-                async data =>
-                {
-                    if (data.Data != null && data.Symbol != null)
-                    {
-                        await onData(new SpreadData
-                        {
-                            Exchange = "MEXC",
-                            Symbol = data.Symbol,
-                            BestBid = data.Data.BestBidPrice,
-                            BestAsk = data.Data.BestAskPrice
-                        });
-                    }
-                });
 
-            return result;
-        }
 
         public async Task<object> SubscribeToTradeUpdatesAsync(
             IEnumerable<string> symbols,

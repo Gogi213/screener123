@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEXC Trades Viewer</title>
+    <title>MEXC Trade Screener</title>
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <style>
         * {
@@ -13,73 +14,92 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #0a0e27;
             color: #e0e6ed;
-            padding: 20px;
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 30px;
+        /* Компактный хедер */
+        .header {
+            background: rgba(15, 20, 40, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 8px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
-        h1 {
-            font-size: 2rem;
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .title {
+            font-size: 16px;
             font-weight: 600;
             color: #00d4aa;
-            margin-bottom: 10px;
         }
 
         .stats {
             display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+            gap: 16px;
+            font-size: 11px;
         }
 
-        .stat-item {
-            background: #151932;
-            padding: 15px 25px;
-            border-radius: 8px;
-            border: 1px solid #1f2541;
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .stat-label {
             color: #6b7a99;
-            font-size: 0.85rem;
-            margin-bottom: 5px;
+            font-size: 9px;
+            text-transform: uppercase;
         }
 
         .stat-value {
-            font-size: 1.5rem;
+            font-size: 13px;
             font-weight: 600;
             color: #00d4aa;
         }
 
+        .status {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            background: rgba(0, 212, 170, 0.1);
+            color: #00d4aa;
+            border: 1px solid rgba(0, 212, 170, 0.2);
+        }
+
+        /* Компактная пагинация */
         .pagination {
             display: flex;
-            justify-content: center;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 30px;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px 16px;
+            background: rgba(15, 20, 40, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
         }
 
         .pagination button {
-            padding: 10px 20px;
-            background: #1f2541;
-            border: 1px solid #2a3150;
-            color: #e0e6ed;
-            border-radius: 6px;
+            padding: 4px 10px;
+            background: rgba(0, 212, 170, 0.1);
+            border: 1px solid rgba(0, 212, 170, 0.2);
+            color: #00d4aa;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s;
+            font-size: 10px;
+            transition: all 0.15s;
         }
 
         .pagination button:hover:not(:disabled) {
-            background: #2a3150;
-            border-color: #00d4aa;
+            background: rgba(0, 212, 170, 0.2);
         }
 
         .pagination button:disabled {
@@ -87,65 +107,63 @@
             cursor: not-allowed;
         }
 
-        .pagination .page-info {
-            padding: 10px 20px;
-            background: #151932;
-            border-radius: 6px;
-            font-weight: 500;
+        .page-info {
+            font-size: 10px;
+            color: #6b7a99;
+            padding: 0 8px;
+        }
+
+        /* Компактная сетка */
+        .charts-container {
+            padding: 8px;
         }
 
         .charts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 10px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 6px;
         }
 
         .chart-card {
-            background: #151932;
-            border: 1px solid #1f2541;
-            border-radius: 8px;
-            padding: 8px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            background: rgba(15, 20, 40, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 4px;
+            overflow: hidden;
+            transition: all 0.15s;
         }
 
         .chart-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0, 212, 170, 0.1);
-            border-color: #00d4aa;
+            border-color: rgba(0, 212, 170, 0.3);
+            transform: translateY(-1px);
         }
 
         .chart-header {
+            padding: 4px 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 5px;
         }
 
         .symbol-name {
-            font-size: 0.95rem;
+            font-size: 12px;
             font-weight: 600;
-            color: #00d4aa;
-        }
-
-        .tick-size {
-            font-size: 0.7rem;
-            color: #6b7a99;
-            background: #0a0e27;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-
-        .price-display {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 5px;
             color: #e0e6ed;
         }
 
-        .chart-container {
-            height: 180px;
-            position: relative;
+        .tick-size {
+            font-size: 9px;
+            color: #6b7a99;
+        }
+
+        .price-display {
+            padding: 2px 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #00d4aa;
+            background: rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
         }
 
         .loading {
@@ -153,88 +171,71 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 1.5rem;
-            color: #00d4aa;
-        }
-
-        .connection-status {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
+            padding: 12px 20px;
+            background: rgba(0, 212, 170, 0.1);
+            border: 1px solid rgba(0, 212, 170, 0.3);
             border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-
-        .status-connected {
-            background: rgba(0, 212, 170, 0.2);
-            border: 1px solid #00d4aa;
             color: #00d4aa;
-        }
-
-        .status-disconnected {
-            background: rgba(255, 90, 90, 0.2);
-            border: 1px solid #ff5a5a;
-            color: #ff5a5a;
-        }
-
-        @media (max-width: 768px) {
-            .charts-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .pagination {
-                flex-wrap: wrap;
-            }
+            font-size: 12px;
         }
     </style>
 </head>
+
 <body>
-    <div id="connection-status" class="connection-status status-disconnected">Disconnected</div>
-
-    <header>
-        <h1>MEXC Trades Viewer</h1>
-        <div class="stats">
-            <div class="stat-item">
-                <div class="stat-label">Total Symbols</div>
-                <div class="stat-value" id="total-symbols">0</div>
+    <!-- Компактный хедер -->
+    <div class="header">
+        <div class="header-content">
+            <div class="title">MEXC Trade Screener</div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-label">Symbols</div>
+                    <div class="stat-value" id="total-symbols">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Page</div>
+                    <div class="stat-value" id="current-page-stat">1</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Charts</div>
+                    <div class="stat-value" id="active-charts">0</div>
+                </div>
             </div>
-            <div class="stat-item">
-                <div class="stat-label">Current Page</div>
-                <div class="stat-value" id="current-page-stat">1</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">Active Charts</div>
-                <div class="stat-value" id="active-charts">0</div>
-            </div>
+            <div class="status" id="connection-status">Connecting...</div>
         </div>
-    </header>
-
-    <div class="pagination" id="pagination-top">
-        <button id="btn-first">First</button>
-        <button id="btn-prev">< Prev</button>
-        <div class="page-info">
-            Page <span id="current-page">1</span> of <span id="total-pages">1</span>
-        </div>
-        <button id="btn-next">Next ></button>
-        <button id="btn-last">Last</button>
     </div>
 
-    <div class="charts-grid" id="charts-grid"></div>
+    <!-- Компактная пагинация -->
+    <div class="pagination">
+        <button id="btn-first">First</button>
+        <button id="btn-prev">
+            < Prev</button>
+                <div class="page-info">
+                    Page <span id="current-page">1</span> of <span id="total-pages">1</span>
+                </div>
+                <button id="btn-next">Next ></button>
+                <button id="btn-last">Last</button>
+    </div>
 
-    <div class="pagination" id="pagination-bottom">
+    <!-- Сетка графиков -->
+    <div class="charts-container">
+        <div class="charts-grid" id="charts-grid"></div>
+    </div>
+
+    <!-- Нижняя пагинация -->
+    <div class="pagination">
         <button id="btn-first-bottom">First</button>
-        <button id="btn-prev-bottom">< Prev</button>
-        <div class="page-info">
-            Page <span id="current-page-bottom">1</span> of <span id="total-pages-bottom">1</span>
-        </div>
-        <button id="btn-next-bottom">Next ></button>
-        <button id="btn-last-bottom">Last</button>
+        <button id="btn-prev-bottom">
+            < Prev</button>
+                <div class="page-info">
+                    Page <span id="current-page-bottom">1</span> of <span id="total-pages-bottom">1</span>
+                </div>
+                <button id="btn-next-bottom">Next ></button>
+                <button id="btn-last-bottom">Last</button>
     </div>
 
     <div id="loading" class="loading" style="display: none;">Loading...</div>
 
-    <script src="js/mexc-viewer.js"></script>
+    <script src="js/mexc-viewer.js?v=6"></script>
 </body>
+
 </html>

@@ -1,8 +1,2 @@
-namespace SpreadAggregator.Domain.Entities
-{
-    public class WebSocketMessage
-    {
-        public required string MessageType { get; init; }
-        public required object Payload { get; init; }
-    }
-}
+// File moved to archive/legacy-hft
+// This file is no longer used in the active codebase.

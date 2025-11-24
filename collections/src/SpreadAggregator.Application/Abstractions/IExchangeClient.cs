@@ -27,13 +27,6 @@ public interface IExchangeClient
     Task<IEnumerable<TickerData>> GetTickersAsync();
 
     /// <summary>
-    /// Subscribes to ticker (book ticker) updates for a list of symbols.
-    /// </summary>
-    /// <param name="symbols">The symbols to subscribe to.</param>
-    /// <param name="onData">The action to perform when new ticker data arrives.</param>
-    Task SubscribeToTickersAsync(IEnumerable<string> symbols, Func<SpreadData, Task> onData);
-
-    /// <summary>
     /// Subscribes to trade updates for a list of symbols.
     /// </summary>
     /// <param name="symbols">The symbols to subscribe to.</param>

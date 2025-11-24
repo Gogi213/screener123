@@ -23,7 +23,6 @@ public abstract class ExchangeClientBase<TRestClient, TSocketClient> : IExchange
 {
     // Common fields for all exchanges
     private readonly List<ManagedConnection> _connections = new();
-    private Func<SpreadData, Task>? _onTickerData;
     private Func<TradeData, Task>? _onTradeData;
 
     private TRestClient? _restClientCache;
@@ -45,14 +44,20 @@ public abstract class ExchangeClientBase<TRestClient, TSocketClient> : IExchange
     public abstract Task<IEnumerable<TickerData>> GetTickersAsync();
 
     /// <summary>
-    /// Subscribe to ticker (book ticker) updates for a list of symbols.
-    /// This method implements the common chunking and connection management logic.
+    /// Subscribe to trade updates for a list of symbols.
+    /// Re-initializes connections to include trade stream.
     /// </summary>
-    public async Task SubscribeToTickersAsync(IEnumerable<string> symbols, Func<SpreadData, Task> onData)
+    public virtual async Task SubscribeToTradesAsync(IEnumerable<string> symbols, Func<TradeData, Task> onData)
     {
-        WebSocketLogger.Log($"[{ExchangeName}] SubscribeToTickersAsync called with {symbols.Count()} symbols");
+        if (!SupportsTradesStream)
+        {
+            WebSocketLogger.Log($"[{ExchangeName}] Trades stream not implemented yet.");
+            return;
+        }
 
-        _onTickerData = onData;
+        WebSocketLogger.Log($"[{ExchangeName}] SubscribeToTradesAsync called with {symbols.Count()} symbols");
+
+        _onTradeData = onData;
 
         // Clean up existing connections
         foreach (var connection in _connections)
@@ -73,7 +78,6 @@ public abstract class ExchangeClientBase<TRestClient, TSocketClient> : IExchange
                 var connection = new ManagedConnection(
                     this,
                     chunk,
-                    _onTickerData,
                     _onTradeData);
                 _connections.Add(connection);
             }
@@ -85,62 +89,6 @@ public abstract class ExchangeClientBase<TRestClient, TSocketClient> : IExchange
         await Task.WhenAll(_connections.Select(c => c.StartAsync()));
 
         WebSocketLogger.Log($"[{ExchangeName}] All connections started");
-    }
-
-    /// <summary>
-    /// Subscribe to trade updates for a list of symbols.
-    /// Default implementation returns completed task (not all exchanges support this yet).
-    /// </summary>
-    /// <summary>
-    /// Subscribe to trade updates for a list of symbols.
-    /// Re-initializes connections to include trade stream.
-    /// </summary>
-    public virtual async Task SubscribeToTradesAsync(IEnumerable<string> symbols, Func<TradeData, Task> onData)
-    {
-        if (!SupportsTradesStream)
-        {
-            WebSocketLogger.Log($"[{ExchangeName}] Trades stream not implemented yet.");
-            return;
-        }
-
-        WebSocketLogger.Log($"[{ExchangeName}] SubscribeToTradesAsync called with {symbols.Count()} symbols");
-
-        _onTradeData = onData;
-
-        // Re-initialize connections to include trade callbacks
-        // This might cause a brief reconnection if tickers were already subscribed
-        
-        // Clean up existing connections
-        foreach (var connection in _connections)
-        {
-            await connection.StopAsync();
-        }
-        _connections.Clear();
-
-        // Split symbols into chunks based on exchange limits
-        var symbolsList = symbols.ToList();
-        WebSocketLogger.Log($"[{ExchangeName}] Creating {(symbolsList.Count + ChunkSize - 1) / ChunkSize} connection chunks (re-init for trades)");
-
-        for (int i = 0; i < symbolsList.Count; i += ChunkSize)
-        {
-            var chunk = symbolsList.Skip(i).Take(ChunkSize).ToList();
-            if (chunk.Any())
-            {
-                var connection = new ManagedConnection(
-                    this,
-                    chunk,
-                    _onTickerData, // Preserve existing ticker callback
-                    _onTradeData); // Add new trade callback
-                _connections.Add(connection);
-            }
-        }
-
-        WebSocketLogger.Log($"[{ExchangeName}] Starting {_connections.Count} connections (trades included)...");
-
-        // Start all connections
-        await Task.WhenAll(_connections.Select(c => c.StartAsync()));
-
-        WebSocketLogger.Log($"[{ExchangeName}] All connections started (with trades)");
     }
 
     /// <summary>
@@ -168,7 +116,6 @@ public abstract class ExchangeClientBase<TRestClient, TSocketClient> : IExchange
     {
         private readonly ExchangeClientBase<TRestClient, TSocketClient> _parent;
         private readonly List<string> _symbols;
-        private readonly Func<SpreadData, Task>? _onTickerData;
         private readonly Func<TradeData, Task>? _onTradeData;
         private readonly TSocketClient _socketClient;
         private readonly SemaphoreSlim _resubscribeLock = new(1, 1);
@@ -180,12 +127,10 @@ public abstract class ExchangeClientBase<TRestClient, TSocketClient> : IExchange
         public ManagedConnection(
             ExchangeClientBase<TRestClient, TSocketClient> parent,
             List<string> symbols,
-            Func<SpreadData, Task>? onTickerData,
             Func<TradeData, Task>? onTradeData)
         {
             _parent = parent;
             _symbols = symbols;
-            _onTickerData = onTickerData;
             _onTradeData = onTradeData;
             _socketClient = parent.CreateSocketClient();
         }
@@ -246,31 +191,6 @@ public abstract class ExchangeClientBase<TRestClient, TSocketClient> : IExchange
 
             var api = _parent.CreateSocketApi(_socketClient);
             await api.UnsubscribeAllAsync();
-
-            // Subscribe to tickers if callback provided
-            if (_onTickerData != null)
-            {
-                dynamic? result;
-
-                // Handle exchanges that don't support multiple symbols (e.g., BingX)
-                if (_parent.SupportsMultipleSymbols)
-                {
-                    result = await api.SubscribeToTickerUpdatesAsync(_symbols, _onTickerData);
-                    HandleSubscriptionResult(result, "ticker");
-                }
-                else
-                {
-                    // Subscribe one by one
-                    foreach (var symbol in _symbols)
-                    {
-                        result = await api.SubscribeToTickerUpdatesAsync(new[] { symbol }, _onTickerData);
-                        if (_symbols.IndexOf(symbol) == 0)
-                        {
-                            HandleSubscriptionResult(result, "ticker");
-                        }
-                    }
-                }
-            }
 
             // Subscribe to trades if callback provided and supported
             if (_onTradeData != null && _parent.SupportsTradesStream)

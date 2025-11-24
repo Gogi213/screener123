@@ -20,15 +20,7 @@ public interface IExchangeSocketApi
     /// </summary>
     Task UnsubscribeAllAsync();
 
-    /// <summary>
-    /// Subscribe to ticker (book ticker) updates for multiple symbols.
-    /// </summary>
-    /// <param name="symbols">The symbols to subscribe to.</param>
-    /// <param name="onData">Callback when ticker data arrives.</param>
-    /// <returns>CallResult with subscription if successful.</returns>
-    Task<object> SubscribeToTickerUpdatesAsync(
-        IEnumerable<string> symbols,
-        Func<SpreadData, Task> onData);
+
 
     /// <summary>
     /// Subscribe to trade updates for multiple symbols.

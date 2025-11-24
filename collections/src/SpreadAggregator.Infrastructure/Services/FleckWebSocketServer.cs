@@ -20,7 +20,6 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
     // PHASE-1-FIX-2: ReaderWriterLockSlim for concurrent broadcast reads, exclusive Add/Remove writes
     private readonly ReaderWriterLockSlim _rwLock = new(LockRecursionPolicy.NoRecursion);
     
-    private readonly Func<OrchestrationService> _orchestrationServiceFactory;
     private readonly System.Threading.Timer _cleanupTimer;
 
     // MEXC TRADES VIEWER: Track client subscriptions (ConnectionId → PageNumber)
@@ -29,11 +28,10 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
     // MEXC TRADES VIEWER: TradeAggregatorService instance (injected after construction)
     private TradeAggregatorService? _tradeAggregatorService;
 
-    public FleckWebSocketServer(string location, Func<OrchestrationService> orchestrationServiceFactory)
+    public FleckWebSocketServer(string location)
     {
         _server = new WebSocketServer(location);
         _allSockets = new List<IWebSocketConnection>();
-        _orchestrationServiceFactory = orchestrationServiceFactory;
 
         // PROPOSAL-2025-0095: Dead connection cleanup every 5 minutes
         _cleanupTimer = new System.Threading.Timer(CleanupDeadConnections, null,

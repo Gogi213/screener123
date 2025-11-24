@@ -6,27 +6,19 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using System.IO;
 
 namespace SpreadAggregator.Application.Services;
 
 public class OrchestrationService
 {
     private readonly IWebSocketServer _webSocketServer;
-    private readonly SpreadCalculator _spreadCalculator;
     private readonly VolumeFilter _volumeFilter;
     private readonly IConfiguration _configuration;
     private readonly IEnumerable<IExchangeClient> _exchangeClients;
-    private readonly Channel<MarketData> _rawDataChannel;
-    private readonly Channel<MarketData> _rollingWindowChannel;
     private readonly Channel<MarketData> _tradeScreenerChannel;
-    private readonly IDataWriter? _dataWriter;
-    private readonly IBidAskLogger? _bidAskLogger;
-    private readonly IExchangeHealthMonitor? _healthMonitor; // Task 0.5
 
     // PROPOSAL-2025-0095: Track symbols and tasks for cleanup
     private readonly List<SymbolInfo> _allSymbolInfo = new();
@@ -34,23 +26,6 @@ public class OrchestrationService
     private readonly object _symbolLock = new();
     private readonly object _taskLock = new();
     private CancellationTokenSource? _cancellationTokenSource;
-
-    // PHASE-2-FIX-7: Symbol normalization cache (HOT PATH optimization)
-    private readonly ConcurrentDictionary<string, string> _normalizedSymbolCache = new();
-
-    public IEnumerable<SymbolInfo> AllSymbolInfo
-    {
-        get
-        {
-            lock (_symbolLock)
-            {
-                return _allSymbolInfo.ToList(); // Return snapshot
-            }
-        }
-    }
-
-    public ChannelReader<MarketData> RawDataChannelReader => _rawDataChannel.Reader;
-    public ChannelReader<MarketData> RollingWindowChannelReader => _rollingWindowChannel.Reader;
 
     /// <summary>
     /// PROPOSAL-2025-0095: Get exchange health status for monitoring
@@ -89,28 +64,16 @@ public class OrchestrationService
 
     public OrchestrationService(
         IWebSocketServer webSocketServer,
-        SpreadCalculator spreadCalculator,
         IConfiguration configuration,
         VolumeFilter volumeFilter,
         IEnumerable<IExchangeClient> exchangeClients,
-        Channel<MarketData> rawDataChannel,
-        Channel<MarketData> rollingWindowChannel,
-        IDataWriter? dataWriter = null,
-        IBidAskLogger? bidAskLogger = null,
-        IExchangeHealthMonitor? healthMonitor = null,
-        Channel<MarketData>? tradeScreenerChannel = null)
+        Channel<MarketData> tradeScreenerChannel)
     {
         _webSocketServer = webSocketServer;
-        _spreadCalculator = spreadCalculator;
         _configuration = configuration;
         _volumeFilter = volumeFilter;
         _exchangeClients = exchangeClients;
-        _rawDataChannel = rawDataChannel;
-        _rollingWindowChannel = rollingWindowChannel;
-        _dataWriter = dataWriter;
-        _bidAskLogger = bidAskLogger;
-        _healthMonitor = healthMonitor;
-        _tradeScreenerChannel = tradeScreenerChannel ?? Channel.CreateBounded<MarketData>(new BoundedChannelOptions(1000) { FullMode = BoundedChannelFullMode.DropOldest });
+        _tradeScreenerChannel = tradeScreenerChannel;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
@@ -148,7 +111,6 @@ public class OrchestrationService
                 {
                     Console.WriteLine($"[FATAL] [{exchangeName}] Exchange failed with error: {ex.Message}");
                     Console.WriteLine($"[INFO] [{exchangeName}] Other exchanges continue running");
-                    // Exchange died, but system continues
                 }
             }, _cancellationTokenSource.Token);
 
@@ -205,107 +167,28 @@ public class OrchestrationService
         }
 
         var tasks = new List<Task>();
-        var enableTickers = _configuration.GetValue<bool>("StreamSettings:EnableTickers", true);
         var enableTrades = _configuration.GetValue<bool>("StreamSettings:EnableTrades", true);
-
-        if (enableTickers)
-        {
-            Console.WriteLine($"[{exchangeName}] Adding ticker subscription task for {filteredSymbolNames.Count} symbols...");
-            tasks.Add(exchangeClient.SubscribeToTickersAsync(filteredSymbolNames, async spreadData =>
-            {
-                // Task 0.5: Report heartbeat to health monitor
-                _healthMonitor?.ReportHeartbeat(exchangeName);
-                
-                if (spreadData.BestAsk == 0) return;
-
-                var localTimestamp = DateTime.UtcNow;
-
-                // HFT: Use server timestamp from exchange (more accurate for cross-exchange timing)
-                // Fallback to local timestamp only if exchange doesn't provide it
-                var timestamp = spreadData.ServerTimestamp ?? localTimestamp;
-
-                // PHASE-2-FIX-7: Use cached normalized symbols to avoid repeated string operations
-                var normalizedSymbol = _normalizedSymbolCache.GetOrAdd(spreadData.Symbol, symbol =>
-                {
-                    // Унифицированная нормализация: удаляем все разделители и преобразуем к формату SYMBOL_QUOTE
-                    var normalized = symbol
-                        .Replace("/", "")
-                        .Replace("-", "")
-                        .Replace("_", "")
-                        .Replace(" ", "");
-
-                    // Добавляем подчеркивание перед USDT/USDC для единообразия
-                    if (normalized.EndsWith("USDT"))
-                    {
-                        return normalized.Substring(0, normalized.Length - 4) + "_USDT";
-                    }
-                    else if (normalized.EndsWith("USDC"))
-                    {
-                        return normalized.Substring(0, normalized.Length - 4) + "_USDC";
-                    }
-
-                    return normalized;
-                });
-
-                var normalizedSpreadData = new SpreadData
-                {
-                    Exchange = spreadData.Exchange,
-                    Symbol = normalizedSymbol,
-                    BestBid = spreadData.BestBid,
-                    BestAsk = spreadData.BestAsk,
-                    SpreadPercentage = _spreadCalculator.Calculate(spreadData.BestBid, spreadData.BestAsk),
-                    MinVolume = minVolume,
-                    MaxVolume = maxVolume,
-                    Timestamp = timestamp,  // Use server timestamp for HFT accuracy
-                    ServerTimestamp = spreadData.ServerTimestamp
-                };
-
-                // Log bid/ask with both server and local timestamps (non-blocking)
-                // DISABLED: Bid/Ask logging disabled to save disk space
-                // _bidAskLogger?.LogAsync(normalizedSpreadData, localTimestamp);
-
-                // PROPOSAL-2025-0093: HFT hot path optimization
-                // HOT PATH: WebSocket broadcast FIRST (critical for <1μs latency)
-                var wrapper = new WebSocketMessage { MessageType = "Spread", Payload = normalizedSpreadData };
-                var message = JsonSerializer.Serialize(wrapper);
-                _ = _webSocketServer.BroadcastRealtimeAsync(message); // fire-and-forget
-
-                // Removed: DeviationCalculator (arbitrage logic) for Screener mode
-
-                // COLD PATH: TryWrite (synchronous, 0 allocations, ~50-100ns each)
-                // Preferred over WriteAsync for HFT - 20-100x faster, no blocking
-                if (!_rawDataChannel.Writer.TryWrite(normalizedSpreadData))
-                {
-                    // TASK 1: Removed Console.WriteLine from hot path (could spam 2500/sec)
-                    // Console.WriteLine($"[Orchestration-WARN] Raw data channel full (system overload), dropping spread data");
-                }
-
-                if (!_rollingWindowChannel.Writer.TryWrite(normalizedSpreadData))
-                {
-                    // TASK 1: Removed Console.WriteLine from hot path
-                    // Console.WriteLine($"[Orchestration-WARN] Rolling window channel full (system overload), dropping spread data");
-                }
-            }));
-        }
 
         if (enableTrades)
         {
             Console.WriteLine($"[{exchangeName}] Adding trade subscription task...");
-            tasks.Add(exchangeClient.SubscribeToTradesAsync(filteredSymbolNames, async tradeData =>
+            tasks.Add(exchangeClient.SubscribeToTradesAsync(filteredSymbolNames, tradeData =>
             {
                 // MEXC TRADES VIEWER: Write trades to TradeScreenerChannel for TradeAggregatorService
                 if (!_tradeScreenerChannel.Writer.TryWrite(tradeData))
                 {
                    // Console.WriteLine($"[Orchestration-WARN] Trade screener channel full (system overload), dropping trade data");
                 }
+                return Task.CompletedTask;
             }));
         }
 
-        Console.WriteLine($"[{exchangeName}] Awaiting {tasks.Count} subscription tasks...");
+
+        Console.WriteLine($"[{exchangeName}] Subscription tasks started (running in background)...");
 
         // MEXC TRADES VIEWER: Subscriptions must stay alive until cancellation
-        // Don't await Task.WhenAll - it returns immediately after subscriptions are set up
-        // Instead, wait indefinitely until cancellation is requested
+        // Tasks run in background and keep the stream alive
+        // Wait indefinitely until cancellation is requested
         try
         {
             await Task.Delay(Timeout.Infinite, cancellationToken);
@@ -316,6 +199,7 @@ public class OrchestrationService
         }
 
         Console.WriteLine($"[{exchangeName}] All subscription tasks completed");
+
     }
 
     public async Task StopAsync(CancellationToken cancellationToken = default)
