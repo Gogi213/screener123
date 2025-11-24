@@ -268,8 +268,11 @@ public class RollingWindowService : IDisposable
                 removedCount++;
             }
             
-            // Safety cap: prevent unbounded growth if timestamps are weird
-            while (window.Trades.Count > 100_000)
+            // CRITICAL FIX: Reduced safety cap from 100K to 10K
+            // Rationale: 30 min × 10 trades/sec = ~18K expected
+            // Old: 100K × 1000 symbols = 100M trades (OOM risk!)
+            // New: 10K × 1000 symbols = 10M trades (safe)
+            while (window.Trades.Count > 10_000)
             {
                 window.Trades.Dequeue();
                 removedCount++;

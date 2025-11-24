@@ -11,6 +11,8 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/screener.css">
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script
         src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -29,10 +31,16 @@
             </div>
         </div>
 
-        <div class="pagination-controls" style="display: flex; gap: 15px; align-items: center;">
+        <div class="pagination-controls" style="display: flex; gap: 10px; align-items: center;">
+            <button id="btnSortToggle" class="nav-btn sort-toggle-btn active" onclick="toggleSmartSort()"
+                title="Toggle Smart Sorting">
+                <span id="sortIcon">🔥</span> Smart Sort
+            </button>
+            <button id="btnFirst" class="nav-btn" onclick="goToFirstPage()" title="First Page">⏮ First</button>
             <button id="btnPrev" class="nav-btn" disabled onclick="changePage(-1)">← Prev</button>
-            <span id="pageIndicator" style="font-family: 'JetBrains Mono'; color: #fff;">Page 1</span>
+            <span id="pageIndicator" style="font-family: 'JetBrains Mono'; color: #fff; font-size: 11px;">Page 1</span>
             <button id="btnNext" class="nav-btn" onclick="changePage(1)">Next →</button>
+            <button id="btnLast" class="nav-btn" onclick="goToLastPage()" title="Last Page">Last ⏭</button>
         </div>
     </header>
 

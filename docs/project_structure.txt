@@ -91,6 +91,8 @@
 | |   | |- RealTimeController.cs
 | |   | |- SignalsController.cs
 | |   | `- TradeController.cs
+| |   |- Diagnostics
+| |   | `- SimpleProfiler.cs
 | |   |- Models
 | |   | |- ChartDataDto.cs
 | |   | `- OpportunityDto.cs
@@ -99,7 +101,6 @@
 | |   | | `- screener.css
 | |   | |- js
 | |   | | `- screener.js
-| |   | |- index.html
 | |   | `- screener.html
 | |   |- Program.cs
 | |   |- SpreadAggregator.Presentation.csproj
@@ -1074,8 +1075,11 @@
 | | | |- phase-3-latency.md
 | | | |- phase-4-automation.md
 | | | `- phase-5-webui.md
+| | |- AGGRESSIVE_CLEANUP_2025-11-24.md
 | | |- GEMINI_SCREENER_DEV.md
-| | `- HANDOVER_CONTEXT.md
+| | |- HANDOVER_CONTEXT.md
+| | |- MEMORY_LEAK_ANALYSIS_2025-11-24.md
+| | `- OPTIMIZATION_REPORT_2025-11-23.md
 | |- GEMINI_DEV.md
 | `- project_structure.txt
 |- GEMINI.md

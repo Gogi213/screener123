@@ -21,7 +21,7 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 30px;
+    padding: 8px 20px;
     background-color: rgba(20, 20, 20, 0.8);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border-color);
@@ -33,47 +33,47 @@ header {
 .header-left {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 15px;
 }
 
 .brand h1 {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 600;
     margin: 0;
     background: linear-gradient(45deg, #fff, #a0a0a0);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .status-badge {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     background: rgba(255, 255, 255, 0.05);
-    padding: 6px 12px;
+    padding: 4px 10px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 10px;
     font-family: 'JetBrains Mono', monospace;
 }
 
 .status-dot {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     background-color: var(--success-color);
     border-radius: 50%;
     box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
 }
 
-/* Pagination Buttons */
 .nav-btn {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     color: var(--text-primary);
-    padding: 8px 16px;
+    padding: 6px 12px;
     border-radius: 6px;
     cursor: pointer;
     font-family: 'Inter', sans-serif;
-    font-size: 14px;
+    font-size: 12px;
     transition: all 0.2s;
 }
 
@@ -85,6 +85,30 @@ header {
 .nav-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+.sort-toggle-btn {
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.sort-toggle-btn.active {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-color: #10b981;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+}
+
+.sort-toggle-btn.active:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+}
+
+.sort-toggle-btn:not(.active) {
+    background: var(--card-bg);
+    opacity: 0.6;
+}
+
+.sort-toggle-btn:not(.active):hover {
+    opacity: 0.8;
 }
 
 #grid {
@@ -122,6 +146,12 @@ header {
     font-weight: 700;
     font-size: 16px;
     font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.symbol-name:hover {
+    color: var(--accent-color);
 }
 
 .trade-stats {
@@ -133,7 +163,8 @@ header {
 }
 
 .price-info {
-    font-size: 20px;
+    font-size: 10px;
+    /* 20px → 14px (-30%) → 10px (-30% more) */
     font-weight: 600;
     margin-bottom: 10px;
     font-family: 'JetBrains Mono', monospace;
