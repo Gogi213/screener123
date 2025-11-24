@@ -14,7 +14,7 @@ let allSymbols = [];
 let currentPage = 1;
 const activeCharts = new Map();     // Symbol -> uPlot Instance
 
-// uPlot DATA STRUCTURE - Map<symbol, {times: Float64Array, buys: Float32Array, sells: Float32Array, index: number}>
+// uPlot DATA STRUCTURE - Map<symbol, {times: [], buys: [], sells: [], startIndex: number}>
 const chartData = new Map();
 
 // SMART SORTING STATE
@@ -61,12 +61,12 @@ async function init() {
 }
 
 function cleanupPage() {
-    // Destroy uPlot instances properly
+    // Destroy uPlot instances properly (UI cleanup only)
     activeCharts.forEach(uplot => {
         uplot.destroy();
     });
     activeCharts.clear();
-    chartData.clear();
+    // NOTE: chartData is NOT cleared - data persists across pages for all symbols
     grid.innerHTML = '';
 }
 
@@ -174,43 +174,66 @@ function createCard(symbol, initialTradeCount) {
         ]
     };
 
-    // Initial empty data: [timestamps[], buys[], sells[]]
-    const data = [[], [], []];
+    // Initialize data storage if not exists (preserve data across page changes)
+    if (!chartData.has(symbol)) {
+        chartData.set(symbol, {
+            times: [],
+            buys: [],
+            sells: [],
+            startIndex: 0
+        });
+    }
+
+    // Load existing data into uPlot (may be empty or accumulated from previous pages)
+    const symbolData = chartData.get(symbol);
+    const data = [
+        symbolData.times.slice(symbolData.startIndex),
+        symbolData.buys.slice(symbolData.startIndex),
+        symbolData.sells.slice(symbolData.startIndex)
+    ];
     const uplot = new uPlot(opts, data, container);
 
     activeCharts.set(symbol, uplot);
-
-    // Initialize data storage for this symbol
-    chartData.set(symbol, {
-        times: [],
-        buys: [],
-        sells: []
-    });
 }
 
-// --- BATCHING LOOP (300ms) ---
-setInterval(() => {
-    if (pendingChartUpdates.size === 0) return;
+// --- BATCHING LOOP (requestAnimationFrame with 300ms throttle) ---
+let lastBatchUpdate = 0;
 
-    pendingChartUpdates.forEach((trades, symbol) => {
-        const uplot = activeCharts.get(symbol);
-        const data = chartData.get(symbol);
+function batchingLoop() {
+    const now = performance.now();
 
-        if (uplot && data && trades.length > 0) {
-            // Add all accumulated trades
-            trades.forEach(t => addTradeToChart(symbol, t));
+    // Throttle to ~300ms (don't update more often than needed)
+    if (now - lastBatchUpdate > 300 && pendingChartUpdates.size > 0) {
+        pendingChartUpdates.forEach((trades, symbol) => {
+            const uplot = activeCharts.get(symbol);
+            const data = chartData.get(symbol);
 
-            // Update stats
-            const lastTrade = trades[trades.length - 1];
-            updateCardStats(symbol, lastTrade.price);
+            if (uplot && data && trades.length > 0) {
+                // Add all accumulated trades
+                trades.forEach(t => addTradeToChart(symbol, t));
 
-            // Update uPlot with new data
-            uplot.setData([data.times, data.buys, data.sells]);
-        }
-    });
+                // Update stats
+                const lastTrade = trades[trades.length - 1];
+                updateCardStats(symbol, lastTrade.price);
 
-    pendingChartUpdates.clear();
-}, 300);
+                // Update uPlot with active data (circular buffer - skip deleted indices)
+                uplot.setData([
+                    data.times.slice(data.startIndex),
+                    data.buys.slice(data.startIndex),
+                    data.sells.slice(data.startIndex)
+                ]);
+            }
+        });
+
+        pendingChartUpdates.clear();
+        lastBatchUpdate = now;
+    }
+
+    requestAnimationFrame(batchingLoop);
+}
+
+// Start the loop
+batchingLoop();
 
 function initGlobalWebSocket() {
     if (globalWebSocket && globalWebSocket.readyState === WebSocket.OPEN) return;
@@ -263,11 +286,18 @@ function addTradeToChart(symbol, trade) {
     data.buys.push(isBuy ? price : null);
     data.sells.push(isBuy ? null : price);
 
-    // Cleanup old data to prevent memory bloat
-    if (data.times.length > 2000) {
-        data.times.shift();
-        data.buys.shift();
-        data.sells.shift();
+    // Circular buffer: increment startIndex instead of shift() - O(1) vs O(n)
+    const activeLength = data.times.length - data.startIndex;
+    if (activeLength > 2000) {
+        data.startIndex += 100; // Mark first 100 as "deleted"
+    }
+
+    // Periodically compact arrays to free memory
+    if (data.startIndex > 500) {
+        data.times = data.times.slice(data.startIndex);
+        data.buys = data.buys.slice(data.startIndex);
+        data.sells = data.sells.slice(data.startIndex);
+        data.startIndex = 0;
     }
 }
 
