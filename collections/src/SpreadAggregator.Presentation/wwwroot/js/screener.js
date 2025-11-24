@@ -25,6 +25,9 @@ let smartSortInterval = null;
 // GLOBAL WebSocket connection
 let globalWebSocket = null;
 
+// WEB WORKER for JSON parsing (offload from UI thread)
+let parseWorker = null;
+
 // BATCHING STATE
 const pendingChartUpdates = new Map(); // symbol -> [trades]
 
@@ -70,7 +73,10 @@ function cleanupPage() {
     grid.innerHTML = '';
 }
 
-function renderPage() {
+function renderPage(autoScroll = false) {
+    // Save current scroll position before cleanup
+    const savedScrollY = window.scrollY;
+
     cleanupPage();
 
     const totalPages = Math.ceil(allSymbols.length / ITEMS_PER_PAGE);
@@ -94,25 +100,30 @@ function renderPage() {
     const pageSymbols = allSymbols.slice(start, end);
 
     pageSymbols.forEach(s => createCard(s.symbol, s.tradeCount));
+
+    // Handle scroll: either restore saved position or scroll to top
+    if (autoScroll) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+        // Restore scroll position (for smart sort - don't jump)
+        window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+    }
 }
 
 function changePage(delta) {
     currentPage += delta;
-    renderPage();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    renderPage(true); // Auto-scroll on manual page change
 }
 
 function goToFirstPage() {
     currentPage = 1;
-    renderPage();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    renderPage(true); // Auto-scroll on manual page change
 }
 
 function goToLastPage() {
     const totalPages = Math.ceil(allSymbols.length / ITEMS_PER_PAGE);
     currentPage = totalPages;
-    renderPage();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    renderPage(true); // Auto-scroll on manual page change
 }
 
 function createCard(symbol, initialTradeCount) {
@@ -169,8 +180,8 @@ function createCard(symbol, initialTradeCount) {
             }
         ],
         axes: [
-            { show: false },
-            { show: false }
+            { show: false }, // X axis (time) - hidden
+            { show: true, side: 1 } // Y axis (price) - visible on right side
         ]
     };
 
@@ -194,6 +205,27 @@ function createCard(symbol, initialTradeCount) {
     const uplot = new uPlot(opts, data, container);
 
     activeCharts.set(symbol, uplot);
+
+    // Initialize stats from existing data (if any) to prevent "0/1m" and "---"
+    if (symbolData.times.length > 0) {
+        // Find last valid price (check both buys and sells)
+        let lastPrice = null;
+        for (let i = symbolData.times.length - 1; i >= symbolData.startIndex; i--) {
+            if (symbolData.buys[i] !== null) {
+                lastPrice = symbolData.buys[i];
+                break;
+            }
+            if (symbolData.sells[i] !== null) {
+                lastPrice = symbolData.sells[i];
+                break;
+            }
+        }
+
+        // Update stats with existing data
+        if (lastPrice !== null) {
+            updateCardStats(symbol, lastPrice);
+        }
+    }
 }
 
 // --- BATCHING LOOP (requestAnimationFrame with 300ms throttle) ---
@@ -205,13 +237,16 @@ function batchingLoop() {
     // Throttle to ~300ms (don't update more often than needed)
     if (now - lastBatchUpdate > 300 && pendingChartUpdates.size > 0) {
         pendingChartUpdates.forEach((trades, symbol) => {
+            if (trades.length === 0) return;
+
+            // ALWAYS update chartData for ALL symbols (even not visible on current page)
+            trades.forEach(t => addTradeToChart(symbol, t));
+
+            // Only update UI for visible charts
             const uplot = activeCharts.get(symbol);
             const data = chartData.get(symbol);
 
-            if (uplot && data && trades.length > 0) {
-                // Add all accumulated trades
-                trades.forEach(t => addTradeToChart(symbol, t));
-
+            if (uplot && data) {
                 // Update stats
                 const lastTrade = trades[trades.length - 1];
                 updateCardStats(symbol, lastTrade.price);
@@ -238,6 +273,29 @@ batchingLoop();
 function initGlobalWebSocket() {
     if (globalWebSocket && globalWebSocket.readyState === WebSocket.OPEN) return;
 
+    // Initialize Web Worker for JSON parsing (once)
+    if (!parseWorker) {
+        parseWorker = new Worker('js/websocket-worker.js');
+
+        // Worker sends back parsed messages
+        parseWorker.onmessage = (e) => {
+            const msg = e.data;
+
+            if (msg.error) {
+                console.error('[Worker] Parse error:', msg.error);
+                return;
+            }
+
+            if (msg.type === 'trade_update' && msg.symbol && msg.trades) {
+                const symbol = msg.symbol.replace('MEXC_', '');
+                // Accumulate trades for ALL symbols, not just visible ones
+                const pending = pendingChartUpdates.get(symbol) || [];
+                pending.push(...msg.trades);
+                pendingChartUpdates.set(symbol, pending);
+            }
+        };
+    }
+
     globalWebSocket = new WebSocket(`ws://${window.location.hostname}:8181`);
 
     globalWebSocket.onopen = () => {
@@ -246,15 +304,8 @@ function initGlobalWebSocket() {
     };
 
     globalWebSocket.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        if (msg.type === 'trade_update' && msg.symbol) {
-            const symbol = msg.symbol.replace('MEXC_', '');
-            if (activeCharts.has(symbol) && msg.trades) {
-                const pending = pendingChartUpdates.get(symbol) || [];
-                pending.push(...msg.trades);
-                pendingChartUpdates.set(symbol, pending);
-            }
-        }
+        // Send raw data to Worker for parsing (doesn't block UI thread)
+        parseWorker.postMessage(event.data);
     };
 
     globalWebSocket.onclose = () => {
@@ -377,27 +428,16 @@ function updateSymbolActivity(symbol, trades1m) {
 function reorderCardsWithoutDestroy() {
     if (!smartSortEnabled) return;
 
-    const cards = Array.from(grid.children);
-    const cardsMap = new Map();
-    cards.forEach(c => {
-        const sym = c.querySelector('.symbol-name').dataset.symbol;
-        cardsMap.set(sym, c);
+    // GLOBAL SORT: Sort ALL 2000+ symbols by activity, not just current page!
+    allSymbols.sort((a, b) => {
+        const actA = symbolActivity.get(a.symbol)?.trades1m || 0;
+        const actB = symbolActivity.get(b.symbol)?.trades1m || 0;
+        return actB - actA; // Descending - most active first
     });
 
-    const currentSymbols = Array.from(cardsMap.keys());
-
-    // Sort by activity
-    currentSymbols.sort((a, b) => {
-        const actA = symbolActivity.get(a)?.trades1m || 0;
-        const actB = symbolActivity.get(b)?.trades1m || 0;
-        return actB - actA; // Descending
-    });
-
-    // Reorder DOM
-    currentSymbols.forEach(sym => {
-        const card = cardsMap.get(sym);
-        grid.appendChild(card); // Moves it to the end (reordering)
-    });
+    // Re-render current page with globally sorted data
+    // Page 1 = top 1-100, Page 2 = top 101-200, etc.
+    renderPage();
 }
 
 // Start
