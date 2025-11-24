@@ -77,8 +77,9 @@ public class TradeAggregatorService : IDisposable
         var key = $"{trade.Exchange}_{trade.Symbol}";
         var now = DateTime.UtcNow;
 
-        // GEMINI_DEV: Record activity for performance monitoring
-        _performanceMonitor?.RecordEvent($"Trade_{key}");
+        // SPRINT-0-FIX-2: RecordEvent disabled (PerformanceMonitor is null)
+        // Was causing string allocations on EVERY trade
+        // _performanceMonitor?.RecordEvent($"Trade_{key}");
 
         // PHASE-1-FIX-4: Pre-check BEFORE adding to prevent symbol explosion
         if (_symbolTrades.Count >= MAX_SYMBOLS && !_symbolTrades.ContainsKey(key))

@@ -94,12 +94,13 @@ class Program
         // MEXC TRADES VIEWER: Only MEXC enabled
         services.AddSingleton<IExchangeClient, MexcExchangeClient>();
 
-        // GEMINI_DEV: Enable centralized performance monitoring
-        services.AddSingleton<PerformanceMonitor>(sp =>
-        {
-            var logDir = "./data/performance";
-            return new PerformanceMonitor(logDir);
-        });
+        // SPRINT-0-FIX-1: PerformanceMonitor DISABLED - sync file I/O was causing 658ms freezes
+        // TODO: Re-enable with async file writes if needed for monitoring
+        // services.AddSingleton<PerformanceMonitor>(sp =>
+        // {
+        //     var logDir = "./data/performance";
+        //     return new PerformanceMonitor(logDir);
+        // });
 
         // MEXC TRADES VIEWER: TradeAggregatorService - processes trades from TradeScreenerChannel
         services.AddSingleton<TradeAggregatorService>(sp =>
@@ -107,8 +108,8 @@ class Program
             var tradeChannel = sp.GetRequiredService<TradeScreenerChannel>().Channel;
             var webSocketServer = sp.GetRequiredService<IWebSocketServer>();
             var logger = sp.GetRequiredService<ILogger<TradeAggregatorService>>();
-            var perfMonitor = sp.GetRequiredService<PerformanceMonitor>();
-            return new TradeAggregatorService(tradeChannel, webSocketServer, logger, perfMonitor);
+            // SPRINT-0-FIX-1: Pass null instead of PerformanceMonitor
+            return new TradeAggregatorService(tradeChannel, webSocketServer, logger, null);
         });
 
         services.AddSingleton<OrchestrationService>(sp =>

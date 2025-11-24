@@ -22,6 +22,9 @@ let smartSortInterval = null;
 // GLOBAL WebSocket connection (FleckWebSocketServer broadcasts ALL trades)
 let globalWebSocket = null;
 
+// SPRINT-0-FIX-3: Frontend batching state
+const pendingChartUpdates = new Map(); // symbol -> [trades]
+
 // DOM ELEMENTS
 const grid = document.getElementById('grid');
 const statusText = document.getElementById('status-text');
@@ -216,7 +219,26 @@ function createCard(symbol, initialTradeCount) {
     activeCharts.set(symbol, chart);
 }
 
-// GLOBAL WebSocket connection (FleckWebSocketServer broadcasts to all clients)
+// SPRINT-0-FIX-3: Flush accumulated chart updates every 300ms
+setInterval(() => {
+    if (pendingChartUpdates.size === 0) return;
+
+    pendingChartUpdates.forEach((trades, symbol) => {
+        const chart = activeCharts.get(symbol);
+        if (chart && trades.length > 0) {
+            // Add all accumulated trades at once
+            trades.forEach(t => addTradeToChart(chart, t));
+
+            // Update stats with last trade
+            const lastTrade = trades[trades.length - 1];
+            updateCardStats(symbol, lastTrade.price, chart);
+        }
+    });
+
+    pendingChartUpdates.clear();
+}, 300);
+
+
 function initGlobalWebSocket() {
     if (globalWebSocket && globalWebSocket.readyState === WebSocket.OPEN) {
         return; // Already connected
@@ -235,14 +257,12 @@ function initGlobalWebSocket() {
         // Route trade_update messages to appropriate chart
         if (msg.type === 'trade_update' && msg.symbol) {
             const symbol = msg.symbol.replace('MEXC_', ''); // Remove exchange prefix
-            const chart = activeCharts.get(symbol);
 
-            if (chart && msg.trades) {
-                msg.trades.forEach(t => addTradeToChart(chart, t));
-                if (msg.trades.length > 0) {
-                    const lastTrade = msg.trades[msg.trades.length - 1];
-                    updateCardStats(symbol, lastTrade.price, chart);
-                }
+            // SPRINT-0-FIX-3: Accumulate instead of immediate update
+            if (activeCharts.has(symbol) && msg.trades) {
+                const pending = pendingChartUpdates.get(symbol) || [];
+                pending.push(...msg.trades);
+                pendingChartUpdates.set(symbol, pending);
             }
         }
     };
