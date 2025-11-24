@@ -134,9 +134,6 @@ function createCard(symbol, initialTradeCount) {
             <div class="symbol-name" data-symbol="${symbol}">${symbol}</div>
             <div class="trade-stats" id="stats-${symbol}">0/1m</div>
         </div>
-        <div class="price-info" id="price-${symbol}">
-            <span class="price-val">---</span>
-        </div>
         <div class="chart-container" id="chart-${symbol}"></div>
     `;
     grid.appendChild(card);
@@ -157,7 +154,7 @@ function createCard(symbol, initialTradeCount) {
 
     const opts = {
         width: container.offsetWidth || 400,
-        height: 150,
+        height: container.offsetHeight || 200,
         cursor: { show: false },
         legend: { show: false },
         scales: {
@@ -181,7 +178,21 @@ function createCard(symbol, initialTradeCount) {
         ],
         axes: [
             { show: false }, // X axis (time) - hidden
-            { show: true, side: 1 } // Y axis (price) - visible on right side
+            {
+                show: true,
+                side: 1,
+                stroke: '#6b7280', // Светло-серый цвет для линий оси
+                grid: {
+                    show: true,
+                    stroke: '#374151', // Темно-серый для сетки
+                    width: 1
+                },
+                ticks: {
+                    show: true,
+                    stroke: '#6b7280', // Светло-серый для делений
+                    width: 1
+                }
+            }
         ]
     };
 
@@ -370,12 +381,7 @@ function updateCardStats(symbol, price) {
     }
 
     // 2. Update UI
-    const priceEl = document.getElementById(`price-${symbol}`);
     const statsEl = document.getElementById(`stats-${symbol}`);
-
-    if (priceEl) {
-        priceEl.innerHTML = `<span class="price-val" style="font-family: 'JetBrains Mono';">${formatTickSize(price)}</span>`;
-    }
 
     if (statsEl) {
         statsEl.textContent = `${count}/1m`;

@@ -189,11 +189,46 @@ public class TradeAggregatorService : IDisposable
     }
 
     /// <summary>
+    /// Calculate trades per minute for a symbol
+    /// </summary>
+    private int CalculateTradesPerMinute(string symbolKey)
+    {
+        if (!_symbolTrades.TryGetValue(symbolKey, out var queue))
+            return 0;
+
+        var oneMinuteAgo = DateTime.UtcNow.AddMinutes(-1);
+        int count = 0;
+
+        lock (queue)
+        {
+            // Count trades in the last minute
+            foreach (var trade in queue)
+            {
+                if (trade.Timestamp >= oneMinuteAgo)
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
+    /// <summary>
     /// Get metadata for all symbols (for client pagination)
+    /// SORTED BY ACTIVITY (trades per minute) - server-side smart sort!
     /// </summary>
     public IEnumerable<SymbolMetadata> GetAllSymbolsMetadata()
     {
-        return _symbolMetadata.Values.OrderByDescending(m => m.LastUpdate).ToList();
+        // Calculate trades/min for each symbol and sort by activity
+        return _symbolMetadata.Values
+            .Select(m =>
+            {
+                var symbolKey = $"{(m.Symbol.StartsWith("MEXC_") ? "" : "MEXC_")}{m.Symbol}";
+                m.TradesPerMin = CalculateTradesPerMinute(symbolKey);
+                return m;
+            })
+            .OrderByDescending(m => m.TradesPerMin)
+            .ThenByDescending(m => m.LastUpdate)  // Tie-breaker
+            .ToList();
     }
 
     /// <summary>
@@ -235,4 +270,5 @@ public class SymbolMetadata
     public required string Symbol { get; set; }
     public decimal LastPrice { get; set; }
     public DateTime LastUpdate { get; set; }
+    public int TradesPerMin { get; set; }  // Activity metric for sorting
 }

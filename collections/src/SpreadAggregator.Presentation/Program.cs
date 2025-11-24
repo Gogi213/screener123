@@ -38,6 +38,23 @@ class Program
         // Add ASP.NET Core services for Charts API
         builder.Services.AddControllers();
         
+        // Add gRPC services
+        builder.Services.AddGrpc();
+        builder.Services.AddGrpcReflection(); // For development/debugging
+        
+        // CRITICAL: Enable gRPC-Web for browser clients
+        // This allows JavaScript frontend to call gRPC services
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowGrpcWeb", policy =>
+            {
+                policy.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .WithExposedHeaders("Grpc-Status", "Grpc-Message", "Grpc-Encoding", "Grpc-Accept-Encoding");
+            });
+        });
+        
         // PHASE-2-FIX-6: Health Check endpoint for monitoring
         builder.Services.AddHealthChecks()
             .AddCheck<MexcHealthCheck>("mexc_websocket");
@@ -58,8 +75,21 @@ class Program
         app.UseStaticFiles(); // Serve static files from wwwroot
         app.UseRouting(); // Enable routing
         app.UseWebSockets();
+        
+        // CRITICAL: gRPC-Web must be before UseCors
+        app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });
+        
         app.UseCors();
+        
         app.MapControllers();
+        
+        // Map gRPC services
+        app.MapGrpcService<SpreadAggregator.Presentation.Services.TradeStreamerService>()
+            .EnableGrpcWeb()  // Enable for browser clients
+            .RequireCors("AllowGrpcWeb");
+        
+        // gRPC reflection for debugging (optional, can be removed in production)
+        app.MapGrpcReflectionService();
         
         // PHASE-2-FIX-6: Health Check endpoint
         app.MapHealthChecks("/health");

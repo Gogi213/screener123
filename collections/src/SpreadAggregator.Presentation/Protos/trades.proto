@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+option csharp_namespace = "SpreadAggregator.Grpc";
+
+package tradestreamer;
+
+// ============================================================================
+// MESSAGES (Data structures)
+// ============================================================================
+
+// Single trade data point
+message Trade {
+    double price = 1;           // Trade price
+    double quantity = 2;        // Trade quantity
+    string side = 3;            // "Buy" or "Sell"
+    int64 timestamp = 4;        // Unix timestamp in milliseconds
+}
+
+// Batch of trades for a single symbol
+message TradeUpdate {
+    string symbol = 1;          // Symbol name (e.g., "BTCUSDT")
+    repeated Trade trades = 2;  // Array of trades
+}
+
+// Symbol metadata for pagination and sorting
+message SymbolMetadata {
+    string symbol = 1;          // Symbol name
+    double last_price = 2;      // Last trade price
+    int64 last_update = 3;      // Last update timestamp (Unix ms)
+    int32 trades_per_min = 4;   // Activity metric (rolling 1 min)
+    int32 rank = 5;             // Position in sorted list (1 = most active)
+}
+
+// Request for streaming trades for a specific page
+message StreamRequest {
+    int32 page = 1;             // Page number (1-indexed)
+    int32 page_size = 2;        // Number of symbols per page (default: 100)
+}
+
+// Empty request for getting all symbols metadata
+message EmptyRequest {
+}
+
+// Response with all symbols metadata
+message SymbolsResponse {
+    int32 total_symbols = 1;                // Total number of symbols
+    int32 total_pages = 2;                  // Total pages (based on page_size)
+    repeated SymbolMetadata symbols = 3;    // All symbols (sorted by activity)
+}
+
+// Batch update containing multiple symbols (for efficient streaming)
+message BatchUpdate {
+    repeated TradeUpdate updates = 1;       // Multiple symbol updates in one message
+    int64 server_timestamp = 2;             // Server timestamp when batch was sent
+}
+
+// ============================================================================
+// SERVICE DEFINITION
+// ============================================================================
+
+service TradeStreamer {
+    // Get list of all symbols with metadata (sorted by activity)
+    rpc GetSymbols(EmptyRequest) returns (SymbolsResponse);
+    
+    // Stream real-time trade updates for a specific page
+    // Server-side filtering: only sends updates for symbols on requested page
+    // Server streaming: client sends one request, server sends continuous stream
+    rpc StreamTrades(StreamRequest) returns (stream TradeUpdate);
+    
+    // Alternative: Batch streaming (more efficient for high-throughput)
+    rpc StreamTradesBatch(StreamRequest) returns (stream BatchUpdate);
+}

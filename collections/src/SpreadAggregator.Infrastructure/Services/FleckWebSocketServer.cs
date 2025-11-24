@@ -16,31 +16,19 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
 {
     private readonly WebSocketServer _server;
     private readonly List<IWebSocketConnection> _allSockets;
-    
-    // PHASE-1-FIX-2: ReaderWriterLockSlim for concurrent broadcast reads, exclusive Add/Remove writes
     private readonly ReaderWriterLockSlim _rwLock = new(LockRecursionPolicy.NoRecursion);
-    
     private readonly System.Threading.Timer _cleanupTimer;
-
-    // MEXC TRADES VIEWER: Track client subscriptions (ConnectionId → PageNumber)
     private readonly ConcurrentDictionary<Guid, int> _clientSubscriptions = new();
-
-    // MEXC TRADES VIEWER: TradeAggregatorService instance (injected after construction)
     private TradeAggregatorService? _tradeAggregatorService;
 
     public FleckWebSocketServer(string location)
     {
         _server = new WebSocketServer(location);
         _allSockets = new List<IWebSocketConnection>();
-
-        // PROPOSAL-2025-0095: Dead connection cleanup every 5 minutes
         _cleanupTimer = new System.Threading.Timer(CleanupDeadConnections, null,
             TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
     }
 
-    /// <summary>
-    /// MEXC TRADES VIEWER: Inject TradeAggregatorService for metadata queries
-    /// </summary>
     public void SetTradeAggregatorService(TradeAggregatorService service)
     {
         _tradeAggregatorService = service;
@@ -63,7 +51,6 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
                     _rwLock.ExitWriteLock();
                 }
 
-                // MEXC TRADES VIEWER: Send symbol metadata on connect
                 if (_tradeAggregatorService != null)
                 {
                     var metadata = _tradeAggregatorService.GetAllSymbolsMetadata();
@@ -75,7 +62,8 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
                         {
                             symbol = m.Symbol,
                             lastPrice = m.LastPrice,
-                            lastUpdate = m.LastUpdate.ToString("o")
+                            lastUpdate = m.LastUpdate.ToString("o"),
+                            tradesPerMin = m.TradesPerMin
                         })
                     };
                     var json = JsonSerializer.Serialize(response);
@@ -98,7 +86,6 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
                 }
             };
 
-            // MEXC TRADES VIEWER: Handle client messages (subscribe_page, etc.)
             socket.OnMessage = async message =>
             {
                 try
@@ -110,11 +97,8 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
                     {
                         var page = request.page ?? 1;
                         var pageSize = request.page_size ?? 100;
-
-                        // Store subscription
                         _clientSubscriptions[socket.ConnectionInfo.Id] = page;
 
-                        // Send initial data for this page
                         if (_tradeAggregatorService != null)
                         {
                             var allMetadata = _tradeAggregatorService.GetAllSymbolsMetadata().ToList();
@@ -125,7 +109,6 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
                                 .ToList();
 
                             var tradesData = _tradeAggregatorService.GetTradesForSymbols(symbolsOnPage);
-
                             var response = new
                             {
                                 type = "page_data",
@@ -147,7 +130,7 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
                             await socket.Send(json);
                         }
 
-                        Console.WriteLine($"[Fleck] Client {socket.ConnectionInfo.ClientIpAddress} subscribed to page {page}");
+                        Console.WriteLine($"[Fleck] Client subscribed to page {page}");
                     }
                 }
                 catch (Exception ex)
@@ -169,11 +152,9 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
     {
         List<IWebSocketConnection> socketsSnapshot;
         
-        // PHASE-1-FIX-2: ReadLock for broadcast (concurrent reads allowed)
         _rwLock.EnterReadLock();
         try
         {
-            // Take a snapshot to avoid holding the lock during I/O operations
             socketsSnapshot = _allSockets.ToList();
         }
         finally
@@ -192,34 +173,26 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[Fleck] Error sending to socket: {ex.Message}. Client might have disconnected.");
+                    Console.WriteLine($"[Fleck] Error sending: {ex.Message}");
                 }
             }
         }
         return Task.WhenAll(tasks);
     }
 
-    /// <summary>
-    /// PROPOSAL-2025-0095: Cleanup dead WebSocket connections
-    /// Removes connections that are closed but not properly removed from list
-    /// </summary>
     private void CleanupDeadConnections(object? state)
     {
         _rwLock.EnterWriteLock();
         try
         {
-            var deadConnections = _allSockets
-                .Where(s => !s.IsAvailable)
-                .ToList();
-
+            var deadConnections = _allSockets.Where(s => !s.IsAvailable).ToList();
             foreach (var socket in deadConnections)
             {
                 _allSockets.Remove(socket);
             }
-
             if (deadConnections.Count > 0)
             {
-                Console.WriteLine($"[Fleck] Cleaned up {deadConnections.Count} dead connections. Active: {_allSockets.Count}");
+                Console.WriteLine($"[Fleck] Cleaned up {deadConnections.Count} dead connections.");
             }
         }
         finally

@@ -24,6 +24,7 @@ public class TradeController : ControllerBase
 
     /// <summary>
     /// Get list of symbols with active trades (MEXC TRADES VIEWER API)
+    /// Returns symbols SORTED BY ACTIVITY (server-side smart sort)
     /// </summary>
     [HttpGet("symbols")]
     public IActionResult GetSymbols()
@@ -31,9 +32,14 @@ public class TradeController : ControllerBase
         var metadata = _tradeAggregator.GetAllSymbolsMetadata();
 
         var symbols = metadata
-            .Select(m => new { m.Symbol, Exchange = "MEXC", m.LastPrice, m.LastUpdate })
-            .OrderByDescending(x => x.LastUpdate)
-            .ToList();
+            .Select(m => new { 
+                m.Symbol, 
+                Exchange = "MEXC", 
+                m.LastPrice, 
+                m.LastUpdate,
+                m.TradesPerMin  // Include activity metric
+            })
+            .ToList();  // Already sorted by TradeAggregatorService!
 
         return Ok(symbols);
     }

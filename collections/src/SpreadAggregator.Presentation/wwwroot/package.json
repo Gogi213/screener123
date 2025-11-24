@@ -1,0 +1,9 @@
+{
+    "name": "trade-screener-frontend",
+    "version": "1.0.0",
+    "description": "MEXC Trade Screener - gRPC Web Frontend",
+    "type": "module",
+    "dependencies": {
+        "@improbable-eng/grpc-web": "^0.15.0"
+    }
+}
