@@ -5,22 +5,19 @@ using System;
 namespace SpreadAggregator.Presentation.Controllers;
 
 /// <summary>
-/// PROPOSAL-2025-0095: Health check endpoint for monitoring
+/// PROPOSAL-2025-0095 + PHASE-2-FIX-6: Health check endpoint for monitoring
+/// Updated: Removed RollingWindowService dependency (legacy HFT code)
 /// </summary>
 [ApiController]
 [Route("")]
 public class HealthController : ControllerBase
 {
     private readonly OrchestrationService _orchestration;
-    private readonly RollingWindowService _rollingWindow;
     private static readonly DateTime _startTime = DateTime.UtcNow;
 
-    public HealthController(
-        OrchestrationService orchestration,
-        RollingWindowService rollingWindow)
+    public HealthController(OrchestrationService orchestration)
     {
         _orchestration = orchestration;
-        _rollingWindow = rollingWindow;
     }
 
     /// <summary>
@@ -51,11 +48,6 @@ public class HealthController : ControllerBase
             },
             services = new
             {
-                rollingWindow = new
-                {
-                    activeWindows = _rollingWindow.GetWindowCount(),
-                    totalSpreads = _rollingWindow.GetTotalSpreadCount()
-                },
                 exchanges = _orchestration.GetExchangeHealth()
             }
         };

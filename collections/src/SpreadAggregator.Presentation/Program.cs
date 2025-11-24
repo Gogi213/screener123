@@ -56,6 +56,11 @@ class Program
 
         // Add ASP.NET Core services for Charts API
         builder.Services.AddControllers();
+        
+        // PHASE-2-FIX-6: Health Check endpoint for monitoring
+        builder.Services.AddHealthChecks()
+            .AddCheck<MexcHealthCheck>("mexc_websocket");
+        
         builder.Services.AddCors(options =>
         {
             options.AddDefaultPolicy(policy =>
@@ -74,6 +79,9 @@ class Program
         app.UseWebSockets();
         app.UseCors();
         app.MapControllers();
+        
+        // PHASE-2-FIX-6: Health Check endpoint
+        app.MapHealthChecks("/health");
 
         // Start background services
         await app.RunAsync();
@@ -142,13 +150,21 @@ class Program
         //     return new RollingWindowService(rollingChannel, bidBidLogger, logger, null);
         // });
 
+        // GEMINI_DEV: Enable centralized performance monitoring
+        services.AddSingleton<PerformanceMonitor>(sp =>
+        {
+            var logDir = "./data/performance";
+            return new PerformanceMonitor(logDir);
+        });
+
         // MEXC TRADES VIEWER: TradeAggregatorService - processes trades from TradeScreenerChannel
         services.AddSingleton<TradeAggregatorService>(sp =>
         {
             var tradeChannel = sp.GetRequiredService<TradeScreenerChannel>().Channel;
             var webSocketServer = sp.GetRequiredService<IWebSocketServer>();
             var logger = sp.GetRequiredService<ILogger<TradeAggregatorService>>();
-            return new TradeAggregatorService(tradeChannel, webSocketServer, logger);
+            var perfMonitor = sp.GetRequiredService<PerformanceMonitor>();
+            return new TradeAggregatorService(tradeChannel, webSocketServer, logger, perfMonitor);
         });
 
         // SCREENER OPTIMIZATION: ExchangeHealthMonitor DISABLED (Timer every 10 sec - not needed for screener MVP)

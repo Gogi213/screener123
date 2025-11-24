@@ -3,6 +3,7 @@ using SpreadAggregator.Application.Abstractions;
 using SpreadAggregator.Domain.Entities;
 using SpreadAggregator.Domain.Services;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -33,6 +34,9 @@ public class OrchestrationService
     private readonly object _symbolLock = new();
     private readonly object _taskLock = new();
     private CancellationTokenSource? _cancellationTokenSource;
+
+    // PHASE-2-FIX-7: Symbol normalization cache (HOT PATH optimization)
+    private readonly ConcurrentDictionary<string, string> _normalizedSymbolCache = new();
 
     public IEnumerable<SymbolInfo> AllSymbolInfo
     {
@@ -220,22 +224,28 @@ public class OrchestrationService
                 // Fallback to local timestamp only if exchange doesn't provide it
                 var timestamp = spreadData.ServerTimestamp ?? localTimestamp;
 
-                // Унифицированная нормализация: удаляем все разделители и преобразуем к формату SYMBOL_QUOTE
-                var normalizedSymbol = spreadData.Symbol
-                    .Replace("/", "")
-                    .Replace("-", "")
-                    .Replace("_", "")
-                    .Replace(" ", "");
+                // PHASE-2-FIX-7: Use cached normalized symbols to avoid repeated string operations
+                var normalizedSymbol = _normalizedSymbolCache.GetOrAdd(spreadData.Symbol, symbol =>
+                {
+                    // Унифицированная нормализация: удаляем все разделители и преобразуем к формату SYMBOL_QUOTE
+                    var normalized = symbol
+                        .Replace("/", "")
+                        .Replace("-", "")
+                        .Replace("_", "")
+                        .Replace(" ", "");
 
-                // Добавляем подчеркивание перед USDT/USDC для единообразия
-                if (normalizedSymbol.EndsWith("USDT"))
-                {
-                    normalizedSymbol = normalizedSymbol.Substring(0, normalizedSymbol.Length - 4) + "_USDT";
-                }
-                else if (normalizedSymbol.EndsWith("USDC"))
-                {
-                    normalizedSymbol = normalizedSymbol.Substring(0, normalizedSymbol.Length - 4) + "_USDC";
-                }
+                    // Добавляем подчеркивание перед USDT/USDC для единообразия
+                    if (normalized.EndsWith("USDT"))
+                    {
+                        return normalized.Substring(0, normalized.Length - 4) + "_USDT";
+                    }
+                    else if (normalized.EndsWith("USDC"))
+                    {
+                        return normalized.Substring(0, normalized.Length - 4) + "_USDC";
+                    }
+
+                    return normalized;
+                });
 
                 var normalizedSpreadData = new SpreadData
                 {

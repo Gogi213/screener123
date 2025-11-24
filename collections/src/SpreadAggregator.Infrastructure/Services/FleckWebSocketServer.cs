@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SpreadAggregator.Infrastructure.Services;
@@ -15,7 +16,10 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
 {
     private readonly WebSocketServer _server;
     private readonly List<IWebSocketConnection> _allSockets;
-    private readonly object _lock = new object();
+    
+    // PHASE-1-FIX-2: ReaderWriterLockSlim for concurrent broadcast reads, exclusive Add/Remove writes
+    private readonly ReaderWriterLockSlim _rwLock = new(LockRecursionPolicy.NoRecursion);
+    
     private readonly Func<OrchestrationService> _orchestrationServiceFactory;
     private readonly System.Threading.Timer _cleanupTimer;
 
@@ -50,10 +54,15 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
         {
             socket.OnOpen = () =>
             {
-                lock (_lock)
+                _rwLock.EnterWriteLock();
+                try
                 {
                     Console.WriteLine($"[Fleck] Client connected: {socket.ConnectionInfo.ClientIpAddress}");
                     _allSockets.Add(socket);
+                }
+                finally
+                {
+                    _rwLock.ExitWriteLock();
                 }
 
                 // MEXC TRADES VIEWER: Send symbol metadata on connect
@@ -78,11 +87,16 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
 
             socket.OnClose = () =>
             {
-                lock (_lock)
+                _rwLock.EnterWriteLock();
+                try
                 {
                     _allSockets.Remove(socket);
                     _clientSubscriptions.TryRemove(socket.ConnectionInfo.Id, out _);
                     Console.WriteLine($"[Fleck] Client disconnected.");
+                }
+                finally
+                {
+                    _rwLock.ExitWriteLock();
                 }
             };
 
@@ -156,10 +170,17 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
     public Task BroadcastRealtimeAsync(string message)
     {
         List<IWebSocketConnection> socketsSnapshot;
-        lock (_lock)
+        
+        // PHASE-1-FIX-2: ReadLock for broadcast (concurrent reads allowed)
+        _rwLock.EnterReadLock();
+        try
         {
-           // Take a snapshot to avoid holding the lock during I/O operations
-           socketsSnapshot = _allSockets.ToList();
+            // Take a snapshot to avoid holding the lock during I/O operations
+            socketsSnapshot = _allSockets.ToList();
+        }
+        finally
+        {
+            _rwLock.ExitReadLock();
         }
 
         var tasks = new List<Task>();
@@ -186,7 +207,8 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
     /// </summary>
     private void CleanupDeadConnections(object? state)
     {
-        lock (_lock)
+        _rwLock.EnterWriteLock();
+        try
         {
             var deadConnections = _allSockets
                 .Where(s => !s.IsAvailable)
@@ -202,10 +224,15 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
                 Console.WriteLine($"[Fleck] Cleaned up {deadConnections.Count} dead connections. Active: {_allSockets.Count}");
             }
         }
+        finally
+        {
+            _rwLock.ExitWriteLock();
+        }
     }
 
     public void Dispose()
     {
+        _rwLock?.Dispose();
         _cleanupTimer?.Dispose();
         _server.Dispose();
         GC.SuppressFinalize(this);

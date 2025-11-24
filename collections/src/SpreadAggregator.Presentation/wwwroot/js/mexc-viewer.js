@@ -171,54 +171,65 @@ class MexcTradesViewer {
 
         document.getElementById('charts-grid').appendChild(card);
 
-        // Initialize lightweight chart
-        const container = document.getElementById(`chart-${symbol}`);
-        const chart = LightweightCharts.createChart(container, {
-            width: container.clientWidth,
-            height: 200,
-            layout: {
-                background: { color: '#0a0e27' },
-                textColor: '#6b7a99',
-            },
-            grid: {
-                vertLines: { color: '#1f2541' },
-                horzLines: { color: '#1f2541' },
-            },
-            timeScale: {
-                timeVisible: true,
-                secondsVisible: false,
-                borderColor: '#2a3150',
-            },
-            rightPriceScale: {
-                borderColor: '#2a3150',
-            },
-        });
+        // BUGFIX: Wait for DOM to render before getting container size
+        requestAnimationFrame(() => {
+            const container = document.getElementById(`chart-${symbol}`);
+            if (!container) return;
 
-        const series = chart.addLineSeries({
-            color: '#00d4aa',
-            lineWidth: 2,
-        });
+            const containerWidth = container.clientWidth || 300;
 
-        // Add historical trades
-        if (trades.length > 0) {
-            const data = trades.map(t => ({
-                time: new Date(t.timestamp).getTime() / 1000,
-                value: parseFloat(t.price)
-            })).sort((a, b) => a.time - b.time);
+            // Initialize lightweight chart with actual container width
+            const chart = LightweightCharts.createChart(container, {
+                width: containerWidth,
+                height: 180,
+                layout: {
+                    background: { color: '#0a0e27' },
+                    textColor: '#6b7a99',
+                },
+                grid: {
+                    vertLines: { color: '#1f2541' },
+                    horzLines: { color: '#1f2541' },
+                },
+                timeScale: {
+                    timeVisible: true,
+                    secondsVisible: false,
+                    borderColor: '#2a3150',
+                },
+                rightPriceScale: {
+                    borderColor: '#2a3150',
+                },
+            });
 
-            series.setData(data);
+            const series = chart.addLineSeries({
+                color: '#00d4aa',
+                lineWidth: 2,
+            });
 
-            // Update price display
-            const latestPrice = data[data.length - 1].value;
-            document.getElementById(`price-${symbol}`).textContent = this.formatPrice(latestPrice);
-        }
+            // Add historical trades
+            if (trades.length > 0) {
+                const data = trades.map(t => ({
+                    time: new Date(t.timestamp).getTime() / 1000,
+                    value: parseFloat(t.price)
+                })).sort((a, b) => a.time - b.time);
 
-        // Store chart reference
-        this.charts.set(symbol, { chart, series, data: [] });
+                series.setData(data);
 
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            chart.resize(container.clientWidth, 200);
+                // Update price display
+                const latestPrice = data[data.length - 1].value;
+                document.getElementById(`price-${symbol}`).textContent = this.formatPrice(latestPrice);
+            } else {
+                // No trades yet - show placeholder
+                document.getElementById(`price-${symbol}`).textContent = 'Waiting for trades...';
+            }
+
+            // Store chart reference
+            this.charts.set(symbol, { chart, series, data: [] });
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                const newWidth = container.clientWidth || 300;
+                chart.resize(newWidth, 180);
+            });
         });
     }
 

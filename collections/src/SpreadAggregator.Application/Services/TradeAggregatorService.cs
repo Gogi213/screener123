@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using SpreadAggregator.Application.Abstractions;
+using SpreadAggregator.Application.Diagnostics;
 using SpreadAggregator.Domain.Entities;
 using System;
 using System.Collections.Concurrent;
@@ -26,6 +27,7 @@ public class TradeAggregatorService : IDisposable
     private readonly ChannelReader<MarketData> _channelReader;
     private readonly IWebSocketServer _webSocketServer;
     private readonly ILogger<TradeAggregatorService> _logger;
+    private readonly PerformanceMonitor? _performanceMonitor;
 
     // Symbol → Queue<TradeData> (FIFO for incremental expiry)
     private readonly ConcurrentDictionary<string, Queue<TradeData>> _symbolTrades = new();
@@ -41,11 +43,13 @@ public class TradeAggregatorService : IDisposable
     public TradeAggregatorService(
         Channel<MarketData> tradeChannel,
         IWebSocketServer webSocketServer,
-        ILogger<TradeAggregatorService>? logger = null)
+        ILogger<TradeAggregatorService>? logger = null,
+        PerformanceMonitor? performanceMonitor = null)
     {
         _channelReader = tradeChannel.Reader;
         _webSocketServer = webSocketServer;
         _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<TradeAggregatorService>.Instance;
+        _performanceMonitor = performanceMonitor;
         _batchTimer = new System.Threading.PeriodicTimer(TimeSpan.FromMilliseconds(BATCH_INTERVAL_MS));
     }
 
@@ -72,6 +76,26 @@ public class TradeAggregatorService : IDisposable
     {
         var key = $"{trade.Exchange}_{trade.Symbol}";
         var now = DateTime.UtcNow;
+
+        // GEMINI_DEV: Record activity for performance monitoring
+        _performanceMonitor?.RecordEvent($"Trade_{key}");
+
+        // PHASE-1-FIX-4: Pre-check BEFORE adding to prevent symbol explosion
+        if (_symbolTrades.Count >= MAX_SYMBOLS && !_symbolTrades.ContainsKey(key))
+        {
+            // Evict oldest symbol proactively
+            var oldestKey = _symbolMetadata
+                .OrderBy(x => x.Value.LastUpdate)
+                .FirstOrDefault().Key;
+
+            if (oldestKey != null)
+            {
+                _symbolTrades.TryRemove(oldestKey, out _);
+                _symbolMetadata.TryRemove(oldestKey, out _);
+                _pendingBroadcasts.TryRemove(oldestKey, out _);
+                _logger.LogWarning($"[TradeAggregator] Evicted oldest symbol: {oldestKey} (LRU pre-check)");
+            }
+        }
 
         // 1. Get or create trade queue for this symbol
         var queue = _symbolTrades.GetOrAdd(key, _ => new Queue<TradeData>());
@@ -104,18 +128,6 @@ public class TradeAggregatorService : IDisposable
         lock (pending)
         {
             pending.Add(trade);
-        }
-
-        // 7. LRU eviction: keep only MAX_SYMBOLS (memory safety)
-        if (_symbolTrades.Count > MAX_SYMBOLS)
-        {
-            var oldestKey = _symbolMetadata
-                .OrderBy(x => x.Value.LastUpdate)
-                .First().Key;
-
-            _symbolTrades.TryRemove(oldestKey, out _);
-            _symbolMetadata.TryRemove(oldestKey, out _);
-            _logger.LogWarning($"[TradeAggregator] Evicted oldest symbol: {oldestKey} (LRU)");
         }
     }
 
