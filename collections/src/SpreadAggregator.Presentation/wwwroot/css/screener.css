@@ -162,6 +162,14 @@ header {
     border-radius: 4px;
 }
 
+.price-info {
+    font-size: 10px;
+    /* 20px → 14px (-30%) → 10px (-30% more) */
+    font-weight: 600;
+    margin-bottom: 10px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
 .chart-container {
     flex-grow: 1;
     position: relative;

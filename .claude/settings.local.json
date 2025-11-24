@@ -51,7 +51,10 @@
       "Bash(tasklist:*)",
       "Bash(del /F \"collections\\src\\SpreadAggregator.Presentation\\wwwroot\\screener.html\")",
       "Bash(del /F \"collections\\src\\SpreadAggregator.Presentation\\wwwroot\\screener_uplot.html\")",
-      "WebSearch"
+      "WebSearch",
+      "Bash(del \"collections\\src\\SpreadAggregator.Presentation\\Services\\TradeStreamerService.cs\")",
+      "Bash(del \"collections\\src\\SpreadAggregator.Presentation\\wwwroot\\js\\grpc-client.js\")",
+      "Bash(del \"collections\\TASKS_GRPC_MIGRATION.md\")"
     ],
     "deny": [],
     "ask": []

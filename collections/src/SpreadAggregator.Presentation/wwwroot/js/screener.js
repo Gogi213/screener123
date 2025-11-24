@@ -32,6 +32,12 @@ const btnPrev = document.getElementById('btnPrev');
 const btnNext = document.getElementById('btnNext');
 const pageIndicator = document.getElementById('pageIndicator');
 
+// GLOBAL WebSocket connection
+let globalWebSocket = null;
+
+// WEB WORKER for JSON parsing (offload from UI thread)
+let parseWorker = null;
+
 // CORE LOGIC
 async function init() {
     try {
@@ -47,8 +53,8 @@ async function init() {
         // Initial Render
         renderPage();
 
-        // Connect gRPC stream AFTER rendering
-        initGrpcStream();
+        // Connect global WebSocket AFTER rendering
+        initGlobalWebSocket();
 
     } catch (e) {
         console.error("Init error:", e);
@@ -107,26 +113,17 @@ function renderPage(autoScroll = false) {
 function changePage(delta) {
     currentPage += delta;
     renderPage(true); // Auto-scroll on manual page change
-
-    // Restart gRPC stream for new page (server-side filtering!)
-    initGrpcStream();
 }
 
 function goToFirstPage() {
     currentPage = 1;
     renderPage(true); // Auto-scroll on manual page change
-
-    // Restart gRPC stream for new page
-    initGrpcStream();
 }
 
 function goToLastPage() {
     const totalPages = Math.ceil(allSymbols.length / ITEMS_PER_PAGE);
     currentPage = totalPages;
     renderPage(true); // Auto-scroll on manual page change
-
-    // Restart gRPC stream for new page
-    initGrpcStream();
 }
 
 function createCard(symbol, initialTradeCount) {
@@ -136,6 +133,9 @@ function createCard(symbol, initialTradeCount) {
         <div class="card-header">
             <div class="symbol-name" data-symbol="${symbol}">${symbol}</div>
             <div class="trade-stats" id="stats-${symbol}">0/1m</div>
+        </div>
+        <div class="price-info" id="price-${symbol}">
+            <span class="price-val">---</span>
         </div>
         <div class="chart-container" id="chart-${symbol}"></div>
     `;
@@ -285,55 +285,51 @@ function batchingLoop() {
 batchingLoop();
 
 // ===================================================================
-// gRPC-WEB STREAMING (replaces WebSocket)
+// WEBSOCKET CONNECTION
 // ===================================================================
-let grpcClient = null;
-let currentGrpcStream = null;
+function initGlobalWebSocket() {
+    if (globalWebSocket && globalWebSocket.readyState === WebSocket.OPEN) return;
 
-function initGrpcStream() {
-    // Initialize gRPC client (once)
-    if (!grpcClient) {
-        const grpcHost = `http://${window.location.hostname}:${window.location.port || 5000}`;
-        grpcClient = new GrpcTradeClient(grpcHost);
-        console.log(`[gRPC] Client initialized: ${grpcHost}`);
-    }
+    // Initialize Web Worker for JSON parsing (once)
+    if (!parseWorker) {
+        parseWorker = new Worker('js/websocket-worker.js');
 
-    // Stop previous stream if exists
-    if (currentGrpcStream) {
-        currentGrpcStream.abort();
-    }
+        // Worker sends back parsed messages
+        parseWorker.onmessage = (e) => {
+            const msg = e.data;
 
-    console.log(`[gRPC] Starting stream for page ${currentPage}, pageSize ${ITEMS_PER_PAGE}`);
-    statusText.textContent = `Connecting (gRPC)...`;
-
-    // Start streaming trades for current page
-    grpcClient.streamTrades(
-        currentPage,
-        ITEMS_PER_PAGE,
-        (tradeUpdate) => {
-            // SUCCESS: Received TradeUpdate from server
-            // tradeUpdate = { symbol: "MEXC_BTCUSDT", trades: [{price, quantity, side, timestamp}] }
-            const symbol = tradeUpdate.symbol.replace('MEXC_', '');
-
-            // Accumulate trades for batching
-            const pending = pendingChartUpdates.get(symbol) || [];
-            pending.push(...tradeUpdate.trades);
-            pendingChartUpdates.set(symbol, pending);
-
-            // Update status on first message
-            if (statusText.textContent.includes('Connecting')) {
-                statusText.textContent = `Live: ${allSymbols.length} Pairs (gRPC)`;
+            if (msg.error) {
+                console.error('[Worker] Parse error:', msg.error);
+                return;
             }
-        },
-        (error) => {
-            // ERROR: Stream failed
-            console.error('[gRPC] Stream error:', error);
-            statusText.textContent = `⚠️ Connection lost (gRPC)`;
 
-            // Retry after 3 seconds
-            setTimeout(initGrpcStream, 3000);
-        }
-    );
+            if (msg.type === 'trade_update' && msg.symbol && msg.trades) {
+                const symbol = msg.symbol.replace('MEXC_', '');
+                // Accumulate trades for ALL symbols, not just visible ones
+                const pending = pendingChartUpdates.get(symbol) || [];
+                pending.push(...msg.trades);
+                pendingChartUpdates.set(symbol, pending);
+            }
+        };
+    }
+
+    globalWebSocket = new WebSocket(`ws://${window.location.hostname}:8181`);
+
+    globalWebSocket.onopen = () => {
+        console.log('[WebSocket] Connected to broadcast server');
+        statusText.textContent = `Live: ${allSymbols.length} Pairs`;
+    };
+
+    globalWebSocket.onmessage = (event) => {
+        // Send raw data to Worker for parsing (doesn't block UI thread)
+        parseWorker.postMessage(event.data);
+    };
+
+    globalWebSocket.onclose = () => {
+        console.log('[WebSocket] Disconnected');
+        statusText.textContent = "Reconnecting...";
+        setTimeout(initGlobalWebSocket, 3000);
+    };
 }
 
 function addTradeToChart(symbol, trade) {
@@ -391,7 +387,12 @@ function updateCardStats(symbol, price) {
     }
 
     // 2. Update UI
+    const priceEl = document.getElementById(`price-${symbol}`);
     const statsEl = document.getElementById(`stats-${symbol}`);
+
+    if (priceEl) {
+        priceEl.innerHTML = `<span class="price-val" style="font-family: 'JetBrains Mono';">${formatTickSize(price)}</span>`;
+    }
 
     if (statsEl) {
         statsEl.textContent = `${count}/1m`;
