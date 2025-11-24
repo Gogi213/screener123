@@ -4,376 +4,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEXC Zen Screener</title>
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <title>Mexc Trade Screener | Pro</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
-    <style>
-        :root {
-            --bg-app: #050608;
-            --bg-card: #0e1014;
-            --bg-header: rgba(5, 6, 8, 0.85);
+    <link rel="stylesheet" href="css/screener.css">
 
-            --text-primary: #e1e7ef;
-            --text-secondary: #8b9bb4;
-            --text-muted: #4a5568;
-
-            --accent: #00f2ff;
-            --accent-dim: rgba(0, 242, 255, 0.1);
-
-            --border-subtle: rgba(255, 255, 255, 0.03);
-            --border-hover: rgba(255, 255, 255, 0.08);
-
-            --success: #00d4aa;
-            --danger: #ff4a4a;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background-color: var(--bg-app);
-            color: var(--text-primary);
-            font-family: 'Inter', -apple-system, sans-serif;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-app);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #2d3748;
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #4a5568;
-        }
-
-        /* --- Header / Control Deck --- */
-        .control-deck {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: var(--bg-header);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-subtle);
-            padding: 12px 24px;
-            display: grid;
-            grid-template-columns: 200px 1fr 200px;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .brand {
-            font-size: 14px;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .brand::before {
-            content: '';
-            display: block;
-            width: 8px;
-            height: 8px;
-            background: var(--accent);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--accent);
-        }
-
-        .stats-bar {
-            display: flex;
-            justify-content: center;
-            gap: 32px;
-        }
-
-        .stat-pill {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            line-height: 1;
-        }
-
-        .stat-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-        }
-
-        .stat-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .stat-value.highlight {
-            color: var(--accent);
-        }
-
-        .controls-right {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* --- Pagination Buttons --- */
-        .btn-group {
-            display: flex;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 6px;
-            padding: 2px;
-            border: 1px solid var(--border-subtle);
-        }
-
-        .btn-icon {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            padding: 6px 12px;
-            font-size: 12px;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .btn-icon:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-primary);
-        }
-
-        .btn-icon:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        .page-indicator {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            color: var(--text-muted);
-            padding: 0 12px;
-            display: flex;
-            align-items: center;
-        }
-
-        .page-indicator span {
-            color: var(--text-secondary);
-            margin: 0 4px;
-        }
-
-        /* --- Grid Layout --- */
-        .viewport {
-            padding: 20px;
-            max-width: 1920px;
-            margin: 0 auto;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 16px;
-        }
-
-        /* --- Chart Card --- */
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            overflow: hidden;
-            position: relative;
-            transition: border-color 0.2s ease, transform 0.2s ease;
-            display: flex;
-            flex-direction: column;
-            height: 260px;
-            /* Fixed height for consistency */
-        }
-
-        .card:hover {
-            border-color: var(--border-hover);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .card-header {
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            border-bottom: 1px solid var(--border-subtle);
-            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.01), transparent);
-        }
-
-        .symbol {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-primary);
-            letter-spacing: 0.02em;
-        }
-
-        .price {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-            color: var(--accent);
-            font-weight: 500;
-            text-shadow: 0 0 10px rgba(0, 242, 255, 0.1);
-        }
-
-        .chart-area {
-            flex: 1;
-            width: 100%;
-            position: relative;
-            background: var(--bg-card);
-        }
-
-        /* --- Footer Pagination --- */
-        .footer-controls {
-            padding: 40px 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 16px;
-        }
-
-        /* --- Utilities --- */
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--text-muted);
-            transition: background 0.3s ease;
-        }
-
-        .status-dot.connected {
-            background: var(--success);
-            box-shadow: 0 0 8px var(--success);
-        }
-
-        .status-dot.disconnected {
-            background: var(--danger);
-        }
-
-        .loading-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(5, 6, 8, 0.8);
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            color: var(--accent);
-            letter-spacing: 0.1em;
-        }
-
-        @media (max-width: 768px) {
-            .control-deck {
-                grid-template-columns: 1fr;
-                gap: 12px;
-                position: relative;
-            }
-
-            .stats-bar {
-                gap: 16px;
-            }
-
-            .controls-right {
-                justify-content: center;
-            }
-        }
-    </style>
+    <!-- ApexCharts - Sprint 0: Migration for better interactivity -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 </head>
 
 <body>
-
-    <!-- Header / Control Deck -->
-    <header class="control-deck">
-        <div class="brand">
-            ANTIGRAVITY <span style="color: var(--text-muted)">//</span> MEXC
-        </div>
-
-        <div class="stats-bar">
-            <div class="stat-pill">
-                <span class="stat-label">Symbols</span>
-                <span class="stat-value" id="total-symbols">--</span>
+    <header>
+        <div class="header-left">
+            <div class="brand">
+                <h1>Mexc Screener Pro</h1>
             </div>
-            <div class="stat-pill">
-                <span class="stat-label">Active</span>
-                <span class="stat-value highlight" id="active-charts">--</span>
-            </div>
-            <div class="stat-pill">
-                <span class="stat-label">Status</span>
-                <div class="status-dot disconnected" id="connection-status-dot"></div>
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                <span id="status-text">Connecting...</span>
             </div>
         </div>
 
-        <div class="controls-right">
-            <div class="btn-group">
-                <button class="btn-icon" id="btn-prev">
-                    << /button>
-                        <div class="page-indicator">
-                            <span id="current-page">1</span> / <span id="total-pages">--</span>
-                        </div>
-                        <button class="btn-icon" id="btn-next">></button>
-            </div>
+        <div class="pagination-controls" style="display: flex; gap: 10px; align-items: center;">
+            <button id="btnSortToggle" class="nav-btn sort-toggle-btn active" onclick="toggleSmartSort()"
+                title="Toggle Smart Sorting">
+                <span id="sortIcon">🔥</span> Smart Sort
+            </button>
+            <button id="btnFirst" class="nav-btn" onclick="goToFirstPage()" title="First Page">⏮ First</button>
+            <button id="btnPrev" class="nav-btn" disabled onclick="changePage(-1)">← Prev</button>
+            <span id="pageIndicator" style="font-family: 'JetBrains Mono'; color: #fff; font-size: 11px;">Page 1</span>
+            <button id="btnNext" class="nav-btn" onclick="changePage(1)">Next →</button>
+            <button id="btnLast" class="nav-btn" onclick="goToLastPage()" title="Last Page">Last ⏭</button>
         </div>
     </header>
 
-    <!-- Main Grid -->
-    <div class="viewport">
-        <div class="grid" id="charts-grid">
-            <!-- Cards injected by JS -->
-        </div>
-    </div>
+    <div id="grid"></div>
 
-    <!-- Footer Pagination -->
-    <div class="footer-controls">
-        <div class="btn-group">
-            <button class="btn-icon" id="btn-first-bottom">First</button>
-            <button class="btn-icon" id="btn-prev-bottom">Prev</button>
-            <div class="page-indicator">
-                <span id="current-page-bottom">1</span>
-            </div>
-            <button class="btn-icon" id="btn-next-bottom">Next</button>
-            <button class="btn-icon" id="btn-last-bottom">Last</button>
-        </div>
-    </div>
-
-    <!-- Loading State -->
-    <div id="loading" class="loading-overlay" style="display: none;">
-        INITIALIZING DATA STREAM...
-    </div>
-
-    <!-- Hidden elements required by legacy JS logic, kept for compatibility but hidden -->
-    <div style="display:none">
-        <div id="connection-status"></div>
-        <div id="current-page-stat"></div>
-        <button id="btn-first"></button>
-        <button id="btn-last"></button>
-    </div>
-
-    <script src="js/mexc-viewer.js?v=8"></script>
+    <script src="js/screener.js"></script>
 </body>
 
 </html>

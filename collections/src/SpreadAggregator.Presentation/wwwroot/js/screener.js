@@ -12,13 +12,15 @@ const BLACKLIST = [
 // STATE
 let allSymbols = [];
 let currentPage = 1;
-const activeWebSockets = new Map(); // Symbol -> WebSocket
-const activeCharts = new Map();     // Symbol -> Chart Instance
+const activeCharts = new Map();     // Symbol -> ApexCharts Instance
 
 // SMART SORTING STATE
 let smartSortEnabled = true; // Smart sorting is ON by default
 const symbolActivity = new Map(); // Symbol -> { trades1m: number, lastUpdate: timestamp }
 let smartSortInterval = null;
+
+// GLOBAL WebSocket connection (FleckWebSocketServer broadcasts ALL trades)
+let globalWebSocket = null;
 
 // DOM ELEMENTS
 const grid = document.getElementById('grid');
@@ -42,6 +44,9 @@ async function init() {
         // Initial Render
         renderPage();
 
+        // Connect global WebSocket AFTER rendering
+        initGlobalWebSocket();
+
     } catch (e) {
         console.error("Init error:", e);
         statusText.textContent = "Connection Error";
@@ -50,16 +55,8 @@ async function init() {
 }
 
 function cleanupPage() {
-    activeWebSockets.forEach(ws => {
-        if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-            ws.close();
-        }
-    });
-    activeWebSockets.clear();
-
     activeCharts.forEach(chart => chart.destroy());
     activeCharts.clear();
-
     grid.innerHTML = '';
 }
 
@@ -122,7 +119,7 @@ function createCard(symbol, initialTradeCount) {
             <span class="price-val">---</span>
         </div>
         <div class="chart-container">
-            <canvas id="chart-${symbol}"></canvas>
+            <div id="chart-${symbol}" style="width: 100%; height: 100%;"></div>
         </div>
     `;
     grid.appendChild(card);
@@ -143,90 +140,151 @@ function createCard(symbol, initialTradeCount) {
         }
     });
 
-    const ctx = document.getElementById(`chart-${symbol}`).getContext('2d');
-
-    const chart = new Chart(ctx, {
-        type: 'scatter',
-        data: {
-            datasets: [
-                {
-                    label: 'Buy',
-                    data: [],
-                    backgroundColor: '#10b981',
-                    pointRadius: 2,
-                    pointHoverRadius: 4
-                },
-                {
-                    label: 'Sell',
-                    data: [],
-                    backgroundColor: '#ef4444',
-                    pointRadius: 2,
-                    pointHoverRadius: 4
-                }
-            ]
+    // SPRINT 0: ApexCharts initialization
+    const options = {
+        series: [
+            {
+                name: 'Buy',
+                data: []
+            },
+            {
+                name: 'Sell',
+                data: []
+            }
+        ],
+        chart: {
+            type: 'scatter',
+            height: '100%',
+            animations: {
+                enabled: false
+            },
+            toolbar: {
+                show: false
+            },
+            zoom: {
+                enabled: true,
+                type: 'x'
+            }
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false,
-            plugins: { legend: { display: false }, tooltip: { enabled: false } },
-            scales: {
-                x: { display: false, grid: { display: false } },
-                y: {
-                    display: true,
-                    position: 'right',
-                    grid: { display: false, color: '#333' },
-                    ticks: { color: '#666', font: { size: 9 } }
+        colors: ['#10b981', '#ef4444'],
+        markers: {
+            size: 2,
+            hover: {
+                size: 4
+            }
+        },
+        xaxis: {
+            type: 'datetime',
+            labels: {
+                show: false
+            },
+            axisBorder: {
+                show: false
+            },
+            axisTicks: {
+                show: false
+            }
+        },
+        yaxis: {
+            opposite: true,
+            labels: {
+                style: {
+                    colors: '#666',
+                    fontSize: '9px'
                 }
             }
-        }
-    });
-
-    activeCharts.set(symbol, chart);
-    connectWebSocket(symbol, chart);
-}
-
-function connectWebSocket(symbol, chart) {
-    const oldWs = activeWebSockets.get(symbol);
-    if (oldWs) oldWs.close();
-
-    const ws = new WebSocket(`ws://${window.location.hostname}:5000/ws/trades/${symbol}`);
-    activeWebSockets.set(symbol, ws);
-
-    ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-
-        if (msg.type === 'snapshot') {
-            msg.trades.forEach(t => addTradeToChart(chart, t));
-            if (msg.trades.length > 0) {
-                updateCardStats(symbol, msg.trades[msg.trades.length - 1].price, chart);
+        },
+        grid: {
+            show: false
+        },
+        legend: {
+            show: false
+        },
+        tooltip: {
+            enabled: true,
+            shared: false,
+            x: {
+                format: 'HH:mm:ss'
             }
-        } else if (msg.type === 'update') {
-            addTradeToChart(chart, msg.trade);
-            updateCardStats(symbol, msg.trade.price, chart);
         }
-
-        chart.update('none');
     };
 
-    ws.onclose = () => {
-        if (activeWebSockets.get(symbol) === ws) {
-            setTimeout(() => connectWebSocket(symbol, chart), 3000);
+    const chartElement = document.getElementById(`chart-${symbol}`);
+    const chart = new ApexCharts(chartElement, options);
+    chart.render();
+
+    activeCharts.set(symbol, chart);
+}
+
+// GLOBAL WebSocket connection (FleckWebSocketServer broadcasts to all clients)
+function initGlobalWebSocket() {
+    if (globalWebSocket && globalWebSocket.readyState === WebSocket.OPEN) {
+        return; // Already connected
+    }
+
+    globalWebSocket = new WebSocket(`ws://${window.location.hostname}:8181`);
+
+    globalWebSocket.onopen = () => {
+        console.log('[WebSocket] Connected to broadcast server on port 8181');
+        statusText.textContent = `Live: ${allSymbols.length} Pairs`;
+    };
+
+    globalWebSocket.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+
+        // Route trade_update messages to appropriate chart
+        if (msg.type === 'trade_update' && msg.symbol) {
+            const symbol = msg.symbol.replace('MEXC_', ''); // Remove exchange prefix
+            const chart = activeCharts.get(symbol);
+
+            if (chart && msg.trades) {
+                msg.trades.forEach(t => addTradeToChart(chart, t));
+                if (msg.trades.length > 0) {
+                    const lastTrade = msg.trades[msg.trades.length - 1];
+                    updateCardStats(symbol, lastTrade.price, chart);
+                }
+            }
         }
+    };
+
+    globalWebSocket.onclose = () => {
+        console.log('[WebSocket] Disconnected, reconnecting in 3s...');
+        statusText.textContent = "Reconnecting...";
+        setTimeout(initGlobalWebSocket, 3000);
+    };
+
+    globalWebSocket.onerror = (error) => {
+        console.error('[WebSocket] Error:', error);
     };
 }
 
 function addTradeToChart(chart, trade) {
-    const point = { x: trade.timestamp, y: trade.price };
-    if (trade.side === "Buy" || trade.side === 0) {
-        chart.data.datasets[0].data.push(point);
-    } else {
-        chart.data.datasets[1].data.push(point);
-    }
+    // Parse timestamp if it's a string
+    const timestamp = typeof trade.timestamp === 'string'
+        ? new Date(trade.timestamp).getTime()
+        : trade.timestamp;
 
+    const point = { x: timestamp, y: trade.price };
+    const seriesIndex = (trade.side === "Buy" || trade.side === 0) ? 0 : 1;
+
+    // Get current series data
+    const currentSeries = chart.w.config.series.map((s, idx) => {
+        const data = [...s.data];
+        if (idx === seriesIndex) {
+            data.push(point);
+        }
+        return { name: s.name, data: data };
+    });
+
+    // Remove old data (30 min window)
     const threshold = Date.now() - (HISTORY_MINUTES * 60 * 1000);
-    while (chart.data.datasets[0].data.length > 0 && chart.data.datasets[0].data[0].x < threshold) chart.data.datasets[0].data.shift();
-    while (chart.data.datasets[1].data.length > 0 && chart.data.datasets[1].data[0].x < threshold) chart.data.datasets[1].data.shift();
+    currentSeries.forEach(s => {
+        while (s.data.length > 0 && s.data[0].x < threshold) {
+            s.data.shift();
+        }
+    });
+
+    chart.updateSeries(currentSeries, false);
 }
 
 function updateCardStats(symbol, price, chart) {
@@ -237,8 +295,9 @@ function updateCardStats(symbol, price, chart) {
     let buyCount = 0;
     let sellCount = 0;
 
-    for (const p of chart.data.datasets[0].data) { if (p.x >= oneMinuteAgo) buyCount++; }
-    for (const p of chart.data.datasets[1].data) { if (p.x >= oneMinuteAgo) sellCount++; }
+    const series = chart.w.config.series;
+    for (const p of series[0].data) { if (p.x >= oneMinuteAgo) buyCount++; }
+    for (const p of series[1].data) { if (p.x >= oneMinuteAgo) sellCount++; }
 
     const total = buyCount + sellCount;
 
@@ -264,8 +323,9 @@ function calculateTickSize(chart) {
     const allPrices = [];
 
     // Collect all unique prices from last 100 points
-    const buyData = chart.data.datasets[0].data.slice(-100);
-    const sellData = chart.data.datasets[1].data.slice(-100);
+    const series = chart.w.config.series;
+    const buyData = series[0].data.slice(-100);
+    const sellData = series[1].data.slice(-100);
 
     buyData.forEach(p => allPrices.push(p.y));
     sellData.forEach(p => allPrices.push(p.y));

@@ -1,5 +1,5 @@
-// MEXC Trades Viewer - Zen Design
-// Architecture: WebSocket → In-memory state → Lightweight Charts
+// MEXC Trades Viewer - Zen Design with ApexCharts
+// Architecture: WebSocket → In-memory state → ApexCharts
 
 class MexcTradesViewer {
     constructor() {
@@ -86,28 +86,21 @@ class MexcTradesViewer {
 
         const chartData = this.charts.get(symbol);
 
-        // Update price display
-        if (trades.length > 0) {
-            const latestTrade = trades[trades.length - 1];
-            const priceEl = document.getElementById(`price-${symbol}`);
-            if (priceEl && latestTrade && latestTrade.price) {
-                priceEl.textContent = this.formatPrice(latestTrade.price);
-            }
-        }
-
         // Add valid trades to chart
         for (const trade of trades) {
             if (!trade || !trade.timestamp || !trade.price) continue;
 
-            const timestamp = new Date(trade.timestamp).getTime() / 1000;
+            const timestamp = new Date(trade.timestamp).getTime();
             const price = parseFloat(trade.price);
 
-            if (isNaN(timestamp) || isNaN(price) || !isFinite(timestamp) || !isFinite(price) || price <= 0) {
+            if (isNaN(timestamp) || isNaN(price) || !isFinite(price) || price <= 0) {
                 continue;
             }
 
             try {
-                chartData.series.update({ time: timestamp, value: price });
+                chartData.chart.appendData([{
+                    data: [{ x: timestamp, y: price }]
+                }]);
             } catch (err) {
                 console.error(`[Chart] Update failed for ${symbol}:`, err);
             }
@@ -149,8 +142,11 @@ class MexcTradesViewer {
         card.className = 'card';
         card.innerHTML = `
             <div class="card-header">
-                <div class="symbol">${this.extractSymbolName(symbol)}</div>
-                <div class="price" id="price-${symbol}">--</div>
+                <div class="symbol-group">
+                    <span class="symbol">${this.extractSymbolName(symbol)}</span>
+                    <span class="tick-size">±0.0001</span>
+                </div>
+                <div class="trades-per-min" id="tpm-${symbol}">--/1m</div>
             </div>
             <div class="chart-area" id="chart-${symbol}"></div>
         `;
@@ -161,73 +157,74 @@ class MexcTradesViewer {
             const container = document.getElementById(`chart-${symbol}`);
             if (!container) return;
 
-            const chart = LightweightCharts.createChart(container, {
-                width: container.clientWidth || 300,
-                height: container.clientHeight || 200,
-                layout: {
-                    background: { color: '#0e1014' },
-                    textColor: '#4a5568',
+            // Prepare data
+            const validData = trades
+                .filter(t => t && t.timestamp && t.price)
+                .map(t => ({
+                    x: new Date(t.timestamp).getTime(),
+                    y: parseFloat(t.price)
+                }))
+                .filter(point =>
+                    !isNaN(point.x) && !isNaN(point.y) &&
+                    isFinite(point.x) && isFinite(point.y) && point.y > 0
+                )
+                .sort((a, b) => a.x - b.x);
+
+            const options = {
+                chart: {
+                    type: 'line',
+                    height: 200,
+                    animations: { enabled: false },
+                    toolbar: { show: false },
+                    zoom: { enabled: false },
+                    background: '#0e1014',
+                },
+                theme: {
+                    mode: 'dark',
+                },
+                series: [{
+                    name: 'Price',
+                    data: validData
+                }],
+                xaxis: {
+                    type: 'datetime',
+                    labels: {
+                        style: {
+                            colors: '#4a5568',
+                            fontSize: '10px'
+                        }
+                    }
+                },
+                yaxis: {
+                    labels: {
+                        style: {
+                            colors: '#4a5568',
+                            fontSize: '10px'
+                        },
+                        formatter: (val) => val ? val.toFixed(8).replace(/\.?0+$/, '') : ''
+                    }
                 },
                 grid: {
-                    vertLines: { color: 'rgba(255,255,255,0.02)' },
-                    horzLines: { color: 'rgba(255,255,255,0.02)' },
+                    borderColor: 'rgba(255,255,255,0.02)',
+                    strokeDashArray: 0,
                 },
-                timeScale: {
-                    timeVisible: true,
-                    secondsVisible: true,
-                    borderColor: 'rgba(255,255,255,0.05)',
+                stroke: {
+                    curve: 'straight',
+                    width: 2,
+                    colors: ['#00f2ff']
                 },
-                rightPriceScale: {
-                    borderColor: 'rgba(255,255,255,0.05)',
-                    scaleMargins: { top: 0.2, bottom: 0.2 },
+                tooltip: {
+                    enabled: true,
+                    theme: 'dark',
+                    x: { format: 'HH:mm:ss' }
                 },
-                crosshair: {
-                    vertLine: { color: 'rgba(0,242,255,0.2)', labelBackgroundColor: '#00f2ff' },
-                    horzLine: { color: 'rgba(0,242,255,0.2)', labelBackgroundColor: '#00f2ff' },
-                },
-            });
+                legend: { show: false },
+            };
 
-            const series = chart.addSeries(LightweightCharts.LineSeries, {
-                color: '#00f2ff',
-                lineWidth: 2,
-                crosshairMarkerVisible: true,
-                crosshairMarkerRadius: 4,
-            });
+            const chart = new ApexCharts(container, options);
+            chart.render();
 
-            // Add historical trades with validation
-            if (trades.length > 0) {
-                const validData = trades
-                    .filter(t => t && t.timestamp && t.price)
-                    .map(t => {
-                        const time = new Date(t.timestamp).getTime() / 1000;
-                        const value = parseFloat(t.price);
-                        return { time, value };
-                    })
-                    .filter(point =>
-                        !isNaN(point.time) && !isNaN(point.value) &&
-                        isFinite(point.time) && isFinite(point.value) &&
-                        point.value > 0
-                    )
-                    .sort((a, b) => a.time - b.time);
-
-                if (validData.length > 0) {
-                    series.setData(validData);
-                    const latestPrice = validData[validData.length - 1].value;
-                    document.getElementById(`price-${symbol}`).textContent = this.formatPrice(latestPrice);
-                } else {
-                    document.getElementById(`price-${symbol}`).textContent = '...';
-                }
-            } else {
-                document.getElementById(`price-${symbol}`).textContent = '...';
-            }
-
-            this.charts.set(symbol, { chart, series });
-
-            window.addEventListener('resize', () => {
-                if (container) {
-                    chart.resize(container.clientWidth, container.clientHeight);
-                }
-            });
+            this.charts.set(symbol, { chart, data: validData });
         });
     }
 
@@ -235,22 +232,6 @@ class MexcTradesViewer {
         const parts = fullSymbol.split('_');
         let symbol = parts[parts.length - 1];
         return symbol.replace(/USDT$|USDC$/, '');
-    }
-
-    formatPrice(price) {
-        if (typeof price !== 'number') price = parseFloat(price);
-        if (!isFinite(price)) return '--';
-
-        const str = price.toString();
-        const match = str.match(/^(0\.)0+/);
-
-        if (!match) {
-            return price.toFixed(8).replace(/\.?0+$/, '');
-        }
-
-        const leadingZeros = match[0].length - 2;
-        const significantDigits = str.slice(match[0].length);
-        return `0.0{${leadingZeros}}${significantDigits.substring(0, 4)}`;
     }
 
     setupPaginationControls() {
