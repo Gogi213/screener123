@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mexc Trade Screener | Pro</title>
+    <title>Mexc Trade Screener | Pro - gRPC Edition</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -31,8 +31,8 @@
 
         <div class="pagination-controls" style="display: flex; gap: 10px; align-items: center;">
             <button id="btnSortToggle" class="nav-btn sort-toggle-btn active" onclick="toggleSmartSort()"
-                title="Toggle Smart Sorting">
-                <span id="sortIcon">🔥</span> Smart Sort
+                title="Server-Side Smart Sort (gRPC)">
+                <span id="sortIcon">🚀</span> gRPC Sort
             </button>
             <button id="btnFirst" class="nav-btn" onclick="goToFirstPage()" title="First Page">⏮ First</button>
             <button id="btnPrev" class="nav-btn" disabled onclick="changePage(-1)">← Prev</button>
@@ -44,6 +44,10 @@
 
     <div id="grid"></div>
 
+    <!-- gRPC-Web client (NO proto compilation needed!) -->
+    <script src="js/grpc-client.js"></script>
+
+    <!-- Main screener logic -->
     <script src="js/screener.js"></script>
 </body>
 
