@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SpreadAggregator.Application.Abstractions;
 using SpreadAggregator.Application.Services;
+using SpreadAggregator.Presentation.Diagnostics;
 using SpreadAggregator.Domain.Entities;
 using SpreadAggregator.Domain.Services;
 using SpreadAggregator.Infrastructure.Services;
@@ -47,14 +48,10 @@ class Program
         // Configure logging
         builder.Logging.AddFilter("System.Net.Http.HttpClient", LogLevel.Warning);
         builder.Logging.AddFilter("BingX", LogLevel.Warning);
-        builder.Logging.AddFilter("Bybit", LogLevel.Debug);
+        builder.Logging.AddFilter("Bybit", LogLevel.Warning);
+        builder.Logging.AddFilter("SpreadAggregator.Application.Services.RollingWindowService", LogLevel.Warning);
 
         // Configure application services
-        
-        // PERFORMANCE MONITOR: Initialize before anything else
-        var perfMonitor = new PerformanceMonitor(@"C:\visual projects\arb1\collections\logs\performance");
-        builder.Services.AddSingleton(perfMonitor);
-
         ConfigureServices(builder.Services, builder.Configuration);
 
         // Add ASP.NET Core services for Charts API
@@ -139,16 +136,12 @@ class Program
             var rollingChannel = sp.GetRequiredService<RollingWindowChannel>().Channel;
             var bidBidLogger = sp.GetService<IBidBidLogger>(); // Optional
             var logger = sp.GetRequiredService<ILogger<RollingWindowService>>();
-            var perfMonitor = sp.GetRequiredService<PerformanceMonitor>();
-            return new RollingWindowService(rollingChannel, bidBidLogger, logger, perfMonitor);
+            // SCREENER OPTIMIZATION: PerformanceMonitor disabled - pass null
+            return new RollingWindowService(rollingChannel, bidBidLogger, logger, null);
         });
 
-        // Task 0.5: Register ExchangeHealthMonitor
-        services.AddSingleton<IExchangeHealthMonitor>(sp =>
-        {
-            var logger = sp.GetRequiredService<ILogger<ExchangeHealthMonitor>>();
-            return new ExchangeHealthMonitor(logger);
-        });
+        // SCREENER OPTIMIZATION: ExchangeHealthMonitor DISABLED (Timer every 10 sec - not needed for screener MVP)
+        // services.AddSingleton<IExchangeHealthMonitor>(sp => { ... });
 
 
         // ... (rest of logging setup)
@@ -169,25 +162,22 @@ class Program
                 rollingChannel,
                 sp.GetRequiredService<IDataWriter>(),
                 sp.GetRequiredService<IBidAskLogger>(),
-                sp.GetRequiredService<IExchangeHealthMonitor>(),
+                sp.GetService<IExchangeHealthMonitor>(), // SCREENER: Optional - disabled for screener
                 sp.GetRequiredService<TradeScreenerChannel>().Channel
             );
         });
 
-        services.AddSingleton<TradeScreenerService>(sp =>
-        {
-            var channelReader = sp.GetRequiredService<TradeScreenerChannel>().Channel.Reader;
-            var config = sp.GetRequiredService<IConfiguration>();
-            var logger = sp.GetRequiredService<ILogger<TradeScreenerService>>();
-            return new TradeScreenerService(channelReader, config, logger);
-        });
+        // SCREENER OPTIMIZATION: TradeScreenerService removed (whale trade file logging not needed for screener MVP)
+        // services.AddSingleton<TradeScreenerService>(sp => { ... });
 
         // Chart API Services removed (legacy arbitrage HFT code)
 
         services.AddHostedService<OrchestrationServiceHost>();
-        services.AddHostedService<DataCollectorService>();
+        // SCREENER OPTIMIZATION: DataCollectorService removed (uses NullDataWriter - no-op)
+        // services.AddHostedService<DataCollectorService>();
         services.AddHostedService<RollingWindowServiceHost>();
-        services.AddHostedService<TradeScreenerService>();
+        // SCREENER OPTIMIZATION: TradeScreenerService removed (whale trade file logging - I/O overhead)
+        // services.AddHostedService<TradeScreenerService>();
     }
 }
 

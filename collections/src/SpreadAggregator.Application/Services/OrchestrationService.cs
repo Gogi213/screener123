@@ -111,7 +111,8 @@ public class OrchestrationService
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        _webSocketServer.Start();
+        // SCREENER OPTIMIZATION: Legacy WebSocket on 8181 DISABLED (not used by screener, actively listens and wastes resources)
+        // _webSocketServer.Start();
 
         // Create cancellation token source for stopping all exchanges
         _cancellationTokenSource = new CancellationTokenSource();
@@ -183,9 +184,9 @@ public class OrchestrationService
 
         var tickerLookup = tickers.ToDictionary(t => t.Symbol, t => t.QuoteVolume);
 
+        // STRESS TEST: Removed USDT/USDC filter - now subscribes to ALL pairs (BTC, ETH, USDT, USDC, etc.)
         var filteredSymbolInfo = allSymbols
             .Where(s => tickerLookup.ContainsKey(s.Name) &&
-                        (s.Name.EndsWith("USDT", StringComparison.OrdinalIgnoreCase) || s.Name.EndsWith("USDC", StringComparison.OrdinalIgnoreCase)) &&
                         _volumeFilter.IsVolumeSufficient(tickerLookup[s.Name], minVolume, maxVolume))
             .ToList();
         
@@ -282,26 +283,12 @@ public class OrchestrationService
             Console.WriteLine($"[{exchangeName}] Adding trade subscription task...");
             tasks.Add(exchangeClient.SubscribeToTradesAsync(filteredSymbolNames, async tradeData =>
             {
-                // PROPOSAL-2025-0093: HFT hot path optimization (same as for spreads)
-                // HOT PATH: WebSocket broadcast FIRST
-                var wrapper = new WebSocketMessage { MessageType = "Trade", Payload = tradeData };
-                var message = JsonSerializer.Serialize(wrapper);
-                _ = _webSocketServer.BroadcastRealtimeAsync(message); // fire-and-forget
-
-                // COLD PATH: TryWrite for minimal latency
-                if (!_rawDataChannel.Writer.TryWrite(tradeData))
-                {
-                    // Console.WriteLine($"[Orchestration-WARN] Raw data channel full (system overload), dropping trade data");
-                }
-
+                // SCREENER OPTIMIZED: Only write to RollingWindow (critical path)
+                // Removed: Legacy WebSocket broadcast (unused), RawDataChannel (DataCollectorService disabled), TradeScreenerChannel (whale logging disabled)
+                
                 if (!_rollingWindowChannel.Writer.TryWrite(tradeData))
                 {
                    // Console.WriteLine($"[Orchestration-WARN] Rolling window channel full (system overload), dropping trade data");
-                }
-
-                if (!_tradeScreenerChannel.Writer.TryWrite(tradeData))
-                {
-                    // Drop silently if full
                 }
             }));
         }

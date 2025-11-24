@@ -5,18 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mexc Trade Screener | Pro</title>
-
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
-
-    <!-- Styles -->
     <link rel="stylesheet" href="css/screener.css">
-
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script
         src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -24,20 +18,26 @@
 </head>
 
 <body>
-
     <header>
-        <div class="brand">
-            <h1>Mexc Screener Pro | Sorted by Activity</h1>
+        <div class="header-left">
+            <div class="brand">
+                <h1>Mexc Screener Pro</h1>
+            </div>
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                <span id="status-text">Connecting...</span>
+            </div>
         </div>
-        <div class="status-badge">
-            <div class="status-dot"></div>
-            <span id="status-text">Connecting...</span>
+
+        <div class="pagination-controls" style="display: flex; gap: 15px; align-items: center;">
+            <button id="btnPrev" class="nav-btn" disabled onclick="changePage(-1)">← Prev</button>
+            <span id="pageIndicator" style="font-family: 'JetBrains Mono'; color: #fff;">Page 1</span>
+            <button id="btnNext" class="nav-btn" onclick="changePage(1)">Next →</button>
         </div>
     </header>
 
     <div id="grid"></div>
 
-    <!-- App Logic -->
     <script src="js/screener.js"></script>
 </body>
 

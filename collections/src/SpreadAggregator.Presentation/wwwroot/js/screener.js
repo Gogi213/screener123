@@ -1,39 +1,47 @@
 // CONFIG
-const MAX_CHARTS = 100;
+const ITEMS_PER_PAGE = 100;
 const HISTORY_MINUTES = 30;
 
+// STATE
+let allSymbols = [];
+let currentPage = 1;
+const activeWebSockets = new Map(); // Symbol -> WebSocket
+const activeCharts = new Map();     // Symbol -> Chart Instance
+
+// DOM ELEMENTS
 const grid = document.getElementById('grid');
 const statusText = document.getElementById('status-text');
+const btnPrev = document.getElementById('btnPrev');
+const btnNext = document.getElementById('btnNext');
+const pageIndicator = document.getElementById('pageIndicator');
 
-// FORMATTER: 0.00000123 -> 0.(5)123
-function formatPrice(val) {
+// UTILS
+function formatPrice(price) {
+    if (!price) return '0.00';
+    if (price < 0.0001) return price.toFixed(8); // Small caps
+    if (price < 1) return price.toFixed(6);
+    if (price < 10) return price.toFixed(4);
+    return price.toFixed(2);
+}
+
+function formatVolume(val) {
     if (!val) return '0';
-    if (val >= 1) return val.toFixed(2);
-    if (val >= 0.001) return val.toFixed(5);
-
-    const str = val.toFixed(10); // High precision
-    // Match 0.000... (zeros) (rest)
-    const match = str.match(/^0\.(0+)([^0].*)$/);
-    if (match) {
-        const zeros = match[1].length;
-        const rest = match[2].substring(0, 4); // Keep 4 sig figs
-        return `0.(${zeros})${rest}`;
-    }
+    if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
+    if (val >= 1000) return (val / 1000).toFixed(1) + 'K';
     return val.toString();
 }
 
+// CORE LOGIC
 async function init() {
     try {
         statusText.textContent = "Fetching symbols...";
         const response = await fetch('/api/trades/symbols');
-        const symbols = await response.json();
+        allSymbols = await response.json();
 
-        const topSymbols = symbols.slice(0, MAX_CHARTS);
+        statusText.textContent = `Live: ${allSymbols.length} Pairs`;
 
-        statusText.textContent = `Live: ${topSymbols.length} Pairs`;
-        grid.innerHTML = '';
-
-        topSymbols.forEach(s => createCard(s.symbol, s.tradeCount));
+        // Initial Render
+        renderPage();
 
     } catch (e) {
         console.error("Init error:", e);
@@ -42,22 +50,70 @@ async function init() {
     }
 }
 
-function createCard(symbol, initialCount) {
-    const div = document.createElement('div');
-    div.className = 'chart-card';
-    div.innerHTML = `
+function cleanupPage() {
+    // 1. Close all WebSockets
+    activeWebSockets.forEach(ws => {
+        if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+            ws.close();
+        }
+    });
+    activeWebSockets.clear();
+
+    // 2. Destroy all Charts (CRITICAL for WebGL memory)
+    activeCharts.forEach(chart => chart.destroy());
+    activeCharts.clear();
+
+    // 3. Clear DOM
+    grid.innerHTML = '';
+}
+
+function renderPage() {
+    cleanupPage();
+
+    const totalPages = Math.ceil(allSymbols.length / ITEMS_PER_PAGE);
+
+    // Validate page bounds
+    if (currentPage < 1) currentPage = 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    // Update Controls
+    pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
+    btnPrev.disabled = currentPage === 1;
+    btnNext.disabled = currentPage === totalPages;
+    statusText.textContent = `Live: ${allSymbols.length} Pairs (showing ${ITEMS_PER_PAGE})`;
+
+    // Slice Data
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    const pageSymbols = allSymbols.slice(start, end);
+
+    // Render Cards
+    pageSymbols.forEach(s => createCard(s.symbol, s.tradeCount));
+}
+
+function changePage(delta) {
+    currentPage += delta;
+    renderPage();
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function createCard(symbol, initialTradeCount) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
         <div class="card-header">
-            <span class="symbol-name">${symbol}</span>
-            <span class="trade-stats" id="stats-${symbol}" title="Trades in last 30 minutes">${initialCount} trades (30m)</span>
+            <div class="symbol-name">${symbol}</div>
+            <div class="trade-stats" id="stats-${symbol}">0/1m</div>
         </div>
-        <div class="chart-wrapper">
-            <canvas id="canvas-${symbol}"></canvas>
+        <div class="price-info" id="price-${symbol}">---</div>
+        <div class="chart-container">
+            <canvas id="chart-${symbol}"></canvas>
         </div>
     `;
-    grid.appendChild(div);
+    grid.appendChild(card);
 
-    const canvas = document.getElementById(`canvas-${symbol}`);
-    const ctx = canvas.getContext('2d');
+    const ctx = document.getElementById(`chart-${symbol}`).getContext('2d');
 
     const chart = new Chart(ctx, {
         type: 'scatter',
@@ -66,170 +122,124 @@ function createCard(symbol, initialCount) {
                 {
                     label: 'Buy',
                     data: [],
-                    backgroundColor: '#22c55e',
-                    pointRadius: 1.5,
-                    pointHoverRadius: 4,
-                    borderWidth: 0
+                    backgroundColor: '#10b981', // Green
+                    pointRadius: 2,
+                    pointHoverRadius: 4
                 },
                 {
                     label: 'Sell',
                     data: [],
-                    backgroundColor: '#ef4444',
-                    pointRadius: 1.5,
-                    pointHoverRadius: 4,
-                    borderWidth: 0
+                    backgroundColor: '#ef4444', // Red
+                    pointRadius: 2,
+                    pointHoverRadius: 4
                 }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            animation: false,
-            interaction: {
-                mode: 'nearest',
-                intersect: false,
-                axis: 'x'
+            animation: false, // Performance
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false } // Performance
             },
             scales: {
                 x: {
                     type: 'time',
-                    time: {
-                        unit: 'minute',
-                        displayFormats: { minute: 'HH:mm' }
-                    },
-                    grid: {
-                        color: '#27272a',
-                        drawBorder: false,
-                        tickLength: 4
-                    },
-                    ticks: {
-                        color: '#71717a',
-                        font: { size: 9, family: "'JetBrains Mono', monospace" },
-                        maxTicksLimit: 5,
-                        maxRotation: 0
-                    }
+                    time: { unit: 'minute' },
+                    display: false, // Clean look
+                    grid: { display: false }
                 },
                 y: {
+                    display: true, // Show Price Axis
                     position: 'right',
-                    grid: {
-                        color: '#27272a',
-                        drawBorder: false,
-                        tickLength: 0
-                    },
-                    ticks: {
-                        color: '#71717a',
-                        font: { size: 9, family: "'JetBrains Mono', monospace" },
-                        callback: (val) => formatPrice(val),
-                        padding: 4
-                    },
-                    beginAtZero: false
-                }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    enabled: true,
-                    backgroundColor: 'rgba(24, 24, 27, 0.9)',
-                    titleColor: '#e4e4e7',
-                    bodyColor: '#a1a1aa',
-                    borderColor: '#27272a',
-                    borderWidth: 1,
-                    padding: 8,
-                    titleFont: { size: 11, family: "'Inter', sans-serif" },
-                    bodyFont: { size: 10, family: "'JetBrains Mono', monospace" },
-                    callbacks: {
-                        label: function (context) {
-                            const p = formatPrice(context.parsed.y);
-                            const t = new Date(context.parsed.x).toLocaleTimeString([], { hour12: false });
-                            return `${context.dataset.label.toUpperCase()}  ${p}  ${t}`;
-                        }
-                    }
-                },
-                zoom: {
-                    zoom: {
-                        wheel: { enabled: true },
-                        pinch: { enabled: true },
-                        mode: 'x',
-                    },
-                    pan: {
-                        enabled: true,
-                        mode: 'x',
-                        modifierKey: null, // No key needed
-                        threshold: 10
-                    }
+                    grid: { display: false, color: '#333' },
+                    ticks: { color: '#888', font: { size: 10 } }
                 }
             }
         }
     });
 
-    // Double click to reset zoom
-    canvas.ondblclick = () => {
-        chart.resetZoom();
-    };
+    // Save chart instance for cleanup
+    activeCharts.set(symbol, chart);
 
     connectWebSocket(symbol, chart);
 }
 
 function connectWebSocket(symbol, chart) {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${protocol}//${window.location.host}/ws/trades/${symbol}`);
+    // Double check cleanup (just in case)
+    const oldWs = activeWebSockets.get(symbol);
+    if (oldWs) oldWs.close();
+
+    // FIX: Use Path Parameter (/ws/trades/SYMBOL) instead of Query Parameter
+    const ws = new WebSocket(`ws://${window.location.hostname}:5000/ws/trades/${symbol}`);
+    activeWebSockets.set(symbol, ws);
 
     ws.onmessage = (event) => {
         const msg = JSON.parse(event.data);
 
+        // FIX: Handle 'snapshot' and 'update' message types
         if (msg.type === 'snapshot') {
-            const buys = [];
-            const sells = [];
-
-            msg.trades.forEach(t => {
-                const point = { x: t.timestamp, y: parseFloat(t.price) };
-                if (t.side === 'Buy') buys.push(point);
-                else sells.push(point);
-            });
-
-            chart.data.datasets[0].data = buys;
-            chart.data.datasets[1].data = sells;
-            chart.update();
-
-            // Update stats immediately
-            updateCardStats(symbol, buys.length + sells.length);
+            msg.trades.forEach(t => addTradeToChart(chart, t));
+        } else if (msg.type === 'update') {
+            addTradeToChart(chart, msg.trade);
+            updateCardStats(symbol, msg.trade.price, chart);
         }
-        else if (msg.type === 'update') {
-            const t = msg.trade;
-            const point = { x: t.timestamp, y: parseFloat(t.price) };
 
-            if (t.side === 'Buy') {
-                chart.data.datasets[0].data.push(point);
-            } else {
-                chart.data.datasets[1].data.push(point);
-            }
-
-            // Time-based cleanup (30 mins)
-            const threshold = Date.now() - HISTORY_MINUTES * 60 * 1000;
-
-            if (chart.data.datasets[0].data.length > 0 && chart.data.datasets[0].data[0].x < threshold) {
-                chart.data.datasets[0].data = chart.data.datasets[0].data.filter(p => p.x >= threshold);
-            }
-            if (chart.data.datasets[1].data.length > 0 && chart.data.datasets[1].data[0].x < threshold) {
-                chart.data.datasets[1].data = chart.data.datasets[1].data.filter(p => p.x >= threshold);
-            }
-
-            chart.update('none');
-
-            // Update stats dynamic
-            const totalPoints = chart.data.datasets[0].data.length + chart.data.datasets[1].data.length;
-            updateCardStats(symbol, totalPoints);
-        }
+        chart.update('none');
     };
 
     ws.onclose = () => {
-        setTimeout(() => connectWebSocket(symbol, chart), 5000);
+        // Auto-reconnect only if still on same page
+        if (activeWebSockets.get(symbol) === ws) {
+            setTimeout(() => connectWebSocket(symbol, chart), 3000);
+        }
     };
 }
 
-function updateCardStats(symbol, count) {
-    const el = document.getElementById(`stats-${symbol}`);
-    if (el) el.textContent = `${count} trades (30m)`;
+function addTradeToChart(chart, trade) {
+    const point = { x: trade.timestamp, y: trade.price };
+
+    // Add point
+    // FIX: Check for both string "Buy" (from API) and integer 0 (legacy)
+    if (trade.side === "Buy" || trade.side === 0) {
+        chart.data.datasets[0].data.push(point);
+    } else { // Sell
+        chart.data.datasets[1].data.push(point);
+    }
+
+    // Efficient Cleanup (Shift instead of Filter)
+    const threshold = Date.now() - (HISTORY_MINUTES * 60 * 1000);
+
+    // Cleanup Buys
+    while (chart.data.datasets[0].data.length > 0 && chart.data.datasets[0].data[0].x < threshold) {
+        chart.data.datasets[0].data.shift();
+    }
+    // Cleanup Sells
+    while (chart.data.datasets[1].data.length > 0 && chart.data.datasets[1].data[0].x < threshold) {
+        chart.data.datasets[1].data.shift();
+    }
+}
+
+function updateCardStats(symbol, price, chart) {
+    const priceEl = document.getElementById(`price-${symbol}`);
+    if (priceEl) priceEl.textContent = formatPrice(price);
+
+    const statsEl = document.getElementById(`stats-${symbol}`);
+    if (statsEl) {
+        const oneMinuteAgo = Date.now() - 60000;
+        let count = 0;
+
+        // Manual count (faster than filter)
+        for (const p of chart.data.datasets[0].data) {
+            if (p.x >= oneMinuteAgo) count++;
+        }
+        for (const p of chart.data.datasets[1].data) {
+            if (p.x >= oneMinuteAgo) count++;
+        }
+
+        statsEl.textContent = `${count}/1m`;
+    }
 }
 
 // Start
