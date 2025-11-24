@@ -12,7 +12,10 @@ const BLACKLIST = [
 // STATE
 let allSymbols = [];
 let currentPage = 1;
-const activeCharts = new Map();     // Symbol -> Chart.js Instance
+const activeCharts = new Map();     // Symbol -> uPlot Instance
+
+// uPlot DATA STRUCTURE - Map<symbol, {times: Float64Array, buys: Float32Array, sells: Float32Array, index: number}>
+const chartData = new Map();
 
 // SMART SORTING STATE
 let smartSortEnabled = true;
@@ -58,11 +61,12 @@ async function init() {
 }
 
 function cleanupPage() {
-    // Destroy Chart.js instances properly
-    activeCharts.forEach(chart => {
-        chart.destroy();
+    // Destroy uPlot instances properly
+    activeCharts.forEach(uplot => {
+        uplot.destroy();
     });
     activeCharts.clear();
+    chartData.clear();
     grid.innerHTML = '';
 }
 
@@ -122,9 +126,7 @@ function createCard(symbol, initialTradeCount) {
         <div class="price-info" id="price-${symbol}">
             <span class="price-val">---</span>
         </div>
-        <div class="chart-container">
-            <canvas id="chart-${symbol}"></canvas>
-        </div>
+        <div class="chart-container" id="chart-${symbol}"></div>
     `;
     grid.appendChild(card);
 
@@ -139,54 +141,51 @@ function createCard(symbol, initialTradeCount) {
         } catch (err) { console.error('Failed to copy:', err); }
     });
 
-    // --- CHART.JS INITIALIZATION ---
-    const ctx = document.getElementById(`chart-${symbol}`).getContext('2d');
+    // --- uPLOT INITIALIZATION ---
+    const container = document.getElementById(`chart-${symbol}`);
 
-    const chart = new Chart(ctx, {
-        type: 'scatter',
-        data: {
-            datasets: [
-                {
-                    label: 'Buy',
-                    data: [],
-                    backgroundColor: '#10b981',
-                    pointRadius: 2,
-                    pointHoverRadius: 3
-                },
-                {
-                    label: 'Sell',
-                    data: [],
-                    backgroundColor: '#ef4444',
-                    pointRadius: 2,
-                    pointHoverRadius: 3
-                }
-            ]
+    const opts = {
+        width: container.offsetWidth || 400,
+        height: 150,
+        cursor: { show: false },
+        legend: { show: false },
+        scales: {
+            x: { time: false },
+            y: { auto: true }
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false, // CRITICAL: Disable animation for performance
-            parsing: false, // Direct data access
-            normalized: true,
-            plugins: {
-                legend: { display: false },
-                tooltip: { enabled: false } // Disable tooltips for speed
+        series: [
+            { label: 'Time' },
+            {
+                label: 'Buy',
+                stroke: '#10b981',
+                fill: '#10b98120',
+                points: { show: true, size: 3, width: 1 }
             },
-            scales: {
-                x: {
-                    type: 'linear', // Use linear scale for timestamps
-                    display: false // Hide X axis
-                    // min/max will be set dynamically based on data
-                },
-                y: {
-                    display: false, // Hide Y axis
-                    beginAtZero: false
-                }
+            {
+                label: 'Sell',
+                stroke: '#ef4444',
+                fill: '#ef444420',
+                points: { show: true, size: 3, width: 1 }
             }
-        }
-    });
+        ],
+        axes: [
+            { show: false },
+            { show: false }
+        ]
+    };
 
-    activeCharts.set(symbol, chart);
+    // Initial empty data: [timestamps[], buys[], sells[]]
+    const data = [[], [], []];
+    const uplot = new uPlot(opts, data, container);
+
+    activeCharts.set(symbol, uplot);
+
+    // Initialize data storage for this symbol
+    chartData.set(symbol, {
+        times: [],
+        buys: [],
+        sells: []
+    });
 }
 
 // --- BATCHING LOOP (300ms) ---
@@ -194,33 +193,19 @@ setInterval(() => {
     if (pendingChartUpdates.size === 0) return;
 
     pendingChartUpdates.forEach((trades, symbol) => {
-        const chart = activeCharts.get(symbol);
-        if (chart && trades.length > 0) {
+        const uplot = activeCharts.get(symbol);
+        const data = chartData.get(symbol);
+
+        if (uplot && data && trades.length > 0) {
             // Add all accumulated trades
-            trades.forEach(t => addTradeToChart(chart, t));
+            trades.forEach(t => addTradeToChart(symbol, t));
 
             // Update stats
             const lastTrade = trades[trades.length - 1];
-            updateCardStats(symbol, lastTrade.price, chart);
+            updateCardStats(symbol, lastTrade.price);
 
-            // Update Chart (Efficiently)
-            // Dynamic X-axis scaling based on actual data
-            const allX = [
-                ...chart.data.datasets[0].data.map(p => p.x),
-                ...chart.data.datasets[1].data.map(p => p.x)
-            ];
-
-            if (allX.length > 0) {
-                const minX = Math.min(...allX);
-                const maxX = Math.max(...allX);
-                const range = maxX - minX || 1000; // Fallback if all trades at same time
-                const padding = range * 0.05; // 5% padding
-
-                chart.options.scales.x.min = minX - padding;
-                chart.options.scales.x.max = maxX + padding;
-            }
-
-            chart.update('none'); // Update without animation
+            // Update uPlot with new data
+            uplot.setData([data.times, data.buys, data.sells]);
         }
     });
 
@@ -256,11 +241,14 @@ function initGlobalWebSocket() {
     };
 }
 
-function addTradeToChart(chart, trade) {
+function addTradeToChart(symbol, trade) {
+    const data = chartData.get(symbol);
+    if (!data) return;
+
     // Parse timestamp (ms)
     let timestamp = typeof trade.timestamp === 'string'
         ? new Date(trade.timestamp).getTime()
-        : trade.timestamp; // Assume ms if number, or fix if seconds
+        : trade.timestamp;
 
     // Check if timestamp is seconds (small number)
     if (timestamp < 10000000000) timestamp *= 1000;
@@ -270,34 +258,34 @@ function addTradeToChart(chart, trade) {
 
     if (isNaN(price)) return;
 
-    // Add to appropriate dataset (scatter chart - independent datasets)
-    // Dataset 0: Buy, Dataset 1: Sell
-    const dataset = isBuy ? chart.data.datasets[0] : chart.data.datasets[1];
-    dataset.data.push({ x: timestamp, y: price });
+    // Add to synchronized arrays (uPlot format)
+    data.times.push(timestamp);
+    data.buys.push(isBuy ? price : null);
+    data.sells.push(isBuy ? null : price);
 
     // Cleanup old data to prevent memory bloat
-    if (dataset.data.length > 2000) {
-        dataset.data.shift();
+    if (data.times.length > 2000) {
+        data.times.shift();
+        data.buys.shift();
+        data.sells.shift();
     }
 }
 
-function updateCardStats(symbol, price, chart) {
+function updateCardStats(symbol, price) {
+    const data = chartData.get(symbol);
+    if (!data) return;
+
     // 1. Calculate Trades/Min
     const oneMinuteAgo = Date.now() - 60000;
     let count = 0;
 
-    // Count from dataset 0 (Buy) + dataset 1 (Sell)
-    const buys = chart.data.datasets[0].data;
-    const sells = chart.data.datasets[1].data;
-
-    // Iterate backwards (all values are valid in scatter chart)
-    for (let i = buys.length - 1; i >= 0; i--) {
-        if (buys[i].x < oneMinuteAgo) break;
-        count++;
-    }
-    for (let i = sells.length - 1; i >= 0; i--) {
-        if (sells[i].x < oneMinuteAgo) break;
-        count++;
+    // Count from times array (iterate backwards)
+    for (let i = data.times.length - 1; i >= 0; i--) {
+        if (data.times[i] < oneMinuteAgo) break;
+        // Count non-null values in buys or sells
+        if (data.buys[i] !== null || data.sells[i] !== null) {
+            count++;
+        }
     }
 
     // 2. Update UI
