@@ -112,16 +112,17 @@ class Program
         services.AddSingleton(sp => sp.GetRequiredService<RawDataChannel>().Channel.Reader);
 
         // Register all exchange clients
-        services.AddSingleton<IExchangeClient, BinanceExchangeClient>();
+        // MEXC TRADES VIEWER: Only MEXC enabled
+        // services.AddSingleton<IExchangeClient, BinanceExchangeClient>();
         services.AddSingleton<IExchangeClient, MexcExchangeClient>();
-        services.AddSingleton<IExchangeClient, GateIoExchangeClient>();
-        services.AddSingleton<IExchangeClient, KucoinExchangeClient>();
-        services.AddSingleton<IExchangeClient, OkxExchangeClient>();
-        services.AddSingleton<IExchangeClient, BitgetExchangeClient>();
-        services.AddSingleton<IExchangeClient, BingXExchangeClient>();
-        services.AddSingleton<IExchangeClient, BybitExchangeClient>();
+        // services.AddSingleton<IExchangeClient, GateIoExchangeClient>();
+        // services.AddSingleton<IExchangeClient, KucoinExchangeClient>();
+        // services.AddSingleton<IExchangeClient, OkxExchangeClient>();
+        // services.AddSingleton<IExchangeClient, BitgetExchangeClient>();
+        // services.AddSingleton<IExchangeClient, BingXExchangeClient>();
+        // services.AddSingleton<IExchangeClient, BybitExchangeClient>();
 
-        services.AddBybit();
+        // services.AddBybit();
 
         // Регистрация IDataWriter (Null implementation for Screener Mode)
         services.AddSingleton<IDataWriter>(sp => new NullDataWriter());
@@ -131,13 +132,23 @@ class Program
 
         // BidBid Logger removed for Screener Mode
 
-        services.AddSingleton<RollingWindowService>(sp =>
+        // MEXC TRADES VIEWER: RollingWindowService disabled (was for bid-bid spread matching)
+        // services.AddSingleton<RollingWindowService>(sp =>
+        // {
+        //     var rollingChannel = sp.GetRequiredService<RollingWindowChannel>().Channel;
+        //     var bidBidLogger = sp.GetService<IBidBidLogger>(); // Optional
+        //     var logger = sp.GetRequiredService<ILogger<RollingWindowService>>();
+        //     // SCREENER OPTIMIZATION: PerformanceMonitor disabled - pass null
+        //     return new RollingWindowService(rollingChannel, bidBidLogger, logger, null);
+        // });
+
+        // MEXC TRADES VIEWER: TradeAggregatorService - processes trades from TradeScreenerChannel
+        services.AddSingleton<TradeAggregatorService>(sp =>
         {
-            var rollingChannel = sp.GetRequiredService<RollingWindowChannel>().Channel;
-            var bidBidLogger = sp.GetService<IBidBidLogger>(); // Optional
-            var logger = sp.GetRequiredService<ILogger<RollingWindowService>>();
-            // SCREENER OPTIMIZATION: PerformanceMonitor disabled - pass null
-            return new RollingWindowService(rollingChannel, bidBidLogger, logger, null);
+            var tradeChannel = sp.GetRequiredService<TradeScreenerChannel>().Channel;
+            var webSocketServer = sp.GetRequiredService<IWebSocketServer>();
+            var logger = sp.GetRequiredService<ILogger<TradeAggregatorService>>();
+            return new TradeAggregatorService(tradeChannel, webSocketServer, logger);
         });
 
         // SCREENER OPTIMIZATION: ExchangeHealthMonitor DISABLED (Timer every 10 sec - not needed for screener MVP)
@@ -175,7 +186,10 @@ class Program
         services.AddHostedService<OrchestrationServiceHost>();
         // SCREENER OPTIMIZATION: DataCollectorService removed (uses NullDataWriter - no-op)
         // services.AddHostedService<DataCollectorService>();
-        services.AddHostedService<RollingWindowServiceHost>();
+        // MEXC TRADES VIEWER: RollingWindowServiceHost disabled (bid-bid spread matching not needed)
+        // services.AddHostedService<RollingWindowServiceHost>();
+        // MEXC TRADES VIEWER: TradeAggregatorServiceHost - processes trades
+        services.AddHostedService<TradeAggregatorServiceHost>();
         // SCREENER OPTIMIZATION: TradeScreenerService removed (whale trade file logging - I/O overhead)
         // services.AddHostedService<TradeScreenerService>();
     }
@@ -269,6 +283,73 @@ public class RollingWindowServiceHost : IHostedService
             else
             {
                 _logger.LogInformation("[RollingWindowHost] Rolling window service stopped");
+            }
+        }
+
+        _cts?.Dispose();
+    }
+}
+
+public class TradeAggregatorServiceHost : IHostedService
+{
+    private readonly TradeAggregatorService _tradeAggregatorService;
+    private readonly TradeScreenerChannel _tradeScreenerChannel;
+    private readonly IWebSocketServer _webSocketServer;
+    private readonly ILogger<TradeAggregatorServiceHost> _logger;
+    private Task? _runningTask;
+    private CancellationTokenSource? _cts;
+
+    public TradeAggregatorServiceHost(
+        TradeAggregatorService tradeAggregatorService,
+        TradeScreenerChannel tradeScreenerChannel,
+        IWebSocketServer webSocketServer,
+        ILogger<TradeAggregatorServiceHost> logger)
+    {
+        _tradeAggregatorService = tradeAggregatorService;
+        _tradeScreenerChannel = tradeScreenerChannel;
+        _webSocketServer = webSocketServer;
+        _logger = logger;
+    }
+
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("[TradeAggregatorHost] Starting trade aggregator service...");
+
+        // MEXC TRADES VIEWER: Inject TradeAggregatorService into WebSocketServer
+        if (_webSocketServer is FleckWebSocketServer fleckServer)
+        {
+            fleckServer.SetTradeAggregatorService(_tradeAggregatorService);
+            _logger.LogInformation("[TradeAggregatorHost] Injected TradeAggregatorService into WebSocketServer");
+        }
+
+        _cts = new CancellationTokenSource();
+        _runningTask = _tradeAggregatorService.StartAsync(_cts.Token);
+        return Task.CompletedTask;
+    }
+
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("[TradeAggregatorHost] Stopping trade aggregator service gracefully...");
+
+        // Signal cancellation
+        _cts?.Cancel();
+
+        // Complete the channel to stop processing
+        _tradeScreenerChannel.Channel.Writer.Complete();
+
+        // Wait for task to finish (with timeout)
+        if (_runningTask != null)
+        {
+            var timeout = Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+            var completed = await Task.WhenAny(_runningTask, timeout);
+
+            if (completed == timeout)
+            {
+                _logger.LogWarning("[TradeAggregatorHost] Trade aggregator service did not stop within 5 seconds");
+            }
+            else
+            {
+                _logger.LogInformation("[TradeAggregatorHost] Trade aggregator service stopped");
             }
         }
 

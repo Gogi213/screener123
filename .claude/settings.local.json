@@ -44,7 +44,11 @@
       "Bash(timeout 60 dotnet run:*)",
       "Bash(timeout 120 dotnet run:*)",
       "Bash(iconv:*)",
-      "Bash(timeout 10 echo:*)"
+      "Bash(timeout 10 echo:*)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(timeout:*)",
+      "Bash(netstat:*)",
+      "Bash(tasklist:*)"
     ],
     "deny": [],
     "ask": []

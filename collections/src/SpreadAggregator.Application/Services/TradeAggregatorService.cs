@@ -1,0 +1,225 @@
+using Microsoft.Extensions.Logging;
+using SpreadAggregator.Application.Abstractions;
+using SpreadAggregator.Domain.Entities;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
+
+namespace SpreadAggregator.Application.Services;
+
+/// <summary>
+/// MEXC Trades Aggregator with 30-minute incremental rolling window.
+/// Collects trades from TradeScreenerChannel and broadcasts to WebSocket clients with pagination support.
+/// </summary>
+public class TradeAggregatorService : IDisposable
+{
+    private const int MAX_TRADES_PER_SYMBOL = 1000; // Memory bound per symbol
+    private const int MAX_SYMBOLS = 5000; // LRU safety margin
+    private readonly TimeSpan WINDOW_SIZE = TimeSpan.FromMinutes(30);
+    private const int BATCH_INTERVAL_MS = 100; // Batching for reduced CPU
+
+    private readonly ChannelReader<MarketData> _channelReader;
+    private readonly IWebSocketServer _webSocketServer;
+    private readonly ILogger<TradeAggregatorService> _logger;
+
+    // Symbol → Queue<TradeData> (FIFO for incremental expiry)
+    private readonly ConcurrentDictionary<string, Queue<TradeData>> _symbolTrades = new();
+
+    // Symbol metadata: tickSize, lastPrice (for client pagination)
+    private readonly ConcurrentDictionary<string, SymbolMetadata> _symbolMetadata = new();
+
+    // Batching: accumulate trades per symbol before broadcast
+    private readonly ConcurrentDictionary<string, List<TradeData>> _pendingBroadcasts = new();
+    private readonly System.Threading.PeriodicTimer _batchTimer;
+    private bool _disposed;
+
+    public TradeAggregatorService(
+        Channel<MarketData> tradeChannel,
+        IWebSocketServer webSocketServer,
+        ILogger<TradeAggregatorService>? logger = null)
+    {
+        _channelReader = tradeChannel.Reader;
+        _webSocketServer = webSocketServer;
+        _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<TradeAggregatorService>.Instance;
+        _batchTimer = new System.Threading.PeriodicTimer(TimeSpan.FromMilliseconds(BATCH_INTERVAL_MS));
+    }
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("[TradeAggregator] Starting...");
+
+        // Start batch broadcast timer
+        _ = Task.Run(async () => await BatchBroadcastLoop(cancellationToken), cancellationToken);
+
+        // Main trade processing loop
+        await foreach (var data in _channelReader.ReadAllAsync(cancellationToken))
+        {
+            if (data is TradeData tradeData)
+            {
+                ProcessTrade(tradeData);
+            }
+        }
+
+        _logger.LogInformation("[TradeAggregator] Channel closed, stopping.");
+    }
+
+    private void ProcessTrade(TradeData trade)
+    {
+        var key = $"{trade.Exchange}_{trade.Symbol}";
+        var now = DateTime.UtcNow;
+
+        // 1. Get or create trade queue for this symbol
+        var queue = _symbolTrades.GetOrAdd(key, _ => new Queue<TradeData>());
+
+        lock (queue)
+        {
+            // 2. INCREMENTAL EXPIRY: Remove trades older than 30 min
+            while (queue.Count > 0 && (now - queue.Peek().Timestamp) > WINDOW_SIZE)
+            {
+                queue.Dequeue();
+            }
+
+            // 3. Add new trade
+            queue.Enqueue(trade);
+
+            // 4. Enforce MAX_TRADES_PER_SYMBOL cap (LRU)
+            if (queue.Count > MAX_TRADES_PER_SYMBOL)
+            {
+                queue.Dequeue(); // Remove oldest
+            }
+        }
+
+        // 5. Update metadata (lastPrice for sorting)
+        _symbolMetadata.AddOrUpdate(key,
+            new SymbolMetadata { Symbol = trade.Symbol, LastPrice = trade.Price, LastUpdate = now },
+            (_, existing) => { existing.LastPrice = trade.Price; existing.LastUpdate = now; return existing; });
+
+        // 6. Add to pending broadcasts (batching)
+        var pending = _pendingBroadcasts.GetOrAdd(key, _ => new List<TradeData>());
+        lock (pending)
+        {
+            pending.Add(trade);
+        }
+
+        // 7. LRU eviction: keep only MAX_SYMBOLS (memory safety)
+        if (_symbolTrades.Count > MAX_SYMBOLS)
+        {
+            var oldestKey = _symbolMetadata
+                .OrderBy(x => x.Value.LastUpdate)
+                .First().Key;
+
+            _symbolTrades.TryRemove(oldestKey, out _);
+            _symbolMetadata.TryRemove(oldestKey, out _);
+            _logger.LogWarning($"[TradeAggregator] Evicted oldest symbol: {oldestKey} (LRU)");
+        }
+    }
+
+    /// <summary>
+    /// Batching loop: flush pending broadcasts every 100ms
+    /// </summary>
+    private async Task BatchBroadcastLoop(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                await _batchTimer.WaitForNextTickAsync(cancellationToken);
+
+                if (_pendingBroadcasts.IsEmpty) continue;
+
+                // Take snapshot and clear
+                var snapshot = _pendingBroadcasts.ToArray();
+                foreach (var kvp in snapshot)
+                {
+                    _pendingBroadcasts.TryRemove(kvp.Key, out _);
+                }
+
+                // Broadcast batches
+                foreach (var (key, trades) in snapshot)
+                {
+                    if (trades == null || trades.Count == 0) continue;
+
+                    List<TradeData> tradesCopy;
+                    lock (trades) { tradesCopy = trades.ToList(); }
+
+                    var message = new
+                    {
+                        type = "trade_update",
+                        symbol = key,
+                        trades = tradesCopy.Select(t => new
+                        {
+                            price = t.Price,
+                            quantity = t.Quantity,
+                            side = t.Side,
+                            timestamp = t.Timestamp.ToString("o")
+                        })
+                    };
+
+                    var json = JsonSerializer.Serialize(message);
+                    _ = _webSocketServer.BroadcastRealtimeAsync(json); // Fire-and-forget
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[TradeAggregator] Error in batch broadcast loop");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Get metadata for all symbols (for client pagination)
+    /// </summary>
+    public IEnumerable<SymbolMetadata> GetAllSymbolsMetadata()
+    {
+        return _symbolMetadata.Values.OrderByDescending(m => m.LastUpdate).ToList();
+    }
+
+    /// <summary>
+    /// Get trades for specific symbols (for initial load when client subscribes to page)
+    /// </summary>
+    public Dictionary<string, List<TradeData>> GetTradesForSymbols(IEnumerable<string> symbolKeys)
+    {
+        var result = new Dictionary<string, List<TradeData>>();
+
+        foreach (var key in symbolKeys)
+        {
+            if (_symbolTrades.TryGetValue(key, out var queue))
+            {
+                lock (queue)
+                {
+                    result[key] = queue.ToList();
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+
+        _batchTimer?.Dispose();
+        GC.SuppressFinalize(this);
+    }
+}
+
+/// <summary>
+/// Metadata for symbol pagination and sorting
+/// </summary>
+public class SymbolMetadata
+{
+    public required string Symbol { get; set; }
+    public decimal LastPrice { get; set; }
+    public DateTime LastUpdate { get; set; }
+}

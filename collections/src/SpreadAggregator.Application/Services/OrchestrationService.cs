@@ -111,8 +111,8 @@ public class OrchestrationService
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        // SCREENER OPTIMIZATION: Legacy WebSocket on 8181 DISABLED (not used by screener, actively listens and wastes resources)
-        // _webSocketServer.Start();
+        // MEXC TRADES VIEWER: WebSocket server enabled for real-time trade streaming
+        _webSocketServer.Start();
 
         // Create cancellation token source for stopping all exchanges
         _cancellationTokenSource = new CancellationTokenSource();
@@ -283,20 +283,27 @@ public class OrchestrationService
             Console.WriteLine($"[{exchangeName}] Adding trade subscription task...");
             tasks.Add(exchangeClient.SubscribeToTradesAsync(filteredSymbolNames, async tradeData =>
             {
-                // SCREENER OPTIMIZED: Only write to RollingWindow (critical path)
-                // Removed: Legacy WebSocket broadcast (unused), RawDataChannel (DataCollectorService disabled), TradeScreenerChannel (whale logging disabled)
-                
-                if (!_rollingWindowChannel.Writer.TryWrite(tradeData))
+                // MEXC TRADES VIEWER: Write trades to TradeScreenerChannel for TradeAggregatorService
+                if (!_tradeScreenerChannel.Writer.TryWrite(tradeData))
                 {
-                   // Console.WriteLine($"[Orchestration-WARN] Rolling window channel full (system overload), dropping trade data");
+                   // Console.WriteLine($"[Orchestration-WARN] Trade screener channel full (system overload), dropping trade data");
                 }
             }));
         }
 
         Console.WriteLine($"[{exchangeName}] Awaiting {tasks.Count} subscription tasks...");
 
-        // These are long-running subscriptions - await them to handle errors properly
-        await Task.WhenAll(tasks);
+        // MEXC TRADES VIEWER: Subscriptions must stay alive until cancellation
+        // Don't await Task.WhenAll - it returns immediately after subscriptions are set up
+        // Instead, wait indefinitely until cancellation is requested
+        try
+        {
+            await Task.Delay(Timeout.Infinite, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine($"[{exchangeName}] Exchange subscriptions cancelled gracefully");
+        }
 
         Console.WriteLine($"[{exchangeName}] All subscription tasks completed");
     }
