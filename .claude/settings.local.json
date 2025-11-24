@@ -48,7 +48,10 @@
       "mcp__sequential-thinking__sequentialthinking",
       "Bash(timeout:*)",
       "Bash(netstat:*)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "Bash(del /F \"collections\\src\\SpreadAggregator.Presentation\\wwwroot\\screener.html\")",
+      "Bash(del /F \"collections\\src\\SpreadAggregator.Presentation\\wwwroot\\screener_uplot.html\")",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []
