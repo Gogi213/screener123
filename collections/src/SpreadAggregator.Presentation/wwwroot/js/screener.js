@@ -11,6 +11,7 @@ const BLACKLIST = [
 // STATE
 let allSymbols = [];
 const activeCharts = new Map();     // Symbol -> uPlot Instance
+let isFirstLoad = true;              // ANTI-FLICKER: Track if this is the first data load
 
 // uPlot DATA STRUCTURE - Map<symbol, {times: [], buys: [], sells: [], startIndex: number}>
 const chartData = new Map();
@@ -85,7 +86,7 @@ function createCard(symbol, initialTradeCount) {
     card.innerHTML = `
         <div class="card-header">
             <div class="symbol-name" data-symbol="${symbol}">${symbol}</div>
-            <div class="trade-stats" id="stats-${symbol}">0/1m</div>
+            <div class="trade-stats" id="stats-${symbol}">0/3m</div>
         </div>
         <div class="price-info" id="price-${symbol}">
             <span class="price-val">---</span>
@@ -173,7 +174,7 @@ function createCard(symbol, initialTradeCount) {
 
     activeCharts.set(symbol, uplot);
 
-    // Initialize stats from existing data (if any) to prevent "0/1m" and "---"
+    // Initialize stats from existing data (if any) to prevent "0/3m" and "---"
     if (symbolData.times.length > 0) {
         // Find last valid price (check both buys and sells)
         let lastPrice = null;
@@ -285,10 +286,14 @@ function initGlobalWebSocket() {
                         };
                     });
 
-                // Re-render current page with updated data
-                renderPage();
-
-                // Status is updated in renderPage()
+                // ANTI-FLICKER FIX: Only render page on first load
+                // After that, Smart Sort will handle re-rendering if enabled
+                if (isFirstLoad) {
+                    renderPage();
+                    isFirstLoad = false;
+                    console.log('[Screener] Initial render complete. Flicker protection enabled.');
+                }
+                // Data is updated in allSymbols, but no re-render unless Smart Sort triggers it
             }
         } catch (error) {
             console.error('[WebSocket] Parse error:', error);
@@ -395,7 +400,8 @@ function toggleSmartSort() {
 
 function startSmartSort() {
     if (smartSortInterval) clearInterval(smartSortInterval);
-    smartSortInterval = setInterval(reorderCardsWithoutDestroy, 2000);
+    // ANTI-FLICKER: 10 seconds instead of 2 - less aggressive re-sorting
+    smartSortInterval = setInterval(reorderCardsWithoutDestroy, 10000);
 }
 
 function stopSmartSort() {
