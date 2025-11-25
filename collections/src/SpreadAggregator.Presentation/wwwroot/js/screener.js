@@ -35,25 +35,12 @@ const pageIndicator = document.getElementById('pageIndicator');
 // GLOBAL WebSocket connection
 let globalWebSocket = null;
 
-// WEB WORKER for JSON parsing (offload from UI thread)
-let parseWorker = null;
-
 // CORE LOGIC
 async function init() {
     try {
-        statusText.textContent = "Fetching symbols...";
-        const response = await fetch('/api/trades/symbols');
-        const data = await response.json();
+        statusText.textContent = "Connecting to WebSocket...";
 
-        // FILTER: Remove Blacklisted pairs
-        allSymbols = data.filter(s => !BLACKLIST.includes(s.symbol.toUpperCase()));
-
-        statusText.textContent = `Live: ${allSymbols.length} Pairs`;
-
-        // Initial Render
-        renderPage();
-
-        // Connect global WebSocket AFTER rendering
+        // Connect WebSocket - it will send all symbols automatically
         initGlobalWebSocket();
 
     } catch (e) {
@@ -290,29 +277,6 @@ batchingLoop();
 function initGlobalWebSocket() {
     if (globalWebSocket && globalWebSocket.readyState === WebSocket.OPEN) return;
 
-    // Initialize Web Worker for JSON parsing (once)
-    if (!parseWorker) {
-        parseWorker = new Worker('js/websocket-worker.js');
-
-        // Worker sends back parsed messages
-        parseWorker.onmessage = (e) => {
-            const msg = e.data;
-
-            if (msg.error) {
-                console.error('[Worker] Parse error:', msg.error);
-                return;
-            }
-
-            if (msg.type === 'trade_update' && msg.symbol && msg.trades) {
-                const symbol = msg.symbol.replace('MEXC_', '');
-                // Accumulate trades for ALL symbols, not just visible ones
-                const pending = pendingChartUpdates.get(symbol) || [];
-                pending.push(...msg.trades);
-                pendingChartUpdates.set(symbol, pending);
-            }
-        };
-    }
-
     globalWebSocket = new WebSocket(`ws://${window.location.hostname}:8181`);
 
     globalWebSocket.onopen = () => {
@@ -321,8 +285,40 @@ function initGlobalWebSocket() {
     };
 
     globalWebSocket.onmessage = (event) => {
-        // Send raw data to Worker for parsing (doesn't block UI thread)
-        parseWorker.postMessage(event.data);
+        try {
+            const msg = JSON.parse(event.data);
+
+            if (msg.type === 'trade_update' && msg.symbol && msg.trades) {
+                // Handle individual trade updates for charts
+                const symbol = msg.symbol.replace('MEXC_', '');
+
+                // Accumulate trades for ALL symbols (even not visible on current page)
+                const pending = pendingChartUpdates.get(symbol) || [];
+                pending.push(...msg.trades);
+                pendingChartUpdates.set(symbol, pending);
+            }
+            else if (msg.type === 'all_symbols_scored') {
+                // Update allSymbols with fresh data (already sorted by score on server)
+                // FILTER: Remove blacklisted pairs
+                allSymbols = msg.symbols
+                    .filter(s => !BLACKLIST.includes(s.symbol.toUpperCase()))
+                    .map(s => ({
+                        symbol: s.symbol,
+                        score: s.score,
+                        tradesPerMin: s.tradesPerMin,
+                        lastPrice: s.lastPrice,
+                        lastUpdate: s.lastUpdate
+                    }));
+
+                // Re-render current page with updated data
+                renderPage();
+
+                // Update status
+                statusText.textContent = `Live: ${allSymbols.length} Pairs (Score-sorted)`;
+            }
+        } catch (error) {
+            console.error('[WebSocket] Parse error:', error);
+        }
     };
 
     globalWebSocket.onclose = () => {

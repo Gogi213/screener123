@@ -82,6 +82,9 @@ class Program
 
         services.AddSingleton<VolumeFilter>();
 
+        // Simple monitor for leak detection (CPU, Memory)
+        services.AddSingleton<SimpleMonitor>();
+
         var channelOptions = new BoundedChannelOptions(1_000_000)
         {
             FullMode = BoundedChannelFullMode.DropOldest

@@ -22,7 +22,7 @@ public class TradeAggregatorService : IDisposable
     private const int MAX_TRADES_PER_SYMBOL = 1000; // Memory bound per symbol
     private const int MAX_SYMBOLS = 5000; // LRU safety margin
     private readonly TimeSpan WINDOW_SIZE = TimeSpan.FromMinutes(30);
-    private const int BATCH_INTERVAL_MS = 100; // Batching for reduced CPU
+    private const int BATCH_INTERVAL_MS = 100; // 100ms batching for reduced CPU
 
     private readonly ChannelReader<MarketData> _channelReader;
     private readonly IWebSocketServer _webSocketServer;
@@ -133,48 +133,85 @@ public class TradeAggregatorService : IDisposable
     }
 
     /// <summary>
-    /// Batching loop: flush pending broadcasts every 100ms
+    /// Batching loop: flush pending broadcasts every 100ms + send metadata every 2 seconds
     /// </summary>
     private async Task BatchBroadcastLoop(CancellationToken cancellationToken)
     {
+        int tickCounter = 0;
+        const int METADATA_BROADCAST_INTERVAL = 20; // Every 20 ticks (2 seconds at 100ms interval)
+
         while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
                 await _batchTimer.WaitForNextTickAsync(cancellationToken);
+                tickCounter++;
 
-                if (_pendingBroadcasts.IsEmpty) continue;
-
-                // Take snapshot and clear
-                var snapshot = _pendingBroadcasts.ToArray();
-                foreach (var kvp in snapshot)
+                // 1. ALWAYS send trade_update for pending trades (for charts)
+                if (!_pendingBroadcasts.IsEmpty)
                 {
-                    _pendingBroadcasts.TryRemove(kvp.Key, out _);
+                    var snapshot = _pendingBroadcasts.ToArray();
+                    foreach (var kvp in snapshot)
+                    {
+                        _pendingBroadcasts.TryRemove(kvp.Key, out _);
+                    }
+
+                    // Broadcast trade updates
+                    foreach (var (key, trades) in snapshot)
+                    {
+                        if (trades == null || trades.Count == 0) continue;
+
+                        List<TradeData> tradesCopy;
+                        lock (trades) { tradesCopy = trades.ToList(); }
+
+                        var message = new
+                        {
+                            type = "trade_update",
+                            symbol = key,
+                            trades = tradesCopy.Select(t => new
+                            {
+                                price = t.Price,
+                                quantity = t.Quantity,
+                                side = t.Side,
+                                timestamp = ((DateTimeOffset)t.Timestamp).ToUnixTimeMilliseconds()
+                            })
+                        };
+
+                        var json = JsonSerializer.Serialize(message);
+                        _ = _webSocketServer.BroadcastRealtimeAsync(json);
+                    }
                 }
 
-                // Broadcast batches
-                foreach (var (key, trades) in snapshot)
+                // 2. PERIODICALLY send all_symbols_scored (for sorting/metadata)
+                if (tickCounter >= METADATA_BROADCAST_INTERVAL)
                 {
-                    if (trades == null || trades.Count == 0) continue;
+                    tickCounter = 0;
 
-                    List<TradeData> tradesCopy;
-                    lock (trades) { tradesCopy = trades.ToList(); }
-
-                    var message = new
+                    var allMetadata = GetAllSymbolsMetadata().ToList();
+                    if (allMetadata.Count > 0)
                     {
-                        type = "trade_update",
-                        symbol = key,
-                        trades = tradesCopy.Select(t => new
+                        var batchMessage = new
                         {
-                            price = t.Price,
-                            quantity = t.Quantity,
-                            side = t.Side,
-                            timestamp = t.Timestamp.ToString("o")
-                        })
-                    };
+                            type = "all_symbols_scored",
+                            timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                            total = allMetadata.Count,
+                            symbols = allMetadata.Select(m => new
+                            {
+                                symbol = m.Symbol,
+                                score = m.Score,
+                                tradesPerMin = m.TradesPerMin,
+                                lastPrice = m.LastPrice,
+                                lastUpdate = ((DateTimeOffset)m.LastUpdate).ToUnixTimeMilliseconds()
+                            })
+                        };
 
-                    var json = JsonSerializer.Serialize(message);
-                    _ = _webSocketServer.BroadcastRealtimeAsync(json); // Fire-and-forget
+                        var json = JsonSerializer.Serialize(batchMessage);
+                        _ = _webSocketServer.BroadcastRealtimeAsync(json);
+
+                        _logger.LogInformation("[TradeAggregator] Metadata broadcast: {Count} symbols, top score: {TopScore:F1}",
+                            allMetadata.Count,
+                            allMetadata.First().Score);
+                    }
                 }
             }
             catch (OperationCanceledException)
@@ -213,20 +250,52 @@ public class TradeAggregatorService : IDisposable
     }
 
     /// <summary>
+    /// Calculate pump detection score for a symbol
+    /// Formula: TradesPerMin × log10(VolumePerMin) - balances activity and volume
+    /// </summary>
+    private double CalculatePumpScore(string symbolKey, int tradesPerMin)
+    {
+        if (!_symbolTrades.TryGetValue(symbolKey, out var queue))
+            return 0;
+
+        var oneMinuteAgo = DateTime.UtcNow.AddMinutes(-1);
+        decimal volumePerMin = 0;
+
+        lock (queue)
+        {
+            // Calculate USD volume in the last minute
+            foreach (var trade in queue)
+            {
+                if (trade.Timestamp >= oneMinuteAgo)
+                {
+                    volumePerMin += trade.Price * trade.Quantity;
+                }
+            }
+        }
+
+        // Formula: trades × log10(volume)
+        // Log prevents BTCUSDT from dominating, emphasizes relative activity
+        if (volumePerMin <= 0) return tradesPerMin; // Fallback if no volume data
+
+        return tradesPerMin * Math.Log10((double)volumePerMin + 1);
+    }
+
+    /// <summary>
     /// Get metadata for all symbols (for client pagination)
     /// SORTED BY ACTIVITY (trades per minute) - server-side smart sort!
     /// </summary>
     public IEnumerable<SymbolMetadata> GetAllSymbolsMetadata()
     {
-        // Calculate trades/min for each symbol and sort by activity
+        // Calculate trades/min and pump score for each symbol
         return _symbolMetadata.Values
             .Select(m =>
             {
                 var symbolKey = $"{(m.Symbol.StartsWith("MEXC_") ? "" : "MEXC_")}{m.Symbol}";
                 m.TradesPerMin = CalculateTradesPerMinute(symbolKey);
+                m.Score = CalculatePumpScore(symbolKey, m.TradesPerMin);
                 return m;
             })
-            .OrderByDescending(m => m.TradesPerMin)
+            .OrderByDescending(m => m.Score)  // Sort by pump score (hottest first)
             .ThenByDescending(m => m.LastUpdate)  // Tie-breaker
             .ToList();
     }
@@ -271,4 +340,5 @@ public class SymbolMetadata
     public decimal LastPrice { get; set; }
     public DateTime LastUpdate { get; set; }
     public int TradesPerMin { get; set; }  // Activity metric for sorting
+    public double Score { get; set; }  // Pump detection score (for real-time sorting)
 }

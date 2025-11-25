@@ -54,7 +54,9 @@
       "WebSearch",
       "Bash(del \"collections\\src\\SpreadAggregator.Presentation\\Services\\TradeStreamerService.cs\")",
       "Bash(del \"collections\\src\\SpreadAggregator.Presentation\\wwwroot\\js\\grpc-client.js\")",
-      "Bash(del \"collections\\TASKS_GRPC_MIGRATION.md\")"
+      "Bash(del \"collections\\TASKS_GRPC_MIGRATION.md\")",
+      "Bash(cmd //c \"taskkill /F /PID 14304\")",
+      "Bash(cmd //c \"taskkill /F /PID 9600\")"
     ],
     "deny": [],
     "ask": []
