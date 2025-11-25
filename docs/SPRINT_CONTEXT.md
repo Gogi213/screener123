@@ -1,43 +1,56 @@
 # 🚀 MEXC Trade Screener - Sprint Context
 
-**Last Updated:** 2025-11-25 16:54 UTC+4  
-**Status:** SPRINT-3 Completed ✅
+**Last Updated:** 2025-11-25 18:45 UTC+4  
+**Status:** Production Ready - All Core Features Complete ✅
 
 ---
 
-## 📋 Project Overview
+## 📋 Overview
 
-**Goal:** Real-time trade screener for 2000+ MEXC coins with intelligent filtering and visualization.
+MEXC Trade Screener - real-time monitoring and analysis tool for 2000+ trading pairs on MEXC exchange.
 
-**Core Concept:**
-- Collect trades for ALL 2000 coins via WebSocket (server-side)
-- Calculate rolling window metrics (1m, 2m, 3m)
-- Sort by trade velocity (`trades/3m`)
-- Render charts for TOP-50 most active coins only
-- Dynamic updates with "Speed Sort" toggle
+**Core Features:**
+- Real-time WebSocket streaming of trades
+- Rolling window metrics (trades/1m, 2m, 3m)
+- Advanced benchmarks (acceleration, patterns, imbalance)
+- TOP-30 display with uPlot charts
+- Freeze/Live sorting controls
 
 ---
 
 ## ✅ Completed Sprints
 
-### **SPRINT-1: Extended Rolling Window Metrics**
+### **SPRINT-0: Infrastructure**
 
 **Status:** ✅ COMPLETE  
-**Duration:** ~1 hour
+**Duration:** Multiple sessions (pre-2025-11-25)
+
+#### Implementation:
+- `OrchestrationService`: MEXC subscription management
+- `TradeAggregatorService`: Trade aggregation with 30-min rolling window
+- WebSocket server (Fleck) on port 8181
+- uPlot charting library integration
+- Basic UI with card grid layout
+
+---
+
+### **SPRINT-1: Extended Metrics**
+
+**Status:** ✅ COMPLETE  
+**Duration:** 1-2 hours
+
+#### Goals Achieved:
+1. ✅ Server calculates trades/1m, 2m, 3m
+2. ✅ WebSocket broadcasts every 2 seconds
+3. ✅ All symbols monitored (2000+)
 
 #### Implementation:
 
-**Server (C#) - `TradeAggregatorService.cs`:**
+**Server Methods:**
 ```csharp
-// Added methods:
-private int CalculateTradesPerMinute(string symbolKey)
-private int CalculateTrades2Min(string symbolKey)
-private int CalculateTrades3Min(string symbolKey)
-
-// Extended SymbolMetadata:
-public int TradesPerMin { get; set; }   // Last 1 minute
-public int Trades2Min { get; set; }     // Last 2 minutes
-public int Trades3Min { get; set; }     // Last 3 minutes
+private int CalculateTradesPerMinute(string symbolKey);
+private int CalculateTrades2Min(string symbolKey);
+private int CalculateTrades3Min(string symbolKey);
 ```
 
 **WebSocket Message:**
@@ -47,32 +60,31 @@ public int Trades3Min { get; set; }     // Last 3 minutes
   "symbols": [
     {
       "symbol": "BTCUSDT",
-      "tradesPerMin": 100,
-      "trades2m": 195,
-      "trades3m": 285,
-      "lastPrice": 45000
+      "tradesPerMin": 120,
+      "trades2m": 240,
+      "trades3m": 360,
+      ...
     }
   ]
 }
 ```
 
-**Performance:**
-- Broadcast every 2 seconds
-- ~2000 symbols processed
-- CPU: <1%
-
 ---
 
 ### **SPRINT-2: Advanced Benchmarks**
 
-**Status:** ✅ COMPLETE (но не используется для сортировки)  
-**Duration:** ~2 hours
+**Status:** ✅ COMPLETE  
+**Duration:** 2-3 hours
+
+#### Goals Achieved:
+1. ✅ Acceleration calculation
+2. ✅ Volume pattern detection (bot detection)
+3. ✅ Buy/Sell imbalance
+4. ✅ Composite score (not used for sorting)
 
 #### Implementation:
 
-**Server (C#) - Added methods:**
-
-1. **Acceleration Detection:**
+**Acceleration:**
 ```csharp
 private double CalculateAcceleration(string symbolKey, int trades1m, int trades2m)
 {
@@ -81,155 +93,86 @@ private double CalculateAcceleration(string symbolKey, int trades1m, int trades2
     return (double)trades1m / tradesPreviousMin;
 }
 ```
-- **Purpose:** Detect sudden spikes in trading activity
-- **Formula:** `trades_current_minute / trades_previous_minute`
-- **Example:** 2.5x means current minute 2.5x faster than previous
 
-2. **Volume Pattern Detection (Bot Detection):**
+**Pattern Detection:**
 ```csharp
 private bool DetectVolumePattern(string symbolKey)
 {
-    // Groups trades by (Volume, Side)
-    // Returns true if 10+ trades with same volume/side
+    // Returns true if 10+ trades with same volume and side
+    var groups = recentTrades
+        .GroupBy(t => new { Volume = t.Quantity, Side = t.Side })
+        .Where(g => g.Count() >= 10);
+    return groups.Any();
 }
 ```
-- **Purpose:** Detect bot activity (repeated identical trades)
-- **Logic:** GroupBy exact volume and side matches
-- **Threshold:** 10+ identical trades = pattern detected
 
-3. **Buy/Sell Imbalance:**
+**Imbalance:**
 ```csharp
 private double CalculateBuySellImbalance(string symbolKey)
 {
-    return |buyVolume - sellVolume| / (buyVolume + sellVolume);
-}
-```
-- **Purpose:** Measure directional pressure
-- **Range:** 0.0 (balanced) to 1.0 (one-sided)
-- **Example:** 0.85 = 92.5% buys, 7.5% sells
-
-4. **Composite Score (NOT USED FOR SORTING):**
-```csharp
-private double CalculateCompositeScore(
-    double pumpScore, 
-    double acceleration, 
-    bool hasPattern, 
-    double imbalance)
-{
-    var cappedAcceleration = Math.Min(acceleration, 5.0);
-    var baseScore = pumpScore * (1.0 + cappedAcceleration / 2.0);
-    var patternBonus = hasPattern ? 100.0 : 0.0;
-    var imbalanceBonus = imbalance * 100.0;
-    return baseScore + patternBonus + imbalanceBonus;
+    // Formula: |buyVolume - sellVolume| / (buyVolume + sellVolume)
+    // Returns 0-1 where 0 = balanced, 1 = one-sided
+    return (double)Math.Abs(buyVolume - sellVolume) / (double)total;
 }
 ```
 
-**Extended SymbolMetadata:**
-```csharp
-// SPRINT-2: Advanced benchmarks
-public double Acceleration { get; set; }
-public bool HasVolumePattern { get; set; }
-public double BuySellImbalance { get; set; }
-public double CompositeScore { get; set; }
-```
-
-**WebSocket Message Extended:**
-```json
-{
-  "symbol": "BTCUSDT",
-  "trades3m": 285,
-  "acceleration": 2.5,
-  "hasPattern": true,
-  "imbalance": 0.85,
-  "compositeScore": 780.5
-}
-```
-
-**Performance:**
-- Benchmarks calculated for TOP-500 only (optimization)
-- CPU: ~1-2% (very cheap operations)
-- All operations O(n) where n = ~100-300 trades
+**Optimization:** Calculated only for TOP-500 symbols (performance)
 
 ---
 
----
-
-### **SPRINT-3: Simple Sorting + TOP-30 Rendering** 
+### **SPRINT-3: Simple Sorting + TOP-30 + Performance** 
 
 **Status:** ✅ COMPLETE  
-**Duration:** ~2 hours (2025-11-25)
+**Duration:** ~4 hours (2025-11-25)
 
 #### Goals Achieved:
-1. ✅ **Server:** Sort by `trades3m` instead of composite score
-2. ✅ **Client:** Render charts for TOP-30 (reduced from 50 for stability)
-3. ✅ **Client:** Speed Sort (Smart Sort) working with trades3m
-4. ✅ **Client:** Display changed from `/1m` → `/3m`
-5. ✅ **BONUS:** Anti-flicker optimization - critical stability fix
+1. ✅ Server sorts by `trades3m` (simplified from CompositeScore)
+2. ✅ Client renders TOP-30 only (reduced from 50)
+3. ✅ Speed Sort → Live Sort/Frozen rename
+4. ✅ Display changed from `/1m` → `/3m`
+5. ✅ **BONUS:** Anti-flicker optimization
+6. ✅ **BONUS:** Acceleration indicator on cards
+7. ✅ **BONUS:** Performance optimizations
 
 #### Implementation:
 
-**Server (C#) - `TradeAggregatorService.cs`:**
+**Server Sorting (TradeAggregatorService.cs):**
 ```csharp
-// Simplified GetAllSymbolsMetadata() - removed complex CompositeScore logic
-return _symbolMetadata.Values
-    .Select(m => {
-        // Calculate metrics
-        m.TradesPerMin = CalculateTradesPerMinute(symbolKey);
-        m.Trades2Min = CalculateTrades2Min(symbolKey);
-        m.Trades3Min = CalculateTrades3Min(symbolKey);
-        return m;
-    })
-    .OrderByDescending(m => m.Trades3Min)  // SPRINT-3: Simple sort by trades/3m
-    .ToList();
+public IEnumerable<SymbolMetadata> GetAllSymbolsMetadata()
+{
+    return _symbolMetadata.Values
+        .Select(m => {
+            // Calculate metrics
+            m.TradesPerMin = CalculateTradesPerMinute(symbolKey);
+            m.Trades2Min = CalculateTrades2Min(symbolKey);
+            m.Trades3Min = CalculateTrades3Min(symbolKey);
+            return m;
+        })
+        .OrderByDescending(m => m.Trades3Min)  // SPRINT-3: Simple sort
+        .Select((m, index) => {
+            // Benchmarks only for TOP-500 (optimization)
+            if (index < 500) {
+                m.Acceleration = CalculateAcceleration(...);
+                m.HasVolumePattern = DetectVolumePattern(...);
+                m.BuySellImbalance = CalculateBuySellImbalance(...);
+            }
+            return m;
+        })
+        .ToList();
+}
 ```
-- **Change:** От сложной 3-ступенчатой сортировки (pumpScore → top500 benchmarks → compositeScore) к простой сортировке по `Trades3Min`
-- **Benefit:** Проще, быстрее, понятнее
 
-**Client (JS) - `screener.js`:**
-
-1. **TOP-30 Rendering:**
+**Client TOP-30 Rendering (screener.js):**
 ```javascript
-const top30 = allSymbols.slice(0, 30);  // Reduced from 50 to 30 for stability
-top30.forEach(s => createCard(s.symbol, s.tradeCount));
+function renderPage(autoScroll = false) {
+    cleanupPage();
+    const top30 = allSymbols.slice(0, 30);
+    statusText.textContent = `Live: TOP-30 of ${allSymbols.length} Pairs (sorted by trades/3m)`;
+    top30.forEach(s => createCard(s.symbol, s.tradeCount));
+}
 ```
 
-2. **Receive trades3m from WebSocket:**
-```javascript
-allSymbols = msg.symbols
-    .map(s => {
-        symbolActivity.set(s.symbol, {
-            trades3m: s.trades3m || 0,
-            lastUpdate: Date.now()
-        });
-        return {
-            symbol: s.symbol,
-            trades3m: s.trades3m || 0,
-            // ...
-        };
-    });
-```
-
-3. **Display /3m on cards:**
-```javascript
-statsEl.textContent = `${count}/3m`;  // Changed from /1m
-```
-
-4. **Smart Sort with trades3m:**
-```javascript
-allSymbols.sort((a, b) => {
-    const actA = symbolActivity.get(a.symbol)?.trades3m || 0;
-    const actB = symbolActivity.get(b.symbol)?.trades3m || 0;
-    return actB - actA;
-});
-```
-
-#### CRITICAL FIX: Anti-Flicker Optimization
-
-**Problem:** Графики дребезжали даже при выключенной Smart Sort
-- **Root cause:** `renderPage()` вызывался каждые 2 секунды при получении `all_symbols_scored`, уничтожая и пересоздавая все графики
-
-**Solution:**
-1. **First Load Flag:**
+**Anti-Flicker Fix:**
 ```javascript
 let isFirstLoad = true;
 
@@ -240,233 +183,187 @@ if (msg.type === 'all_symbols_scored') {
     if (isFirstLoad) {
         renderPage();
         isFirstLoad = false;
-        console.log('[Screener] Initial render complete. Flicker protection enabled.');
     }
 }
 ```
 
-2. **Smart Sort Interval:** 2000ms → **10000ms** (10 seconds)
+**Performance Optimizations:**
+1. Batch throttle: 300ms → 1000ms (1 second)
+2. Smart Sort interval: 2s → 10s
+3. Graph rendering: scatter-only (removed stroke/fill)
+
+**Acceleration Indicator:**
 ```javascript
-smartSortInterval = setInterval(reorderCardsWithoutDestroy, 10000);
+// Always visible on cards
+accelEl.textContent = `↑${accel.toFixed(1)}x`;
+
+// Color coding
+if (accel >= 3.0) {
+    accelEl.style.color = '#ef4444'; // red
+} else if (accel >= 2.0) {
+    accelEl.style.color = '#f97316'; // orange
+} else {
+    accelEl.style.color = '#6b7280'; // gray
+}
 ```
 
-**Result:**
-- ✅ При **выключенной** Smart Sort - **0 мерцания** (графики рендерятся один раз)
-- ✅ При **включенной** Smart Sort - пересортировка раз в 10 сек (комфортно для глаз)
-- ✅ WebSocket стабилен, нет disconnect ошибок
+**Freeze Button:**
+```javascript
+function toggleSmartSort() {
+    smartSortEnabled = !smartSortEnabled;
+    if (smartSortEnabled) {
+        btn.innerHTML = '<span id="sortIcon">🔥</span> Live Sort';
+        startSmartSort();
+    } else {
+        btn.innerHTML = '<span id="sortIcon">❄️</span> Frozen';
+        stopSmartSort();
+    }
+}
+```
 
-#### Performance:
-- **TOP-30 charts:** ~100-150ms рендер
-- **Server CPU:** ~2% для 2000 символов
-- **WebSocket:** Стабильное соединение
-- **Memory:** Контролируемая (circular buffer в chartData)
+#### Critical Bug Fixes:
+
+**Bug #1: Sorting Broken**
+- **Problem:** Client was overwriting server `trades3m` data with local counts
+- **Cause:** `updateSymbolActivity(symbol, count)` called from `updateCardStats()`
+- **Fix:** Removed local data updates, use server-only data for sorting
+
+**Before:**
+```javascript
+function updateCardStats(symbol, price) {
+    // Local count calculation
+    let count = 0;
+    for (let i = data.times.length - 1; i >= 0; i--) {
+        if (data.times[i] < threeMinutesAgo) break;
+        count++;
+    }
+    
+    // BUG: This overwrites server data!
+    updateSymbolActivity(symbol, count);  // ← REMOVED
+}
+```
+
+**After:**
+```javascript
+function updateCardStats(symbol, price) {
+    let count = 0; // Only for UI display
+    // ...calculate count...
+    
+    // NOTE: symbolActivity updated ONLY from WebSocket
+    // Local count is for display only, not sorting
+}
+```
+
+#### Performance Metrics:
+- **TOP-30 charts:** ~100-150ms render
+- **Server CPU:** ~2% for 2000 symbols
+- **WebSocket:** Stable connection, no disconnects
+- **Memory:** Controlled (circular buffer in chartData)
 
 ---
 
-## 🔨 Pending Sprints
+## 🔨 Optional Future Work
 
-### **SPRINT-4: Benchmark Indicators (UI Polish)**
+### **SPRINT-4: Visual Indicators (Optional)**
 
-**Status:** 🔨 TODO  
+**Status:** Not started  
 **Estimated Duration:** 2-3 hours
 
 #### Goals:
-Show benchmark data on individual chart cards
+1. Display imbalance indicator (📈/📉) on cards
+2. Display bot pattern indicator (🤖) on cards
+3. Color-code cards by overall "hotness"
 
-#### Tasks:
-
-**Client (JS):**
-- ✏️ Add visual indicators to cards:
-  ```
-  ┌────────────────────────────┐
-  │ BTCUSDT              45000 │
-  │ 285/3m  🔥2.5x  🤖  📈    │
-  │ ══════ Chart ══════       │
-  └────────────────────────────┘
-  ```
-
-- ✏️ Indicator logic:
-  - 🔥 - if `acceleration > 2.0` (show `🔥${acceleration}x`)
-  - 🤖 - if `hasPattern = true` (bot detected)
-  - 📈 - if `imbalance > 0.7` (buy pressure)
-  - 📉 - if `imbalance < -0.7` (sell pressure)
-
-- ✏️ Tooltip on hover:
-  ```html
-  <div class="tooltip">
-    Acceleration: 2.5x (last minute 2.5x faster)
-    Bot detected: 15 trades with volume 1000
-    Buy pressure: 85% buys, 15% sells
-  </div>
-  ```
-
----
-
-## 🏗️ Architecture
-
-### **Data Flow:**
-
+#### Card Mockup:
 ```
-┌──────────────────────────────────────────┐
-│ MEXC Exchange (2000+ symbols)            │
-└────────────┬─────────────────────────────┘
-             │ WebSocket Streams
-             ▼
-┌──────────────────────────────────────────┐
-│ SERVER (C# - TradeAggregatorService)     │
-│                                          │
-│ 1. Collect trades for ALL 2000 symbols  │
-│    - Store in rolling window (30 min)   │
-│    - ConcurrentDictionary per symbol    │
-│                                          │
-│ 2. Calculate metrics (every 2 sec):     │
-│    - trades/1m, 2m, 3m                   │
-│    - acceleration                        │
-│    - volume patterns                     │
-│    - buy/sell imbalance                  │
-│                                          │
-│ 3. Sort ALL symbols by trades/3m        │
-│                                          │
-│ 4. Broadcast via WebSocket              │
-│    - all_symbols_scored (2000 symbols)  │
-│    - trade_update (incremental)         │
-└────────────┬─────────────────────────────┘
-             │ WS Messages
-             ▼
-┌──────────────────────────────────────────┐
-│ CLIENT (Browser - screener.js)           │
-│                                          │
-│ 1. Receive all 2000 symbols with        │
-│    metrics (NO charts yet)               │
-│                                          │
-│ 2. Sort by trades/3m locally            │
-│                                          │
-│ 3. Take TOP-50                           │
-│                                          │
-│ 4. Render uPlot charts ONLY for TOP-50  │
-│    - Destroy charts for symbols not in  │
-│      top50                               │
-│    - Create charts for new symbols      │
-│                                          │
-│ 5. Speed Sort toggle:                   │
-│    - ON: Update top50 every 2 sec       │
-│    - OFF: Freeze current 50 charts      │
-└──────────────────────────────────────────┘
+┌────────────────────────────────┐
+│ BTCUSDT                  45000 │
+│ 285/3m  ↑2.5x  📈  🤖         │
+│ ════════ Chart ════════        │
+└────────────────────────────────┘
 ```
 
-### **Key Design Decisions:**
-
-1. **NO pagination** - Display top50, not pages
-2. **Server calculates metrics** - Client just sorts/filters
-3. **TOP-500 optimization** - Benchmarks only for top 500 by pump score (4x CPU savings)
-4. **Incremental chart updates** - `uPlot.setData()` instead of destroy/recreate
-5. **Speed Sort toggle** - User control over chart volatility
+**Implementation Notes:**
+- Imbalance: Show 📈 if > 0.7 and buy-heavy, 📉 if sell-heavy
+- Pattern: Show 🤖 if `hasPattern = true`
+- Already receiving data from server - just need UI
 
 ---
 
-## 📂 File Structure
+## 📊 Architecture Summary
 
+### Data Flow:
 ```
-collections/src/SpreadAggregator.Application/Services/
-├── TradeAggregatorService.cs  ← Main service (SPRINT-1 & SPRINT-2)
-│   ├── Rolling window storage
-│   ├── Metrics calculation
-│   ├── Benchmark calculation
-│   └── WebSocket broadcast
-
-collections/src/SpreadAggregator.Domain/Entities/
-├── TradeData.cs               ← Trade model
-└── SymbolMetadata.cs          ← Extended in SPRINT-1 & SPRINT-2
-
-collections/src/SpreadAggregator.Presentation/wwwroot/
-├── js/screener.js             ← Client logic (SPRINT-3 pending)
-├── index.html                 ← UI (minimal changes)
-└── styles.css                 ← Styling
+MEXC Exchange
+    ↓ WebSocket
+OrchestrationService
+    ↓ Channel
+TradeAggregatorService
+    ↓ Calculate metrics (trades/1m,2m,3m, acceleration, etc)
+    ↓ Sort by trades3m
+    ↓ WebSocket broadcast (every 2s)
+Client (screener.js)
+    ↓ Receive all_symbols_scored
+    ↓ Render TOP-30
+    ↓ Display acceleration indicator
+    ↓ Smart Sort (10s interval if enabled)
 ```
 
----
+### Key Files:
+- **Server:** `TradeAggregatorService.cs` - all metrics calculation
+- **Client:** `screener.js` - rendering, sorting, UI
+- **UI:** `index.html` - structure
 
-## 🔧 Configuration
-
-### **Server:**
-- WebSocket server: `ws://0.0.0.0:8181`
-- Broadcast interval: 2 seconds (100ms batching)
-- Rolling window: 30 minutes
-- Max trades per symbol: 1000
-- Max symbols: 5000 (LRU)
-
-### **Client:**
-- Charts limit: 50 (TOP-50 by trades/3m)
-- Update interval: 2 seconds (when Speed Sort enabled)
-- Chart library: uPlot
-- Batch throttle: 300ms
+### Design Decisions:
+1. **Simple sorting:** trades/3m instead of complex composite scores
+2. **Server authority:** Client uses server data, doesn't recalculate
+3. **Performance first:** TOP-30 limit, scatter graphs, batch throttling
+4. **User control:** Freeze button for studying coins
 
 ---
 
-## ⚡ Performance Metrics
+## 🎯 Production Readiness
 
-### **Server (per 2-second tick):**
-| Operation | Count | Complexity | CPU % |
-|-----------|-------|------------|-------|
-| Basic metrics (trades/1m,2m,3m) | 2000 | O(n)×4000 | <1% |
-| Benchmarks (TOP-500) | 500 | O(n)×1500 | ~1% |
-| **Total** | - | ~2.85M ops | **~2%** |
+**Status:** ✅ Production Ready
 
-### **Client:**
-| Operation | Count | Impact |
-|-----------|-------|--------|
-| WebSocket message processing | 1/2sec | Minimal |
-| Sorting 2000 symbols | 1/2sec | <10ms |
-| uPlot chart updates (TOP-50) | 50 | ~100ms |
-| **Total render time** | - | **<150ms** |
+**Checklist:**
+- ✅ Stable WebSocket connection
+- ✅ No browser crashes (TOP-30 limit)
+- ✅ Accurate sorting (server-side)
+- ✅ No chart flickering (anti-flicker fix)
+- ✅ Performance optimized (1s batch, scatter graphs)
+- ✅ User controls (freeze button)
+- ✅ Real-time metrics display
 
----
-
-## 🐛 Known Issues
-
-1. **screener.js corruption** - Fixed by reverting to git commit `59204ea`
-2. **WebSocket disconnects** - Normal on page refresh, auto-reconnects
-3. **Chart flicker** - Mitigated by incremental updates
+**Known Limitations:**
+- Only TOP-30 displayed (by design for performance)
+- Some metrics calculated only for TOP-500 (optimization)
+- Imbalance/pattern indicators not yet displayed (optional)
 
 ---
 
-## 📝 Next Actions (SPRINT-3)
+## 📝 Development Guidelines
 
-### **Priority 1 - Server:**
-1. Change sorting in `GetAllSymbolsMetadata()` to `trades3m`
-2. Remove `top70_update` message
-3. Test WebSocket output
+### Adding New Metrics:
+1. Add calculation method in `TradeAggregatorService.cs`
+2. Add property to `SymbolMetadata` class
+3. Include in WebSocket broadcast (line ~207)
+4. Receive in client `all_symbols_scored` handler
+5. Display in `updateCardStats()` or `createCard()`
 
-### **Priority 2 - Client:**
-1. Update `allSymbols.sort()` to use `trades3m`
-2. Limit charts to TOP-50
-3. Implement Speed Sort toggle logic
-4. Change card display: `/1m` → `/3m`
+### Performance Considerations:
+- Calculate expensive metrics only for TOP-500
+- Use throttling for UI updates
+- Keep circular buffers bounded (MAX_TRADES_PER_SYMBOL = 1000)
+- Avoid frequent `renderPage()` calls (use Smart Sort interval)
 
-### **Testing:**
-1. Open browser DevTools
-2. Monitor WebSocket messages
-3. Verify sorting by trades3m
-4. Check chart performance with 50 charts
-
----
-
-## 🔗 Related Files
-
-- `docs/GEMINI_DEV.md` - Development principles
-- `docs/ARCHITECTURE.md` - System architecture (to be created)
-- Git commit: `59204ea` - Last stable screener.js
+### Testing:
+- Always test with server running (`dotnet run`)
+- Check browser console for errors
+- Verify sorting order matches trades/3m values
+- Test Freeze button (sorting should stop)
 
 ---
 
-## 💡 Key Insights
-
-1. **Benchmarks are cheap** - All operations <2% CPU for 2000 symbols
-2. **TOP-50 is optimal** - Browser handles 50 charts easily, 2000 crashes
-3. **trades/3m is best metric** - More stable than 1m, faster than 5m
-4. **Speed Sort toggle essential** - Users need control over chart changes
-5. **Incremental updates work** - uPlot.setData() prevents flicker
-
----
-
-**Session End: 2025-11-25 07:07 UTC+4**
+**Last Sync:** 2025-11-25 18:45 UTC+4  
+**Next Steps:** Optional UI polish (SPRINT-4) or deploy as-is
