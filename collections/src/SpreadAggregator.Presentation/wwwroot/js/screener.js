@@ -17,7 +17,7 @@ const chartData = new Map();
 
 // SMART SORTING STATE
 let smartSortEnabled = true;
-const symbolActivity = new Map(); // Symbol -> { trades1m: number, lastUpdate: timestamp }
+const symbolActivity = new Map(); // Symbol -> { trades3m: number, lastUpdate: timestamp }
 let smartSortInterval = null;
 
 // BATCHING STATE
@@ -61,10 +61,12 @@ function renderPage(autoScroll = false) {
 
     cleanupPage();
 
-    statusText.textContent = `Live: ${allSymbols.length} Pairs (sorted by trades/min)`;
+    // Render TOP-30 only (prevent browser crash from too many charts)
+    const top30 = allSymbols.slice(0, 30);
+    statusText.textContent = `Live: TOP-30 of ${allSymbols.length} Pairs (sorted by trades/3m)`;
 
-    // Render ALL symbols (no pagination)
-    allSymbols.forEach(s => createCard(s.symbol, s.tradeCount));
+    // Render only top 30 symbols
+    top30.forEach(s => createCard(s.symbol, s.tradeCount));
 
     // Handle scroll: either restore saved position or scroll to top
     if (autoScroll) {
@@ -262,23 +264,31 @@ function initGlobalWebSocket() {
                 pendingChartUpdates.set(symbol, pending);
             }
             else if (msg.type === 'all_symbols_scored') {
-                // Update allSymbols with fresh data (already sorted by score on server)
+                // SPRINT-3: Server now sorts by trades3m, receive and store it
                 // FILTER: Remove blacklisted pairs
                 allSymbols = msg.symbols
                     .filter(s => !BLACKLIST.includes(s.symbol.toUpperCase()))
-                    .map(s => ({
-                        symbol: s.symbol,
-                        score: s.score,
-                        tradesPerMin: s.tradesPerMin,
-                        lastPrice: s.lastPrice,
-                        lastUpdate: s.lastUpdate
-                    }));
+                    .map(s => {
+                        // Update activity map with trades3m from server
+                        symbolActivity.set(s.symbol, {
+                            trades3m: s.trades3m || 0,
+                            lastUpdate: Date.now()
+                        });
+
+                        return {
+                            symbol: s.symbol,
+                            score: s.score,
+                            tradesPerMin: s.tradesPerMin,
+                            trades3m: s.trades3m || 0,
+                            lastPrice: s.lastPrice,
+                            lastUpdate: s.lastUpdate
+                        };
+                    });
 
                 // Re-render current page with updated data
                 renderPage();
 
-                // Update status
-                statusText.textContent = `Live: ${allSymbols.length} Pairs (Score-sorted)`;
+                // Status is updated in renderPage()
             }
         } catch (error) {
             console.error('[WebSocket] Parse error:', error);
@@ -333,13 +343,13 @@ function updateCardStats(symbol, price) {
     const data = chartData.get(symbol);
     if (!data) return;
 
-    // 1. Calculate Trades/Min
-    const oneMinuteAgo = Date.now() - 60000;
+    // SPRINT-3: Calculate Trades/3Min (changed from 1 minute)
+    const threeMinutesAgo = Date.now() - 180000; // 3 minutes in ms
     let count = 0;
 
     // Count from times array (iterate backwards)
     for (let i = data.times.length - 1; i >= 0; i--) {
-        if (data.times[i] < oneMinuteAgo) break;
+        if (data.times[i] < threeMinutesAgo) break;
         // Count non-null values in buys or sells
         if (data.buys[i] !== null || data.sells[i] !== null) {
             count++;
@@ -355,10 +365,10 @@ function updateCardStats(symbol, price) {
     }
 
     if (statsEl) {
-        statsEl.textContent = `${count}/1m`;
+        statsEl.textContent = `${count}/3m`;  // SPRINT-3: Display /3m instead of /1m
     }
 
-    // Smart Sort Update
+    // Smart Sort Update with trades3m
     updateSymbolActivity(symbol, count);
 }
 
@@ -395,9 +405,9 @@ function stopSmartSort() {
     }
 }
 
-function updateSymbolActivity(symbol, trades1m) {
+function updateSymbolActivity(symbol, trades3m) {
     symbolActivity.set(symbol, {
-        trades1m: trades1m,
+        trades3m: trades3m,
         lastUpdate: Date.now()
     });
 }
@@ -405,14 +415,14 @@ function updateSymbolActivity(symbol, trades1m) {
 function reorderCardsWithoutDestroy() {
     if (!smartSortEnabled) return;
 
-    // Sort ALL symbols by trades/min activity (descending)
+    // SPRINT-3: Sort ALL symbols by trades/3m activity (descending)
     allSymbols.sort((a, b) => {
-        const actA = symbolActivity.get(a.symbol)?.trades1m || 0;
-        const actB = symbolActivity.get(b.symbol)?.trades1m || 0;
+        const actA = symbolActivity.get(a.symbol)?.trades3m || 0;
+        const actB = symbolActivity.get(b.symbol)?.trades3m || 0;
         return actB - actA; // Descending - most active first
     });
 
-    // Re-render with sorted data (all symbols displayed)
+    // Re-render with sorted data (TOP-30 displayed)
     renderPage();
 }
 

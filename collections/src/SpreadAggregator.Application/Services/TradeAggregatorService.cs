@@ -448,53 +448,44 @@ public class TradeAggregatorService : IDisposable
     }
 
     /// <summary>
-    /// Get metadata for all symbols (for client pagination)
-    /// SORTED BY ACTIVITY (trades per minute) - server-side smart sort!
+    /// SPRINT-3: Get metadata for all symbols sorted by trades/3m
+    /// Simple sorting by activity - no complex composite scores
     /// </summary>
     public IEnumerable<SymbolMetadata> GetAllSymbolsMetadata()
     {
-        // STEP 1: Calculate basic metrics (trades/min, pump score) for ALL symbols
-        var allWithBasicMetrics = _symbolMetadata.Values
+        // Calculate metrics for ALL symbols and sort by Trades3Min (simplest, clearest metric)
+        return _symbolMetadata.Values
             .Select(m =>
             {
                 var symbolKey = $"{(m.Symbol.StartsWith("MEXC_") ? "" : "MEXC_")}{m.Symbol}";
+                
+                // Calculate rolling window metrics
                 m.TradesPerMin = CalculateTradesPerMinute(symbolKey);
                 m.Trades2Min = CalculateTrades2Min(symbolKey);
                 m.Trades3Min = CalculateTrades3Min(symbolKey);
+                
+                // Keep pump score for compatibility (but not used for sorting)
                 m.Score = CalculatePumpScore(symbolKey, m.TradesPerMin);
+                
+                // SPRINT-2 benchmarks: Calculate for TOP-500 only (optimization)
+                // Note: We calculate AFTER sorting by Trades3Min
                 return m;
             })
-            .OrderByDescending(m => m.Score)  // Sort by pump score
+            .OrderByDescending(m => m.Trades3Min)  // SPRINT-3: Sort by trades/3m - SIMPLE!
+            .Select((m, index) =>
+            {
+                // Calculate advanced benchmarks only for TOP-500 (performance optimization)
+                if (index < 500)
+                {
+                    var symbolKey = $"{(m.Symbol.StartsWith("MEXC_") ? "" : "MEXC_")}{m.Symbol}";
+                    m.Acceleration = CalculateAcceleration(symbolKey, m.TradesPerMin, m.Trades2Min);
+                    m.HasVolumePattern = DetectVolumePattern(symbolKey);
+                    m.BuySellImbalance = CalculateBuySellImbalance(symbolKey);
+                    m.CompositeScore = CalculateCompositeScore(m.Score, m.Acceleration, m.HasVolumePattern, m.BuySellImbalance);
+                }
+                return m;
+            })
             .ToList();
-
-        // STEP 2: OPTIMIZATION - Calculate advanced benchmarks only for TOP-500
-        // This reduces CPU load from 2000 -> 500 symbols (4x improvement)
-        var top500 = allWithBasicMetrics.Take(500).ToList();
-
-        foreach (var m in top500)
-        {
-            var symbolKey = $"{(m.Symbol.StartsWith("MEXC_") ? "" : "MEXC_")}{m.Symbol}";
-            
-            // SPRINT-2: Calculate advanced benchmarks
-            m.Acceleration = CalculateAcceleration(symbolKey, m.TradesPerMin, m.Trades2Min);
-            m.HasVolumePattern = DetectVolumePattern(symbolKey);
-            m.BuySellImbalance = CalculateBuySellImbalance(symbolKey);
-            
-            // Calculate composite score combining all benchmarks
-            m.CompositeScore = CalculateCompositeScore(
-                m.Score, 
-                m.Acceleration, 
-                m.HasVolumePattern, 
-                m.BuySellImbalance
-            );
-        }
-
-        // STEP 3: Sort TOP-500 by composite score, keep rest sorted by pump score
-        var top500Sorted = top500.OrderByDescending(m => m.CompositeScore).ToList();
-        var remaining = allWithBasicMetrics.Skip(500).ToList();
-
-        // Return: TOP-500 by composite, then rest by pump score
-        return top500Sorted.Concat(remaining).ToList();
     }
 
     /// <summary>
