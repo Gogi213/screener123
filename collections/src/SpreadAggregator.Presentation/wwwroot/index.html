@@ -29,16 +29,11 @@
             </div>
         </div>
 
-        <div class="pagination-controls" style="display: flex; gap: 10px; align-items: center;">
+        <div class="header-controls" style="display: flex; gap: 10px; align-items: center;">
             <button id="btnSortToggle" class="nav-btn sort-toggle-btn active" onclick="toggleSmartSort()"
-                title="Server-Side Pump Score Sorting">
-                <span id="sortIcon">🔥</span> Score Sort
+                title="Auto-sort by Trades/Min (Live)">
+                <span id="sortIcon">🔥</span> Speed Sort
             </button>
-            <button id="btnFirst" class="nav-btn" onclick="goToFirstPage()" title="First Page">⏮ First</button>
-            <button id="btnPrev" class="nav-btn" disabled onclick="changePage(-1)">← Prev</button>
-            <span id="pageIndicator" style="font-family: 'JetBrains Mono'; color: #fff; font-size: 11px;">Page 1</span>
-            <button id="btnNext" class="nav-btn" onclick="changePage(1)">Next →</button>
-            <button id="btnLast" class="nav-btn" onclick="goToLastPage()" title="Last Page">Last ⏭</button>
         </div>
     </header>
 

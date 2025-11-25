@@ -1,5 +1,4 @@
 // CONFIG
-const ITEMS_PER_PAGE = 100;
 const HISTORY_MINUTES = 30;
 
 // BLACKLIST (Pairs to hide)
@@ -11,7 +10,6 @@ const BLACKLIST = [
 
 // STATE
 let allSymbols = [];
-let currentPage = 1;
 const activeCharts = new Map();     // Symbol -> uPlot Instance
 
 // uPlot DATA STRUCTURE - Map<symbol, {times: [], buys: [], sells: [], startIndex: number}>
@@ -28,9 +26,6 @@ const pendingChartUpdates = new Map(); // symbol -> [trades]
 // DOM ELEMENTS
 const grid = document.getElementById('grid');
 const statusText = document.getElementById('status-text');
-const btnPrev = document.getElementById('btnPrev');
-const btnNext = document.getElementById('btnNext');
-const pageIndicator = document.getElementById('pageIndicator');
 
 // GLOBAL WebSocket connection
 let globalWebSocket = null;
@@ -56,7 +51,7 @@ function cleanupPage() {
         uplot.destroy();
     });
     activeCharts.clear();
-    // NOTE: chartData is NOT cleared - data persists across pages for all symbols
+    // NOTE: chartData is NOT cleared - data persists for all symbols
     grid.innerHTML = '';
 }
 
@@ -66,27 +61,10 @@ function renderPage(autoScroll = false) {
 
     cleanupPage();
 
-    const totalPages = Math.ceil(allSymbols.length / ITEMS_PER_PAGE);
+    statusText.textContent = `Live: ${allSymbols.length} Pairs (sorted by trades/min)`;
 
-    if (currentPage < 1) currentPage = 1;
-    if (currentPage > totalPages) currentPage = totalPages;
-
-    pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
-    btnPrev.disabled = currentPage === 1;
-    btnNext.disabled = currentPage === totalPages;
-
-    const btnFirst = document.getElementById('btnFirst');
-    const btnLast = document.getElementById('btnLast');
-    if (btnFirst) btnFirst.disabled = currentPage === 1;
-    if (btnLast) btnLast.disabled = currentPage === totalPages;
-
-    statusText.textContent = `Live: ${allSymbols.length} Pairs (showing ${ITEMS_PER_PAGE})`;
-
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
-    const pageSymbols = allSymbols.slice(start, end);
-
-    pageSymbols.forEach(s => createCard(s.symbol, s.tradeCount));
+    // Render ALL symbols (no pagination)
+    allSymbols.forEach(s => createCard(s.symbol, s.tradeCount));
 
     // Handle scroll: either restore saved position or scroll to top
     if (autoScroll) {
@@ -97,21 +75,7 @@ function renderPage(autoScroll = false) {
     }
 }
 
-function changePage(delta) {
-    currentPage += delta;
-    renderPage(true); // Auto-scroll on manual page change
-}
 
-function goToFirstPage() {
-    currentPage = 1;
-    renderPage(true); // Auto-scroll on manual page change
-}
-
-function goToLastPage() {
-    const totalPages = Math.ceil(allSymbols.length / ITEMS_PER_PAGE);
-    currentPage = totalPages;
-    renderPage(true); // Auto-scroll on manual page change
-}
 
 function createCard(symbol, initialTradeCount) {
     const card = document.createElement('div');
@@ -441,15 +405,14 @@ function updateSymbolActivity(symbol, trades1m) {
 function reorderCardsWithoutDestroy() {
     if (!smartSortEnabled) return;
 
-    // GLOBAL SORT: Sort ALL 2000+ symbols by activity, not just current page!
+    // Sort ALL symbols by trades/min activity (descending)
     allSymbols.sort((a, b) => {
         const actA = symbolActivity.get(a.symbol)?.trades1m || 0;
         const actB = symbolActivity.get(b.symbol)?.trades1m || 0;
         return actB - actA; // Descending - most active first
     });
 
-    // Re-render current page with globally sorted data
-    // Page 1 = top 1-100, Page 2 = top 101-200, etc.
+    // Re-render with sorted data (all symbols displayed)
     renderPage();
 }
 
