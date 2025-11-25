@@ -82,6 +82,9 @@ class Program
 
         services.AddSingleton<VolumeFilter>();
 
+        // Binance Spot Filter - exclude MEXC coins that are on Binance
+        services.AddSingleton<BinanceSpotFilter>();
+
         // Simple monitor for leak detection (CPU, Memory)
         services.AddSingleton<SimpleMonitor>();
 
@@ -122,7 +125,8 @@ class Program
                 sp.GetRequiredService<IConfiguration>(),
                 sp.GetRequiredService<VolumeFilter>(),
                 sp.GetRequiredService<IEnumerable<IExchangeClient>>(),
-                sp.GetRequiredService<TradeScreenerChannel>().Channel
+                sp.GetRequiredService<TradeScreenerChannel>().Channel,
+                sp.GetRequiredService<BinanceSpotFilter>() // Add Binance filter
             );
         });
 

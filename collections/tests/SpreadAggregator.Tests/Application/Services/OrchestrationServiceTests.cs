@@ -55,12 +55,15 @@ public class OrchestrationServiceTests
         mockConfiguration.Setup(c => c.GetSection(It.Is<string>(s => s.EndsWith(":VolumeFilter")))).Returns(new Mock<IConfigurationSection>().Object);
         mockConfiguration.Setup(c => c.GetValue<bool>("StreamSettings:EnableTrades", true)).Returns(true);
 
+        var mockBinanceFilter = new Mock<BinanceSpotFilter>();
+
         var orchestrationService = new OrchestrationService(
             mockWebSocketServer.Object,
             mockConfiguration.Object,
             volumeFilter,
             new[] { mockExchangeClient.Object },
-            tradeScreenerChannel
+            tradeScreenerChannel,
+            mockBinanceFilter.Object
         );
 
         // Act
@@ -111,12 +114,15 @@ public class OrchestrationServiceTests
         volumeConfig.Setup(c => c.GetValue<decimal?>("MinUsdVolume", null)).Returns(1000m);
         mockConfiguration.Setup(c => c.GetSection($"ExchangeSettings:Exchanges:{exchangeName}:VolumeFilter")).Returns(volumeConfig.Object);
 
+        var mockBinanceFilter = new Mock<BinanceSpotFilter>();
+
         var orchestrationService = new OrchestrationService(
             mockWebSocketServer.Object,
             mockConfiguration.Object,
             volumeFilter,
             new[] { mockExchangeClient.Object },
-            tradeScreenerChannel
+            tradeScreenerChannel,
+            mockBinanceFilter.Object
         );
 
         // Act

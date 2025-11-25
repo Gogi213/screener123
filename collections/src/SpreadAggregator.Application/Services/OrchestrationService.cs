@@ -19,6 +19,7 @@ public class OrchestrationService
     private readonly IConfiguration _configuration;
     private readonly IEnumerable<IExchangeClient> _exchangeClients;
     private readonly Channel<MarketData> _tradeScreenerChannel;
+    private readonly BinanceSpotFilter _binanceSpotFilter;
 
     // PROPOSAL-2025-0095: Track symbols and tasks for cleanup
     private readonly List<SymbolInfo> _allSymbolInfo = new();
@@ -67,19 +68,24 @@ public class OrchestrationService
         IConfiguration configuration,
         VolumeFilter volumeFilter,
         IEnumerable<IExchangeClient> exchangeClients,
-        Channel<MarketData> tradeScreenerChannel)
+        Channel<MarketData> tradeScreenerChannel,
+        BinanceSpotFilter binanceSpotFilter)
     {
         _webSocketServer = webSocketServer;
         _configuration = configuration;
         _volumeFilter = volumeFilter;
         _exchangeClients = exchangeClients;
         _tradeScreenerChannel = tradeScreenerChannel;
+        _binanceSpotFilter = binanceSpotFilter;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
         // MEXC TRADES VIEWER: WebSocket server enabled for real-time trade streaming
         _webSocketServer.Start();
+
+        // Load Binance Spot symbols for filtering
+        await _binanceSpotFilter.LoadAsync();
 
         // Create cancellation token source for stopping all exchanges
         _cancellationTokenSource = new CancellationTokenSource();
@@ -159,6 +165,12 @@ public class OrchestrationService
         var filteredSymbolNames = filteredSymbolInfo.Select(s => s.Name).ToList();
         
         Console.WriteLine($"[{exchangeName}] {filteredSymbolNames.Count} symbols passed the volume filter.");
+
+        // Apply Binance filter (only for MEXC exchange)
+        if (exchangeName.Equals("MEXC", StringComparison.OrdinalIgnoreCase))
+        {
+            filteredSymbolNames = _binanceSpotFilter.FilterExcludeBinance(filteredSymbolNames);
+        }
 
         if (!filteredSymbolNames.Any())
         {
