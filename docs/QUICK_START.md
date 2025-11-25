@@ -6,7 +6,9 @@
 
 ## 🎯 Current Objective
 
-Implement **SPRINT-3**: Simple sorting by `trades/3m` + TOP-50 chart rendering
+~~SPRINT-3: Simple sorting + TOP-30~~ ✅ **COMPLETE**
+
+**Next:** Implement **SPRINT-4** - Benchmark Indicators on chart cards (optional UI polish)
 
 ---
 
@@ -40,102 +42,48 @@ docs/
 - `acceleration` - growth rate detection
 - `hasPattern` - bot detection
 - `imbalance` - buy/sell pressure
-- **NOTE:** Implemented but NOT used for sorting yet
+- **NOTE:** Implemented but NOT used for sorting (SPRINT-3 uses simple trades/3m)
+
+### SPRINT-3: Simple Sorting + TOP-30 + Anti-Flicker ✅ **[NEW]**
+- **Server:** Sorts by `Trades3Min` (simplified from CompositeScore)
+- **Client:** Renders only TOP-30 charts (reduced from 50 for stability)
+- **Client:** Displays `X/3m` instead of `X/1m`
+- **Client:** Smart Sort uses `trades3m` with 10-second interval
+- **CRITICAL FIX:** Anti-flicker optimization
+  - `renderPage()` только при первой загрузке (isFirstLoad flag)
+  - Smart Sort interval: 2s → 10s
+  - **Result:** 0 мерцания при выключенной Smart Sort
 
 ---
 
-## 🔨 What's TODO (SPRINT-3)
-
-### Server Changes (C#):
-
-**File:** `TradeAggregatorService.cs`
-
-**Line ~449:** Change sorting
-```csharp
-// BEFORE:
-.OrderByDescending(m => m.Score)  // pump score
-
-// AFTER:
-.OrderByDescending(m => m.Trades3Min)  // trades/3m
-```
-
-**Line ~211-220:** Remove `top70_update` message (optional cleanup)
-
 ---
 
-### Client Changes (JavaScript):
+## 🔨 What's NEXT (SPRINT-4 - Optional)
 
-**File:** `screener.js`
+### Goal: Visual Benchmark Indicators
 
-#### 1. **Change sorting** (currently by `score`, need by `trades3m`):
+Add visual indicators to chart cards showing the advanced benchmarks from SPRINT-2:
 
-**Find:** Line ~254-264
-```javascript
-allSymbols = msg.symbols
-    .filter(s => !BLACKLIST.includes(s.symbol.toUpperCase()))
-    .map(s => ({
-        symbol: s.symbol,
-        score: s.score,
-        tradesPerMin: s.tradesPerMin,
-        trades2m: s.trades2m,        // ← Already receiving
-        trades3m: s.trades3m,        // ← Already receiving
-        lastPrice: s.lastPrice
-    }));
+**Indicators:**
+- 🔥 **Acceleration** - if `acceleration > 2.0` display `🔥${acceleration}x`
+- 🤖 **Bot Pattern** - if `hasPattern = true` display bot icon
+- 📈 **Buy Pressure** - if `imbalance > 0.7` show upward trend
+- 📉 **Sell Pressure** - if `imbalance < -0.7` show downward trend
+
+**Card mockup:**
+```
+┌────────────────────────────┐
+│ BTCUSDT              45000 │
+│ 285/3m  🔥2.5x  🤖  📈    │
+│ ══════ Chart ══════       │
+└────────────────────────────┘
 ```
 
-**Add sorting:**
-```javascript
-// After mapping, before renderPage()
-allSymbols.sort((a, b) => b.trades3m - a.trades3m);  // ← ADD THIS
-```
+**Files to modify:**
+- `screener.js` - add indicator rendering logic in `createCard()`
+- `screener.css` - styling for indicators
 
-#### 2. **Limit to TOP-50:**
-
-**Find:** `renderPage()` function (~line 55)
-```javascript
-function renderPage() {
-    cleanupPage();
-    
-    // BEFORE: Render all
-    allSymbols.forEach(s => createCard(s.symbol));
-    
-    // AFTER: Render only top 50
-    const top50 = allSymbols.slice(0, 50);
-    top50.forEach(s => createCard(s.symbol));
-}
-```
-
-#### 3. **Change display `/1m` → `/3m`:**
-
-**Find:** `updateCardStats()` function (~line 345)
-```javascript
-// BEFORE:
-statsEl.textContent = `${count}/1m`;
-
-// AFTER:
-const trades3m = symbolActivity.get(symbol)?.trades3m || 0;
-statsEl.textContent = `${trades3m}/3m`;
-```
-
-**NOTE:** You'll need to store `trades3m` in `symbolActivity` when receiving metrics!
-
-#### 4. **Speed Sort toggle** (already exists, just verify):
-
-**Find:** `reorderCardsWithoutDestroy()` (~line 405)
-```javascript
-function reorderCardsWithoutDestroy() {
-    if (!smartSortEnabled) return;  // ← Respect toggle
-    
-    // Sort by trades3m instead of trades1m
-    allSymbols.sort((a, b) => {
-        const actA = symbolActivity.get(a.symbol)?.trades3m || 0;
-        const actB = symbolActivity.get(b.symbol)?.trades3m || 0;
-        return actB - actA;
-    });
-    
-    renderPage();  // Will render top50
-}
-```
+**ETA:** 2-3 hours (optional polish)
 
 ---
 

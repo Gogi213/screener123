@@ -86,7 +86,10 @@ function createCard(symbol, initialTradeCount) {
     card.innerHTML = `
         <div class="card-header">
             <div class="symbol-name" data-symbol="${symbol}">${symbol}</div>
-            <div class="trade-stats" id="stats-${symbol}">0/3m</div>
+            <div class="trade-stats">
+                <span id="stats-${symbol}">0/3m</span>
+                <span id="accel-${symbol}" class="acceleration" style="margin-left: 8px; color: #f59e0b; font-size: 0.85em;"></span>
+            </div>
         </div>
         <div class="price-info" id="price-${symbol}">
             <span class="price-val">---</span>
@@ -122,15 +125,27 @@ function createCard(symbol, initialTradeCount) {
             { label: 'Time' },
             {
                 label: 'Buy',
-                stroke: '#10b981',
-                fill: '#10b98120',
-                points: { show: true, size: 3, width: 1 }
+                // RENDER OPTIMIZATION: No stroke/fill, only scatter points
+                stroke: 'transparent',
+                width: 0,
+                points: {
+                    show: true,
+                    size: 4,  // Slightly bigger since no lines
+                    stroke: '#10b981',
+                    fill: '#10b981'
+                }
             },
             {
                 label: 'Sell',
-                stroke: '#ef4444',
-                fill: '#ef444420',
-                points: { show: true, size: 3, width: 1 }
+                // RENDER OPTIMIZATION: No stroke/fill, only scatter points
+                stroke: 'transparent',
+                width: 0,
+                points: {
+                    show: true,
+                    size: 4,  // Slightly bigger since no lines
+                    stroke: '#ef4444',
+                    fill: '#ef4444'
+                }
             }
         ],
         axes: [
@@ -138,15 +153,15 @@ function createCard(symbol, initialTradeCount) {
             {
                 show: true,
                 side: 1,
-                stroke: '#6b7280', // Светло-серый цвет для линий оси
+                stroke: '#6b7280',
                 grid: {
                     show: true,
-                    stroke: '#374151', // Темно-серый для сетки
+                    stroke: '#374151',
                     width: 1
                 },
                 ticks: {
                     show: true,
-                    stroke: '#6b7280', // Светло-серый для делений
+                    stroke: '#6b7280',
                     width: 1
                 }
             }
@@ -196,14 +211,14 @@ function createCard(symbol, initialTradeCount) {
     }
 }
 
-// --- BATCHING LOOP (requestAnimationFrame with 300ms throttle) ---
+// --- BATCHING LOOP (requestAnimationFrame with 1000ms throttle) ---
 let lastBatchUpdate = 0;
 
 function batchingLoop() {
     const now = performance.now();
 
-    // Throttle to ~300ms (don't update more often than needed)
-    if (now - lastBatchUpdate > 300 && pendingChartUpdates.size > 0) {
+    // RENDER OPTIMIZATION: Throttle 1000ms (1 second)
+    if (now - lastBatchUpdate > 1000 && pendingChartUpdates.size > 0) {
         pendingChartUpdates.forEach((trades, symbol) => {
             if (trades.length === 0) return;
 
@@ -270,9 +285,10 @@ function initGlobalWebSocket() {
                 allSymbols = msg.symbols
                     .filter(s => !BLACKLIST.includes(s.symbol.toUpperCase()))
                     .map(s => {
-                        // Update activity map with trades3m from server
+                        // Update activity map with trades3m AND acceleration from server
                         symbolActivity.set(s.symbol, {
                             trades3m: s.trades3m || 0,
+                            acceleration: s.acceleration || 1.0,
                             lastUpdate: Date.now()
                         });
 
@@ -281,6 +297,7 @@ function initGlobalWebSocket() {
                             score: s.score,
                             tradesPerMin: s.tradesPerMin,
                             trades3m: s.trades3m || 0,
+                            acceleration: s.acceleration || 1.0,
                             lastPrice: s.lastPrice,
                             lastUpdate: s.lastUpdate
                         };
@@ -364,6 +381,7 @@ function updateCardStats(symbol, price) {
     // 2. Update UI
     const priceEl = document.getElementById(`price-${symbol}`);
     const statsEl = document.getElementById(`stats-${symbol}`);
+    const accelEl = document.getElementById(`accel-${symbol}`);
 
     if (priceEl) {
         priceEl.innerHTML = `<span class="price-val" style="font-family: 'JetBrains Mono';">${formatTickSize(price)}</span>`;
@@ -371,6 +389,28 @@ function updateCardStats(symbol, price) {
 
     if (statsEl) {
         statsEl.textContent = `${count}/3m`;  // SPRINT-3: Display /3m instead of /1m
+    }
+
+    // ACCELERATION: Display if >= 1.5x (significant growth)
+    if (accelEl) {
+        const activity = symbolActivity.get(symbol);
+        const accel = activity?.acceleration || 1.0;
+
+        if (accel >= 1.5) {
+            accelEl.textContent = `↑${accel.toFixed(1)}x`;
+            accelEl.style.display = 'inline';
+            // Color coding: yellow for moderate, orange for high, red for extreme
+            if (accel >= 3.0) {
+                accelEl.style.color = '#ef4444'; // red
+            } else if (accel >= 2.0) {
+                accelEl.style.color = '#f97316'; // orange
+            } else {
+                accelEl.style.color = '#f59e0b'; // yellow
+            }
+        } else {
+            accelEl.textContent = '';
+            accelEl.style.display = 'none';
+        }
     }
 
     // Smart Sort Update with trades3m
