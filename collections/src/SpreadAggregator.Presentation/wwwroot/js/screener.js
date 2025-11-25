@@ -391,30 +391,28 @@ function updateCardStats(symbol, price) {
         statsEl.textContent = `${count}/3m`;  // SPRINT-3: Display /3m instead of /1m
     }
 
-    // ACCELERATION: Display if >= 1.5x (significant growth)
+    // ACCELERATION: ALWAYS SHOW (gray if < 2.0x, colored if >= 2.0x)
     if (accelEl) {
         const activity = symbolActivity.get(symbol);
         const accel = activity?.acceleration || 1.0;
 
-        if (accel >= 1.5) {
-            accelEl.textContent = `↑${accel.toFixed(1)}x`;
-            accelEl.style.display = 'inline';
-            // Color coding: yellow for moderate, orange for high, red for extreme
-            if (accel >= 3.0) {
-                accelEl.style.color = '#ef4444'; // red
-            } else if (accel >= 2.0) {
-                accelEl.style.color = '#f97316'; // orange
-            } else {
-                accelEl.style.color = '#f59e0b'; // yellow
-            }
+        // Always display
+        accelEl.textContent = `↑${accel.toFixed(1)}x`;
+        accelEl.style.display = 'inline';
+
+        // Color coding: gray if slow, colored if fast
+        if (accel >= 3.0) {
+            accelEl.style.color = '#ef4444'; // red - extreme
+        } else if (accel >= 2.0) {
+            accelEl.style.color = '#f97316'; // orange - high
         } else {
-            accelEl.textContent = '';
-            accelEl.style.display = 'none';
+            accelEl.style.color = '#6b7280'; // gray - normal/low
         }
     }
 
-    // Smart Sort Update with trades3m
-    updateSymbolActivity(symbol, count);
+    // NOTE: We DON'T update symbolActivity here anymore!
+    // Sorting uses server-provided trades3m data (from all_symbols_scored message)
+    // Local 'count' is only for UI display, not for sorting
 }
 
 function formatTickSize(tick) {
@@ -429,11 +427,16 @@ function formatTickSize(tick) {
 function toggleSmartSort() {
     smartSortEnabled = !smartSortEnabled;
     const btn = document.getElementById('btnSortToggle');
+    const icon = document.getElementById('sortIcon');
     btn.classList.toggle('active');
 
     if (smartSortEnabled) {
+        icon.textContent = '🔥';
+        btn.innerHTML = '<span id="sortIcon">🔥</span> Live Sort';
         startSmartSort();
     } else {
+        icon.textContent = '❄️';
+        btn.innerHTML = '<span id="sortIcon">❄️</span> Frozen';
         stopSmartSort();
     }
 }
@@ -451,12 +454,6 @@ function stopSmartSort() {
     }
 }
 
-function updateSymbolActivity(symbol, trades3m) {
-    symbolActivity.set(symbol, {
-        trades3m: trades3m,
-        lastUpdate: Date.now()
-    });
-}
 
 function reorderCardsWithoutDestroy() {
     if (!smartSortEnabled) return;
