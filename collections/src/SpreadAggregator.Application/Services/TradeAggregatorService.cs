@@ -190,6 +190,7 @@ public class TradeAggregatorService : IDisposable
                     var allMetadata = GetAllSymbolsMetadata().ToList();
                     if (allMetadata.Count > 0)
                     {
+                        // Send all symbols with full metrics
                         var batchMessage = new
                         {
                             type = "all_symbols_scored",
@@ -200,6 +201,13 @@ public class TradeAggregatorService : IDisposable
                                 symbol = m.Symbol,
                                 score = m.Score,
                                 tradesPerMin = m.TradesPerMin,
+                                trades2m = m.Trades2Min,
+                                trades3m = m.Trades3Min,
+                                // SPRINT-2: Advanced benchmarks
+                                acceleration = m.Acceleration,
+                                hasPattern = m.HasVolumePattern,
+                                imbalance = m.BuySellImbalance,
+                                compositeScore = m.CompositeScore,
                                 lastPrice = m.LastPrice,
                                 lastUpdate = ((DateTimeOffset)m.LastUpdate).ToUnixTimeMilliseconds()
                             })
@@ -208,9 +216,21 @@ public class TradeAggregatorService : IDisposable
                         var json = JsonSerializer.Serialize(batchMessage);
                         _ = _webSocketServer.BroadcastRealtimeAsync(json);
 
-                        _logger.LogInformation("[TradeAggregator] Metadata broadcast: {Count} symbols, top score: {TopScore:F1}",
+                        // SPRINT-2: Send TOP-70 list separately (for chart rendering on client)
+                        var top70 = allMetadata.Take(70).Select(m => m.Symbol).ToList();
+                        var top70Message = new
+                        {
+                            type = "top70_update",
+                            timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                            symbols = top70
+                        };
+
+                        var top70Json = JsonSerializer.Serialize(top70Message);
+                        _ = _webSocketServer.BroadcastRealtimeAsync(top70Json);
+
+                        _logger.LogInformation("[TradeAggregator] Metadata broadcast: {Count} symbols, top composite: {TopScore:F1}",
                             allMetadata.Count,
-                            allMetadata.First().Score);
+                            allMetadata.First().CompositeScore);
                     }
                 }
             }
@@ -250,6 +270,52 @@ public class TradeAggregatorService : IDisposable
     }
 
     /// <summary>
+    /// Calculate trades in the last 2 minutes for a symbol
+    /// </summary>
+    private int CalculateTrades2Min(string symbolKey)
+    {
+        if (!_symbolTrades.TryGetValue(symbolKey, out var queue))
+            return 0;
+
+        var twoMinutesAgo = DateTime.UtcNow.AddMinutes(-2);
+        int count = 0;
+
+        lock (queue)
+        {
+            foreach (var trade in queue)
+            {
+                if (trade.Timestamp >= twoMinutesAgo)
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
+    /// <summary>
+    /// Calculate trades in the last 3 minutes for a symbol
+    /// </summary>
+    private int CalculateTrades3Min(string symbolKey)
+    {
+        if (!_symbolTrades.TryGetValue(symbolKey, out var queue))
+            return 0;
+
+        var threeMinutesAgo = DateTime.UtcNow.AddMinutes(-3);
+        int count = 0;
+
+        lock (queue)
+        {
+            foreach (var trade in queue)
+            {
+                if (trade.Timestamp >= threeMinutesAgo)
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
+    /// <summary>
     /// Calculate pump detection score for a symbol
     /// Formula: TradesPerMin × log10(VolumePerMin) - balances activity and volume
     /// </summary>
@@ -281,22 +347,165 @@ public class TradeAggregatorService : IDisposable
     }
 
     /// <summary>
+    /// SPRINT-2: Calculate acceleration (growth rate of trading activity)
+    /// Formula: trades1m / trades_in_previous_minute
+    /// </summary>
+    private double CalculateAcceleration(string symbolKey, int trades1m, int trades2m)
+    {
+        var tradesPreviousMin = trades2m - trades1m; // Trades between [-2m, -1m]
+        if (tradesPreviousMin <= 0) return 1.0; // No acceleration data
+        
+        return (double)trades1m / tradesPreviousMin;
+    }
+
+    /// <summary>
+    /// SPRINT-2: Detect volume patterns (repeated volumes = bot activity)
+    /// Returns true if 10+ trades with same volume and side in last minute
+    /// </summary>
+    private bool DetectVolumePattern(string symbolKey)
+    {
+        if (!_symbolTrades.TryGetValue(symbolKey, out var queue))
+            return false;
+
+        var oneMinuteAgo = DateTime.UtcNow.AddMinutes(-1);
+        var recentTrades = new List<TradeData>();
+
+        lock (queue)
+        {
+            foreach (var trade in queue)
+            {
+                if (trade.Timestamp >= oneMinuteAgo)
+                    recentTrades.Add(trade);
+            }
+        }
+
+        // Group by volume and side, check for patterns
+        var groups = recentTrades
+            .GroupBy(t => new { Volume = t.Quantity, Side = t.Side })
+            .Where(g => g.Count() >= 10);
+
+        return groups.Any();
+    }
+
+    /// <summary>
+    /// SPRINT-2: Calculate buy/sell imbalance
+    /// Formula: |buyVolume - sellVolume| / (buyVolume + sellVolume)
+    /// Returns 0-1 where 0 = balanced, 1 = completely one-sided
+    /// </summary>
+    private double CalculateBuySellImbalance(string symbolKey)
+    {
+        if (!_symbolTrades.TryGetValue(symbolKey, out var queue))
+            return 0;
+
+        var oneMinuteAgo = DateTime.UtcNow.AddMinutes(-1);
+        decimal buyVolume = 0;
+        decimal sellVolume = 0;
+
+        lock (queue)
+        {
+            foreach (var trade in queue)
+            {
+                if (trade.Timestamp >= oneMinuteAgo)
+                {
+                    var volume = trade.Price * trade.Quantity;
+                    if (trade.Side.Equals("Buy", StringComparison.OrdinalIgnoreCase))
+                        buyVolume += volume;
+                    else
+                        sellVolume += volume;
+                }
+            }
+        }
+
+        var total = buyVolume + sellVolume;
+        if (total == 0) return 0;
+
+        return (double)Math.Abs(buyVolume - sellVolume) / (double)total;
+    }
+
+    /// <summary>
+    /// SPRINT-2: Calculate composite score combining all benchmarks
+    /// Formula: pumpScore * (1 + acceleration/2) + patternBonus + imbalanceBonus
+    /// </summary>
+    private double CalculateCompositeScore(
+        double pumpScore, 
+        double acceleration, 
+        bool hasPattern, 
+        double imbalance)
+    {
+        // Cap acceleration at 5.0 to prevent extreme outliers
+        var cappedAcceleration = Math.Min(acceleration, 5.0);
+        
+        // Base score multiplied by acceleration factor
+        var baseScore = pumpScore * (1.0 + cappedAcceleration / 2.0);
+        
+        // Pattern bonus (bot activity is interesting)
+        var patternBonus = hasPattern ? 100.0 : 0.0;
+        
+        // Imbalance bonus (strong pressure is interesting)
+        var imbalanceBonus = imbalance * 100.0;
+        
+        return baseScore + patternBonus + imbalanceBonus;
+    }
+
+    /// <summary>
     /// Get metadata for all symbols (for client pagination)
     /// SORTED BY ACTIVITY (trades per minute) - server-side smart sort!
     /// </summary>
     public IEnumerable<SymbolMetadata> GetAllSymbolsMetadata()
     {
-        // Calculate trades/min and pump score for each symbol
-        return _symbolMetadata.Values
+        // STEP 1: Calculate basic metrics (trades/min, pump score) for ALL symbols
+        var allWithBasicMetrics = _symbolMetadata.Values
             .Select(m =>
             {
                 var symbolKey = $"{(m.Symbol.StartsWith("MEXC_") ? "" : "MEXC_")}{m.Symbol}";
                 m.TradesPerMin = CalculateTradesPerMinute(symbolKey);
+                m.Trades2Min = CalculateTrades2Min(symbolKey);
+                m.Trades3Min = CalculateTrades3Min(symbolKey);
                 m.Score = CalculatePumpScore(symbolKey, m.TradesPerMin);
                 return m;
             })
-            .OrderByDescending(m => m.Score)  // Sort by pump score (hottest first)
-            .ThenByDescending(m => m.LastUpdate)  // Tie-breaker
+            .OrderByDescending(m => m.Score)  // Sort by pump score
+            .ToList();
+
+        // STEP 2: OPTIMIZATION - Calculate advanced benchmarks only for TOP-500
+        // This reduces CPU load from 2000 -> 500 symbols (4x improvement)
+        var top500 = allWithBasicMetrics.Take(500).ToList();
+
+        foreach (var m in top500)
+        {
+            var symbolKey = $"{(m.Symbol.StartsWith("MEXC_") ? "" : "MEXC_")}{m.Symbol}";
+            
+            // SPRINT-2: Calculate advanced benchmarks
+            m.Acceleration = CalculateAcceleration(symbolKey, m.TradesPerMin, m.Trades2Min);
+            m.HasVolumePattern = DetectVolumePattern(symbolKey);
+            m.BuySellImbalance = CalculateBuySellImbalance(symbolKey);
+            
+            // Calculate composite score combining all benchmarks
+            m.CompositeScore = CalculateCompositeScore(
+                m.Score, 
+                m.Acceleration, 
+                m.HasVolumePattern, 
+                m.BuySellImbalance
+            );
+        }
+
+        // STEP 3: Sort TOP-500 by composite score, keep rest sorted by pump score
+        var top500Sorted = top500.OrderByDescending(m => m.CompositeScore).ToList();
+        var remaining = allWithBasicMetrics.Skip(500).ToList();
+
+        // Return: TOP-500 by composite, then rest by pump score
+        return top500Sorted.Concat(remaining).ToList();
+    }
+
+    /// <summary>
+    /// SPRINT-2: Get TOP-70 symbols by composite score (for chart rendering)
+    /// </summary>
+    public List<string> GetTop70Symbols()
+    {
+        var allMetadata = GetAllSymbolsMetadata();
+        return allMetadata
+            .Take(70)
+            .Select(m => m.Symbol)
             .ToList();
     }
 
@@ -339,6 +548,14 @@ public class SymbolMetadata
     public required string Symbol { get; set; }
     public decimal LastPrice { get; set; }
     public DateTime LastUpdate { get; set; }
-    public int TradesPerMin { get; set; }  // Activity metric for sorting
+    public int TradesPerMin { get; set; }  // Activity metric for sorting (1 minute)
+    public int Trades2Min { get; set; }    // Trades in last 2 minutes (for acceleration detection)
+    public int Trades3Min { get; set; }    // Trades in last 3 minutes (for trend analysis)
     public double Score { get; set; }  // Pump detection score (for real-time sorting)
+    
+    // SPRINT-2: Advanced benchmarks
+    public double Acceleration { get; set; }        // Growth rate (trades1m / trades2m_prev)
+    public bool HasVolumePattern { get; set; }      // Repeated volumes (bot detection)
+    public double BuySellImbalance { get; set; }    // Buy/sell pressure (0-1)
+    public double CompositeScore { get; set; }      // Weighted sum of all benchmarks
 }
