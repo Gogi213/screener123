@@ -24,6 +24,10 @@ let smartSortInterval = null;
 // BATCHING STATE
 const pendingChartUpdates = new Map(); // symbol -> [trades]
 
+// HEALTH MONITORING STATE (SPRINT-5)
+let lastTradeTimestamp = Date.now();
+let healthCheckInterval = null;
+
 // DOM ELEMENTS
 const grid = document.getElementById('grid');
 const statusText = document.getElementById('status-text');
@@ -130,7 +134,7 @@ function createCard(symbol, initialTradeCount) {
                 width: 0,
                 points: {
                     show: true,
-                    size: 4,  // Slightly bigger since no lines
+                    size: 3,  // Balanced size for readability
                     stroke: '#10b981',
                     fill: '#10b981'
                 }
@@ -142,7 +146,7 @@ function createCard(symbol, initialTradeCount) {
                 width: 0,
                 points: {
                     show: true,
-                    size: 4,  // Slightly bigger since no lines
+                    size: 3,  // Balanced size for readability
                     stroke: '#ef4444',
                     fill: '#ef4444'
                 }
@@ -273,6 +277,9 @@ function initGlobalWebSocket() {
             if (msg.type === 'trade_update' && msg.symbol && msg.trades) {
                 // Handle individual trade updates for charts
                 const symbol = msg.symbol.replace('MEXC_', '');
+
+                // SPRINT-5: Update health timestamp
+                lastTradeTimestamp = Date.now();
 
                 // Accumulate trades for ALL symbols (even not visible on current page)
                 const pending = pendingChartUpdates.get(symbol) || [];
@@ -469,6 +476,42 @@ function reorderCardsWithoutDestroy() {
     renderPage();
 }
 
+// SPRINT-5: Health Check Functions
+function startHealthCheck() {
+    if (healthCheckInterval) clearInterval(healthCheckInterval);
+
+    healthCheckInterval = setInterval(() => {
+        const timeSinceLastTrade = Date.now() - lastTradeTimestamp;
+
+        if (timeSinceLastTrade > 30000) { // 30 seconds
+            showHealthAlert('⚠️ No trades for 30+ seconds. MEXC connection may be down.');
+        } else {
+            hideHealthAlert();
+        }
+    }, 5000); // Check every 5 seconds
+}
+
+function showHealthAlert(message) {
+    let alertEl = document.getElementById('health-alert');
+    if (!alertEl) {
+        // Create alert element if doesn't exist
+        alertEl = document.createElement('div');
+        alertEl.id = 'health-alert';
+        alertEl.className = 'health-alert';
+        document.body.appendChild(alertEl);
+    }
+    alertEl.textContent = message;
+    alertEl.style.display = 'block';
+}
+
+function hideHealthAlert() {
+    const alertEl = document.getElementById('health-alert');
+    if (alertEl) {
+        alertEl.style.display = 'none';
+    }
+}
+
 // Start
 init();
 startSmartSort();
+startHealthCheck(); // SPRINT-5
