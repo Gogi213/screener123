@@ -23,7 +23,7 @@ window.globalWebSocket = window.globalWebSocket || null;
 // Local state (not shared)
 const activeCharts = new Map();     // Symbol -> uPlot Instance
 const chartData = new Map();         // uPlot DATA STRUCTURE
-const symbolActivity = new Map();    // Symbol -> { trades3m: number, lastUpdate: timestamp }
+const symbolActivity = new Map();    // Symbol -> { trades5m: number, lastUpdate: timestamp }
 const pendingChartUpdates = new Map(); // symbol -> [trades]
 
 // CONSTANTS
@@ -74,11 +74,11 @@ function renderPage(autoScroll = false) {
     // Render TOP-30 only (prevent browser crash from too many charts)
     const top30 = window.allSymbols.slice(0, 30);
     if (statusText) {
-        statusText.textContent = `Live: TOP-30 of ${window.allSymbols.length} Pairs (sorted by trades/3m)`;
+        statusText.textContent = `Live: TOP-30 of ${window.allSymbols.length} Pairs (sorted by trades/5m)`;
     }
 
     // Render only top 30 symbols
-    top30.forEach(s => createCard(s.symbol, s.trades3m || 0));
+    top30.forEach(s => createCard(s.symbol, s.trades5m || 0));
 
     // Handle scroll: either restore saved position or scroll to top
     if (autoScroll) {
@@ -98,7 +98,7 @@ function createCard(symbol, initialTradeCount) {
         <div class="card-header">
             <div class="symbol-name" data-symbol="${symbol}">${symbol}</div>
             <div class="trade-stats">
-                <span id="stats-${symbol}">0/3m</span>
+                <span id="stats-${symbol}">0/5m</span>
                 <span id="accel-${symbol}" class="acceleration" style="margin-left: 8px; color: #f59e0b; font-size: 0.85em;"></span>
             </div>
         </div>
@@ -200,7 +200,16 @@ function createCard(symbol, initialTradeCount) {
 
     activeCharts.set(symbol, uplot);
 
-    // Initialize stats from existing data (if any) to prevent "0/3m" and "---"
+    // Initialize stats immediately with server data
+    const serverSymbol = window.allSymbols.find(s => s.symbol === symbol);
+
+    // Set initial trades count from server (always available)
+    const statsEl = document.getElementById(`stats-${symbol}`);
+    if (statsEl && serverSymbol) {
+        statsEl.textContent = `${serverSymbol.trades5m || 0}/5m`;
+    }
+
+    // Initialize price from chart data (if any) to prevent "---"
     if (symbolData.times.length > 0) {
         // Find last valid price (check both buys and sells)
         let lastPrice = null;
@@ -342,14 +351,14 @@ function initGlobalWebSocket() {
                 pendingChartUpdates.set(symbol, pending);
             }
             else if (msg.type === 'all_symbols_scored') {
-                // SPRINT-3: Server now sorts by trades3m, receive and store it
+                // Server sends trades5m, receive and store it
                 // FILTER: Remove blacklisted pairs
                 window.allSymbols = msg.symbols
                     .filter(s => !BLACKLIST.includes(s.symbol.toUpperCase()))
                     .map(s => {
-                        // Update activity map with trades3m AND acceleration from server
+                        // Update activity map with trades5m AND acceleration from server
                         symbolActivity.set(s.symbol, {
-                            trades3m: s.trades3m || 0,
+                            trades5m: s.trades5m || 0,
                             acceleration: s.acceleration || 1.0,
                             lastUpdate: Date.now()
                         });
@@ -358,7 +367,7 @@ function initGlobalWebSocket() {
                             symbol: s.symbol,
                             score: s.score,
                             tradesPerMin: s.tradesPerMin,
-                            trades3m: s.trades3m || 0,
+                            trades5m: s.trades5m || 0,
                             acceleration: s.acceleration || 1.0,
                             lastPrice: s.lastPrice,
                             lastUpdate: s.lastUpdate
@@ -433,23 +442,12 @@ function addTradeToChart(symbol, trade) {
 }
 
 function updateCardStats(symbol, price) {
-    const data = chartData.get(symbol);
-    if (!data) return;
+    // Get trades5m from server data (same source as table)
+    // This ensures charts and table show identical values
+    const symbolData = window.allSymbols.find(s => s.symbol === symbol);
+    const trades5m = symbolData?.trades5m || 0;
 
-    // SPRINT-3: Calculate Trades/3Min (changed from 1 minute)
-    const threeMinutesAgo = Date.now() - 180000; // 3 minutes in ms
-    let count = 0;
-
-    // Count from times array (iterate backwards)
-    for (let i = data.times.length - 1; i >= 0; i--) {
-        if (data.times[i] < threeMinutesAgo) break;
-        // Count non-null values in buys or sells
-        if (data.buys[i] !== null || data.sells[i] !== null) {
-            count++;
-        }
-    }
-
-    // 2. Update UI
+    // Update UI
     const priceEl = document.getElementById(`price-${symbol}`);
     const statsEl = document.getElementById(`stats-${symbol}`);
     const accelEl = document.getElementById(`accel-${symbol}`);
@@ -459,7 +457,7 @@ function updateCardStats(symbol, price) {
     }
 
     if (statsEl) {
-        statsEl.textContent = `${count}/3m`;  // SPRINT-3: Display /3m instead of /1m
+        statsEl.textContent = `${trades5m}/5m`;  // Use server data (matches table view EXACTLY)
     }
 
     // ACCELERATION: ALWAYS SHOW (gray if < 2.0x, colored if >= 2.0x)
@@ -481,9 +479,9 @@ function updateCardStats(symbol, price) {
         }
     }
 
-    // NOTE: We DON'T update symbolActivity here anymore!
-    // Sorting uses server-provided trades3m data (from all_symbols_scored message)
-    // Local 'count' is only for UI display, not for sorting
+    // NOTE: We use server-provided trades5m from all_symbols_scored
+    // This is the SAME data source as the table view, ensuring consistency
+    // No local counting needed - server already calculated it
 }
 
 function formatTickSize(tick) {
@@ -529,10 +527,10 @@ function stopSmartSort() {
 function reorderCardsWithoutDestroy() {
     if (!window.smartSortEnabled) return;
 
-    // SPRINT-R4-FIX: Sort by trades3m from object itself (no Map indirection)
-    // Simpler, faster, no risk of desynchronization
+    // Sort by trades5m from server data
+    // Descending order - most active coins first
     window.allSymbols.sort((a, b) => {
-        return (b.trades3m || 0) - (a.trades3m || 0); // Descending - most active first
+        return (b.trades5m || 0) - (a.trades5m || 0); // Descending - most active first
     });
 
     // Re-render with sorted data (TOP-30 displayed)
@@ -583,7 +581,7 @@ window.handleAllSymbolsScored = function (msg) {
             symbol: s.symbol,
             score: s.score,
             tradesPerMin: s.tradesPerMin,
-            trades3m: s.trades3m || 0,
+            trades5m: s.trades5m || 0,
             acceleration: s.acceleration || 1.0,
             lastPrice: s.lastPrice,
             lastUpdate: s.lastUpdate
