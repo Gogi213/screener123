@@ -234,9 +234,9 @@ public class TradeAggregatorService : IDisposable
                                 compositeScore = m.CompositeScore,
                                 lastPrice = m.LastPrice,
                                 lastUpdate = ((DateTimeOffset)m.LastUpdate).ToUnixTimeMilliseconds(),
-                                // SPRINT-10: 24h metrics for table
+                                // SPRINT-10: Table metrics (24h volume + 4h price change)
                                 volume24h = m.Volume24h,
-                                priceChangePercent24h = m.PriceChangePercent24h
+                                priceChangePercent4h = m.PriceChangePercent4h
                             })
                         };
 
@@ -478,16 +478,58 @@ public class TradeAggregatorService : IDisposable
                     m.BuySellImbalance = CalculateBuySellImbalance(symbolKey);
                     m.CompositeScore = CalculateCompositeScore(m.Score, m.Acceleration, m.HasVolumePattern, m.BuySellImbalance);
 
-                    // SPRINT-10: Populate 24h ticker data
+                    // SPRINT-10: Populate 24h volume from ticker (keep 24h volume)
                     if (_tickerData.TryGetValue(symbolKey, out var ticker))
                     {
                         m.Volume24h = ticker.Volume24h;
-                        m.PriceChangePercent24h = ticker.PriceChangePercent24h;
                     }
+
+                    // Calculate 4h price change from local trade data
+                    m.PriceChangePercent4h = Calculate4hPriceChange(symbolKey);
                 }
                 return m;
             })
             .ToList();
+    }
+
+    /// <summary>
+    /// Calculate 4-hour price change percentage using local trade data
+    /// </summary>
+    private decimal Calculate4hPriceChange(string symbolKey)
+    {
+        if (!_symbolTrades.TryGetValue(symbolKey, out var queue))
+            return 0;
+
+        if (queue.Count < 2)
+            return 0;
+
+        var fourHoursAgo = DateTime.UtcNow.AddHours(-4);
+        TradeData currentTrade = null;
+        TradeData oldTrade = null;
+
+        lock (queue)
+        {
+            // Get current (last) trade
+            currentTrade = queue.LastOrDefault();
+            if (currentTrade == null)
+                return 0;
+
+            // Find trade closest to 4 hours ago
+            oldTrade = queue.FirstOrDefault(t => t.Timestamp >= fourHoursAgo);
+
+            // If no trade found within 4h window, use oldest available
+            if (oldTrade == null)
+                oldTrade = queue.FirstOrDefault();
+
+            if (oldTrade == null || oldTrade.Price == 0)
+                return 0;
+        }
+
+        // Calculate percentage change
+        var priceChange = ((currentTrade.Price - oldTrade.Price) / oldTrade.Price) * 100;
+
+        // Clamp to reasonable range
+        return Math.Max(-100, Math.Min(1000, priceChange));
     }
 
     /// <summary>
@@ -559,5 +601,5 @@ public class SymbolMetadata
     // SPRINT-10: Table view metrics
     public int Trades5Min { get; set; }             // Trades in last 5 minutes (for table sorting)
     public decimal Volume24h { get; set; }          // 24h volume from ticker
-    public decimal PriceChangePercent24h { get; set; }  // 24h price change % from ticker
+    public decimal PriceChangePercent4h { get; set; }  // 4h price change % calculated from local trades
 }
