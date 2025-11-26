@@ -4,43 +4,482 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mexc Trade Screener | Pro - Pump Detector</title>
+    <title>MEXC Trade Screener Pro</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="css/screener.css">
+    <link rel="stylesheet" href="/css/styles.css">
 
-    <!-- uPlot - Ultra-fast charting library -->
+    <!-- uPlot - for Charts view -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uplot@1.6.24/dist/uPlot.min.css">
     <script src="https://cdn.jsdelivr.net/npm/uplot@1.6.24/dist/uPlot.iife.min.js"></script>
+
+    <style>
+        /* UNIFIED SCREENER: Table + Charts in one interface */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-app);
+            color: var(--text-primary);
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg-header);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 12px 24px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .brand {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand::before {
+            content: '';
+            display: block;
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .status {
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status.connected {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.2s ease;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-hover);
+        }
+
+        .tab.active {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .view {
+            display: none;
+            padding: 20px;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        /* TABLE VIEW STYLES */
+        .table-container {
+            overflow-x: auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 15px;
+            max-width: 1920px;
+            margin: 0 auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.03), transparent);
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-subtle);
+            cursor: pointer;
+            user-select: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        th:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        th.sortable::after {
+            content: ' ⇅';
+            opacity: 0.3;
+        }
+
+        th.sorted-asc::after {
+            content: ' ↑';
+            opacity: 1;
+            color: var(--accent);
+        }
+
+        th.sorted-desc::after {
+            content: ' ↓';
+            opacity: 1;
+            color: var(--accent);
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .symbol {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .symbol:hover {
+            color: var(--accent);
+        }
+
+        .positive {
+            color: var(--success);
+        }
+
+        .negative {
+            color: var(--danger);
+        }
+
+        .volume {
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .trades {
+            color: var(--accent);
+            font-weight: 500;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .price {
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* CHARTS VIEW STYLES */
+        #chartsView {
+            max-width: 1920px;
+            margin: 0 auto;
+        }
+
+        #chartsHeader {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        #btnSortToggle {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.2s ease;
+        }
+
+        #btnSortToggle:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-hover);
+        }
+
+        #btnSortToggle.active {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        /* Card styles loaded from screener.js */
+    </style>
 </head>
 
 <body>
-    <header>
-        <div class="header-left">
-            <div class="brand">
-                <h1>Mexc Screener Pro</h1>
-            </div>
-            <div class="status-badge">
-                <div class="status-dot"></div>
-                <span id="status-text">Connecting...</span>
-            </div>
+    <div class="header">
+        <div class="header-top">
+            <div class="brand">MEXC Screener Pro</div>
+            <div id="status" class="status">⏳ Connecting...</div>
         </div>
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('table')">📊 Table</button>
+            <button class="tab" onclick="switchTab('charts')">📈 Charts</button>
+        </div>
+    </div>
 
-        <div class="header-controls" style="display: flex; gap: 10px; align-items: center;">
-            <button id="btnSortToggle" class="nav-btn sort-toggle-btn active" onclick="toggleSmartSort()"
-                title="Click to freeze and study coins">
+    <!-- TABLE VIEW -->
+    <div id="tableView" class="view active">
+        <div class="table-container">
+            <table id="symbolsTable">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-column="symbol">Symbol</th>
+                        <th class="sortable" data-column="trades5m">Trades 5m</th>
+                        <th class="sortable" data-column="volume24h">24h Volume</th>
+                        <th class="sortable" data-column="change24h">24h Change</th>
+                        <th class="sortable" data-column="price">Price</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Rows populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CHARTS VIEW -->
+    <div id="chartsView" class="view">
+        <div id="chartsHeader">
+            <button id="btnSortToggle" class="active" onclick="toggleSmartSort()">
                 <span id="sortIcon">🔥</span> Live Sort
             </button>
         </div>
-    </header>
+        <div id="grid"></div>
+    </div>
 
-    <div id="grid"></div>
+    <script>
+        // UNIFIED SCREENER: Single WebSocket connection, two views
 
-    <!-- Main screener logic -->
-    <script src="js/screener.js"></script>
+        // Global state
+        let allSymbols = [];
+        let ws = null;
+        let currentView = 'table';
+        let chartsInitialized = false;
+
+        // Table view state
+        let currentSort = { column: 'trades5m', direction: 'desc' };
+
+        // Initialize WebSocket
+        function initWebSocket() {
+            ws = new WebSocket(`ws://${window.location.hostname}:8181`);
+
+            ws.onopen = () => {
+                const statusEl = document.getElementById('status');
+                statusEl.textContent = '✅ Connected';
+                statusEl.className = 'status connected';
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+
+                    if (msg.type === 'all_symbols_scored') {
+                        allSymbols = msg.symbols.map(s => ({
+                            symbol: s.symbol,
+                            trades5m: s.trades5m || 0,
+                            volume24h: s.volume24h || 0,
+                            change24h: s.priceChangePercent24h || 0,
+                            price: s.lastPrice || 0,
+                            // Keep all data for charts
+                            ...s
+                        }));
+
+                        // Update active view
+                        if (currentView === 'table') {
+                            sortAndRenderTable();
+                        } else if (chartsInitialized && window.handleAllSymbolsScored) {
+                            window.handleAllSymbolsScored(msg);
+                        }
+                    } else if (msg.type === 'trade_aggregate' && chartsInitialized && window.handleTradeAggregate) {
+                        window.handleTradeAggregate(msg);
+                    }
+                } catch (err) {
+                    console.error('Parse error:', err);
+                }
+            };
+
+            ws.onclose = () => {
+                const statusEl = document.getElementById('status');
+                statusEl.textContent = '⚠️ Reconnecting...';
+                statusEl.className = 'status';
+                setTimeout(initWebSocket, 2000);
+            };
+        }
+
+        // TABLE VIEW: Sort and render
+        function sortAndRenderTable() {
+            const sorted = [...allSymbols].sort((a, b) => {
+                let aVal = a[currentSort.column];
+                let bVal = b[currentSort.column];
+
+                if (currentSort.column === 'symbol') {
+                    return currentSort.direction === 'asc'
+                        ? aVal.localeCompare(bVal)
+                        : bVal.localeCompare(aVal);
+                }
+
+                return currentSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
+            });
+
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = sorted.map(s => `
+                <tr>
+                    <td class="symbol" onclick="copySymbol('${s.symbol}')">${s.symbol}</td>
+                    <td class="trades">${s.trades5m}</td>
+                    <td class="volume">${formatVolume(s.volume24h)}</td>
+                    <td class="${s.change24h >= 0 ? 'positive' : 'negative'}">
+                        ${s.change24h >= 0 ? '+' : ''}${s.change24h.toFixed(2)}%
+                    </td>
+                    <td class="price">${formatPrice(s.price)}</td>
+                </tr>
+            `).join('');
+
+            document.querySelectorAll('th').forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+                if (th.dataset.column === currentSort.column) {
+                    th.classList.add(currentSort.direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
+                }
+            });
+        }
+
+        // TABLE VIEW: Formatting helpers
+        function formatVolume(vol) {
+            if (vol >= 1000000) return `$${(vol / 1000000).toFixed(2)}M`;
+            if (vol >= 1000) return `$${(vol / 1000).toFixed(2)}K`;
+            return `$${vol.toFixed(2)}`;
+        }
+
+        function formatPrice(price) {
+            if (!price || price <= 0) return '---';
+            if (price >= 1) return price.toFixed(2);
+            if (price >= 0.01) return price.toFixed(4);
+            if (price >= 0.0001) return price.toFixed(6);
+            return price.toFixed(8).replace(/\.?0+$/, '');
+        }
+
+        function copySymbol(symbol) {
+            navigator.clipboard.writeText(symbol).then(() => {
+                const symbolEls = document.querySelectorAll('.symbol');
+                symbolEls.forEach(el => {
+                    if (el.textContent === symbol) {
+                        const originalColor = el.style.color;
+                        el.style.color = 'var(--success)';
+                        setTimeout(() => { el.style.color = originalColor; }, 300);
+                    }
+                });
+            }).catch(err => console.error('Copy failed:', err));
+        }
+
+        // TABLE VIEW: Column sorting
+        document.querySelectorAll('th.sortable').forEach(th => {
+            th.addEventListener('click', () => {
+                const column = th.dataset.column;
+                if (currentSort.column === column) {
+                    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort.column = column;
+                    currentSort.direction = 'desc';
+                }
+                sortAndRenderTable();
+            });
+        });
+
+        // TAB SWITCHING
+        function switchTab(tabName) {
+            currentView = tabName;
+
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update views
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+
+            if (tabName === 'table') {
+                document.getElementById('tableView').classList.add('active');
+            } else if (tabName === 'charts') {
+                document.getElementById('chartsView').classList.add('active');
+
+                // Lazy load charts logic
+                if (!chartsInitialized) {
+                    initChartsView();
+                    chartsInitialized = true;
+                }
+            }
+        }
+
+        // CHARTS VIEW: Initialize (lazy loaded)
+        function initChartsView() {
+            console.log('[Screener] Initializing charts view...');
+
+            // Load the screener.js logic
+            const script = document.createElement('script');
+            script.src = '/js/screener.js';
+            script.onload = () => {
+                console.log('[Screener] Charts view initialized');
+            };
+            document.body.appendChild(script);
+        }
+
+        // Initialize WebSocket on page load
+        initWebSocket();
+    </script>
 </body>
 
 </html>

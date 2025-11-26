@@ -112,7 +112,8 @@ class Program
                 sp.GetRequiredService<VolumeFilter>(),
                 sp.GetRequiredService<IEnumerable<IExchangeClient>>(),
                 sp.GetRequiredService<Channel<MarketData>>(),
-                sp.GetRequiredService<BinanceSpotFilter>() // Add Binance filter
+                sp.GetRequiredService<BinanceSpotFilter>(), // Add Binance filter
+                sp.GetRequiredService<TradeAggregatorService>() // SPRINT-10: Add TradeAggregatorService
             );
         });
 

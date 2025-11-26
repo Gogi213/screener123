@@ -18,7 +18,7 @@ namespace SpreadAggregator.Application.Services;
 /// </summary>
 public class TradeAggregatorService : IDisposable
 {
-    private const int MAX_TRADES_PER_SYMBOL = 1000; // Memory bound per symbol
+    private const int MAX_TRADES_PER_SYMBOL = 5000; // FIXED: Increased from 1000 to allow accurate statistics for active pairs
     private const int MAX_SYMBOLS = 5000; // LRU safety margin
     private readonly TimeSpan WINDOW_SIZE = TimeSpan.FromMinutes(30);
     private const int BATCH_INTERVAL_MS = 200; // SPRINT-8: 200ms batching for reduced CPU (~50% fewer broadcasts)
@@ -32,6 +32,9 @@ public class TradeAggregatorService : IDisposable
 
     // Symbol metadata: tickSize, lastPrice (for client pagination)
     private readonly ConcurrentDictionary<string, SymbolMetadata> _symbolMetadata = new();
+
+    // SPRINT-10: Ticker data storage (Volume24h, PriceChangePercent24h)
+    private readonly ConcurrentDictionary<string, TickerData> _tickerData = new();
 
     // Batching: accumulate trades per symbol before broadcast
     private readonly ConcurrentDictionary<string, List<TradeData>> _pendingBroadcasts = new();
@@ -426,6 +429,19 @@ public class TradeAggregatorService : IDisposable
     }
 
     /// <summary>
+    /// SPRINT-10: Update ticker data (Volume24h, PriceChangePercent24h) from exchange API
+    /// Called periodically by OrchestrationService
+    /// </summary>
+    public void UpdateTickerData(IEnumerable<TickerData> tickers)
+    {
+        foreach (var ticker in tickers)
+        {
+            var key = $"MEXC_{ticker.Symbol}"; // Match trade data key format
+            _tickerData.AddOrUpdate(key, ticker, (_, __) => ticker);
+        }
+    }
+
+    /// <summary>
     /// SPRINT-3: Get metadata for all symbols sorted by trades/3m
     /// Simple sorting by activity - no complex composite scores
     /// </summary>
@@ -461,6 +477,13 @@ public class TradeAggregatorService : IDisposable
                     m.HasVolumePattern = DetectVolumePattern(symbolKey);
                     m.BuySellImbalance = CalculateBuySellImbalance(symbolKey);
                     m.CompositeScore = CalculateCompositeScore(m.Score, m.Acceleration, m.HasVolumePattern, m.BuySellImbalance);
+
+                    // SPRINT-10: Populate 24h ticker data
+                    if (_tickerData.TryGetValue(symbolKey, out var ticker))
+                    {
+                        m.Volume24h = ticker.Volume24h;
+                        m.PriceChangePercent24h = ticker.PriceChangePercent24h;
+                    }
                 }
                 return m;
             })

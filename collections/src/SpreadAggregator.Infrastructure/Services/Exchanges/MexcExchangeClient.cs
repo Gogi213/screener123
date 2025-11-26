@@ -59,7 +59,7 @@ public class MexcExchangeClient : ExchangeClientBase<MexcRestClient, MexcSocketC
             QuoteVolume = t.QuoteVolume ?? 0,
             // SPRINT-10: Add 24h metrics from MEXC ticker
             Volume24h = t.QuoteVolume ?? 0,  // MEXC QuoteVolume is already 24h
-            PriceChangePercent24h = t.PriceChange,  // Price change (percent) - already decimal
+            PriceChangePercent24h = t.PriceChange * 100,  // MEXC PriceChange is decimal (0.05 = 5%), convert to %
             LastPrice = t.LastPrice
         });
     }

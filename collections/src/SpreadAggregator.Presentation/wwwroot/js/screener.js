@@ -34,22 +34,29 @@ const MAX_RECONNECT_DELAY = 30000; // 30 seconds
 
 // DOM ELEMENTS
 const grid = document.getElementById('grid');
-const statusText = document.getElementById('status-text');
+const statusText = document.getElementById('status-text'); // May be null in tab mode
 
-// GLOBAL WebSocket connection
+// GLOBAL WebSocket connection (shared or standalone)
 let globalWebSocket = null;
+const isEmbeddedMode = !statusText; // Detect if running in unified tab mode
 
 // CORE LOGIC
 async function init() {
     try {
-        statusText.textContent = "Connecting to WebSocket...";
+        // In embedded mode, WebSocket is managed by parent (index.html)
+        if (isEmbeddedMode) {
+            console.log('[Screener] Running in embedded tab mode');
+            // WebSocket handled by parent, just wait for data
+            return;
+        }
 
-        // Connect WebSocket - it will send all symbols automatically
+        // Standalone mode: manage own WebSocket
+        if (statusText) statusText.textContent = "Connecting to WebSocket...";
         initGlobalWebSocket();
 
     } catch (e) {
         console.error("Init error:", e);
-        statusText.textContent = "Connection Error";
+        if (statusText) statusText.textContent = "Connection Error";
         setTimeout(init, 5000);
     }
 }
@@ -72,10 +79,12 @@ function renderPage(autoScroll = false) {
 
     // Render TOP-30 only (prevent browser crash from too many charts)
     const top30 = allSymbols.slice(0, 30);
-    statusText.textContent = `Live: TOP-30 of ${allSymbols.length} Pairs (sorted by trades/3m)`;
+    if (statusText) {
+        statusText.textContent = `Live: TOP-30 of ${allSymbols.length} Pairs (sorted by trades/3m)`;
+    }
 
     // Render only top 30 symbols
-    top30.forEach(s => createCard(s.symbol, s.tradeCount));
+    top30.forEach(s => createCard(s.symbol, s.trades3m || 0));
 
     // Handle scroll: either restore saved position or scroll to top
     if (autoScroll) {
@@ -278,7 +287,9 @@ function initGlobalWebSocket() {
         // SPRINT-5 integration: Reset health timestamp to prevent false alerts
         lastTradeTimestamp = Date.now();
 
-        statusText.textContent = `Live: ${allSymbols.length} Pairs`;
+        if (statusText) {
+            statusText.textContent = `Live: ${allSymbols.length} Pairs`;
+        }
     };
 
     globalWebSocket.onmessage = (event) => {
@@ -382,7 +393,9 @@ function initGlobalWebSocket() {
         reconnectAttempt++;
 
         console.log(`[WebSocket] Reconnecting in ${delay}ms (attempt ${reconnectAttempt})...`);
-        statusText.textContent = "Reconnecting...";
+        if (statusText) {
+            statusText.textContent = "Reconnecting...";
+        }
 
         setTimeout(initGlobalWebSocket, delay);
     };
@@ -567,7 +580,68 @@ function hideHealthAlert() {
     }
 }
 
-// Start
-init();
-startSmartSort();
-startHealthCheck(); // SPRINT-5
+// EXPORT FUNCTIONS for embedded mode (called by parent index.html)
+window.handleAllSymbolsScored = function (msg) {
+    // Update allSymbols from parent data
+    allSymbols = msg.symbols
+        .filter(s => !BLACKLIST.includes(s.symbol.toUpperCase()))
+        .map(s => ({
+            symbol: s.symbol,
+            score: s.score,
+            tradesPerMin: s.tradesPerMin,
+            trades3m: s.trades3m || 0,
+            acceleration: s.acceleration || 1.0,
+            lastPrice: s.lastPrice,
+            lastUpdate: s.lastUpdate
+        }));
+
+    // Render page if first load
+    if (isFirstLoad) {
+        renderPage();
+        isFirstLoad = false;
+        console.log('[Screener] Initial render complete (embedded mode)');
+    }
+};
+
+window.handleTradeAggregate = function (msg) {
+    // Handle trade aggregates in embedded mode
+    if (msg.type === 'trade_aggregate' && msg.symbol && msg.aggregate) {
+        const symbol = msg.symbol.replace('MEXC_', '');
+
+        if (!chartData.has(symbol)) {
+            chartData.set(symbol, {
+                times: [],
+                buys: [],
+                sells: [],
+                startIndex: 0
+            });
+        }
+
+        lastTradeTimestamp = Date.now();
+
+        const agg = msg.aggregate;
+        const pseudoTrade = {
+            price: agg.close,
+            quantity: agg.volume / agg.close,
+            side: agg.buyVolume > agg.sellVolume ? 'Buy' : 'Sell',
+            timestamp: agg.timestamp
+        };
+
+        const pending = pendingChartUpdates.get(symbol) || [];
+        pending.push(pseudoTrade);
+        pendingChartUpdates.set(symbol, pending);
+    }
+};
+
+// Start (only in standalone mode)
+if (!isEmbeddedMode) {
+    init();
+    startSmartSort();
+    startHealthCheck();
+} else {
+    console.log('[Screener] Embedded mode - waiting for parent to feed data');
+    // Start batching loop and health check even in embedded mode
+    batchingLoop(); // Already started globally, but ensure it runs
+    startSmartSort();
+    startHealthCheck();
+}

@@ -20,6 +20,7 @@ public class OrchestrationService
     private readonly IEnumerable<IExchangeClient> _exchangeClients;
     private readonly Channel<MarketData> _tradeScreenerChannel;
     private readonly BinanceSpotFilter _binanceSpotFilter;
+    private readonly TradeAggregatorService _tradeAggregator;
 
     // PROPOSAL-2025-0095: Track symbols and tasks for cleanup
     private readonly List<SymbolInfo> _allSymbolInfo = new();
@@ -69,7 +70,8 @@ public class OrchestrationService
         VolumeFilter volumeFilter,
         IEnumerable<IExchangeClient> exchangeClients,
         Channel<MarketData> tradeScreenerChannel,
-        BinanceSpotFilter binanceSpotFilter)
+        BinanceSpotFilter binanceSpotFilter,
+        TradeAggregatorService tradeAggregator)
     {
         _webSocketServer = webSocketServer;
         _configuration = configuration;
@@ -77,6 +79,7 @@ public class OrchestrationService
         _exchangeClients = exchangeClients;
         _tradeScreenerChannel = tradeScreenerChannel;
         _binanceSpotFilter = binanceSpotFilter;
+        _tradeAggregator = tradeAggregator;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
@@ -197,6 +200,31 @@ public class OrchestrationService
 
 
         Console.WriteLine($"[{exchangeName}] Subscription tasks started (running in background)...");
+
+        // SPRINT-10: Periodic ticker data refresh (Volume24h, PriceChangePercent24h)
+        var tickerTimer = new System.Threading.PeriodicTimer(TimeSpan.FromSeconds(10));
+        _ = Task.Run(async () =>
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await tickerTimer.WaitForNextTickAsync(cancellationToken);
+                    var freshTickers = await exchangeClient.GetTickersAsync();
+                    _tradeAggregator.UpdateTickerData(freshTickers);
+                    Console.WriteLine($"[{exchangeName}] Ticker data refreshed ({freshTickers.Count()} symbols)");
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[{exchangeName}] Ticker refresh error: {ex.Message}");
+                }
+            }
+            tickerTimer.Dispose();
+        }, cancellationToken);
 
         // MEXC TRADES VIEWER: Subscriptions must stay alive until cancellation
         // Tasks run in background and keep the stream alive
