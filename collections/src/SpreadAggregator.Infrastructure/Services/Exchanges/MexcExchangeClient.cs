@@ -56,7 +56,11 @@ public class MexcExchangeClient : ExchangeClientBase<MexcRestClient, MexcSocketC
         return tickers.Data.Select(t => new TickerData
         {
             Symbol = t.Symbol,
-            QuoteVolume = t.QuoteVolume ?? 0
+            QuoteVolume = t.QuoteVolume ?? 0,
+            // SPRINT-10: Add 24h metrics from MEXC ticker
+            Volume24h = t.QuoteVolume ?? 0,  // MEXC QuoteVolume is already 24h
+            PriceChangePercent24h = t.PriceChange,  // Price change (percent) - already decimal
+            LastPrice = t.LastPrice
         });
     }
 

@@ -142,45 +142,63 @@ public class TradeAggregatorService : IDisposable
                 // 1. SPRINT-9: Send OHLCV aggregates (200ms timeframe) instead of individual trades
                 if (!_pendingBroadcasts.IsEmpty)
                 {
-                    var snapshot = _pendingBroadcasts.ToArray();
-                    foreach (var kvp in snapshot)
+                    // SPRINT-R4: Zero-copy optimization - iterate directly over ConcurrentDictionary
+                    foreach (var kvp in _pendingBroadcasts)
                     {
-                        _pendingBroadcasts.TryRemove(kvp.Key, out _);
-                    }
-
-                    // Broadcast OHLCV aggregates
-                    foreach (var (key, trades) in snapshot)
-                    {
+                        if (!_pendingBroadcasts.TryRemove(kvp.Key, out var trades)) continue;
                         if (trades == null || trades.Count == 0) continue;
 
-                        List<TradeData> tradesCopy;
-                        lock (trades) { tradesCopy = trades.ToList(); }
-
-                        // Compute OHLCV aggregate for 200ms bucket
-                        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                        var buyTrades = tradesCopy.Where(t => t.Side.Equals("Buy", StringComparison.OrdinalIgnoreCase)).ToList();
-                        var sellTrades = tradesCopy.Where(t => !t.Side.Equals("Buy", StringComparison.OrdinalIgnoreCase)).ToList();
-
-                        var message = new
+                        // SPRINT-R4: Calculate everything inside lock to avoid ToList() copy
+                        lock (trades)
                         {
-                            type = "trade_aggregate",
-                            symbol = key,
-                            aggregate = new
-                            {
-                                timestamp = timestamp,
-                                open = tradesCopy.First().Price,
-                                high = tradesCopy.Max(t => t.Price),
-                                low = tradesCopy.Min(t => t.Price),
-                                close = tradesCopy.Last().Price,
-                                volume = tradesCopy.Sum(t => t.Price * t.Quantity),
-                                tradeCount = tradesCopy.Count,
-                                buyVolume = buyTrades.Sum(t => t.Price * t.Quantity),
-                                sellVolume = sellTrades.Sum(t => t.Price * t.Quantity)
-                            }
-                        };
+                            if (trades.Count == 0) continue;
 
-                        var json = JsonSerializer.Serialize(message);
-                        _ = _webSocketServer.BroadcastRealtimeAsync(json);
+                            // SPRINT-R4: Single-pass calculation for buy/sell volumes (no ToList)
+                            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            var open = trades[0].Price;
+                            var close = trades[^1].Price;
+                            decimal high = decimal.MinValue;
+                            decimal low = decimal.MaxValue;
+                            decimal totalVolume = 0;
+                            decimal buyVolume = 0;
+                            decimal sellVolume = 0;
+                            int tradeCount = trades.Count;
+
+                            foreach (var trade in trades)
+                            {
+                                if (trade.Price > high) high = trade.Price;
+                                if (trade.Price < low) low = trade.Price;
+
+                                var volume = trade.Price * trade.Quantity;
+                                totalVolume += volume;
+
+                                if (trade.Side.Equals("Buy", StringComparison.OrdinalIgnoreCase))
+                                    buyVolume += volume;
+                                else
+                                    sellVolume += volume;
+                            }
+
+                            var message = new
+                            {
+                                type = "trade_aggregate",
+                                symbol = kvp.Key,
+                                aggregate = new
+                                {
+                                    timestamp = timestamp,
+                                    open = open,
+                                    high = high,
+                                    low = low,
+                                    close = close,
+                                    volume = totalVolume,
+                                    tradeCount = tradeCount,
+                                    buyVolume = buyVolume,
+                                    sellVolume = sellVolume
+                                }
+                            };
+
+                            var json = JsonSerializer.Serialize(message);
+                            _ = _webSocketServer.BroadcastRealtimeAsync(json);
+                        }
                     }
                 }
 
@@ -205,13 +223,17 @@ public class TradeAggregatorService : IDisposable
                                 tradesPerMin = m.TradesPerMin,
                                 trades2m = m.Trades2Min,
                                 trades3m = m.Trades3Min,
+                                trades5m = m.Trades5Min,  // SPRINT-10: for table sorting
                                 // SPRINT-2: Advanced benchmarks
                                 acceleration = m.Acceleration,
                                 hasPattern = m.HasVolumePattern,
                                 imbalance = m.BuySellImbalance,
                                 compositeScore = m.CompositeScore,
                                 lastPrice = m.LastPrice,
-                                lastUpdate = ((DateTimeOffset)m.LastUpdate).ToUnixTimeMilliseconds()
+                                lastUpdate = ((DateTimeOffset)m.LastUpdate).ToUnixTimeMilliseconds(),
+                                // SPRINT-10: 24h metrics for table
+                                volume24h = m.Volume24h,
+                                priceChangePercent24h = m.PriceChangePercent24h
                             })
                         };
 
@@ -219,12 +241,12 @@ public class TradeAggregatorService : IDisposable
                         _ = _webSocketServer.BroadcastRealtimeAsync(json);
 
                         // SPRINT-2: Send TOP-70 list separately (for chart rendering on client)
-                        var top70 = allMetadata.Take(70).Select(m => m.Symbol).ToList();
+                        // SPRINT-R4: Removed .ToList() - JSON serializer handles IEnumerable
                         var top70Message = new
                         {
                             type = "top70_update",
                             timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                            symbols = top70
+                            symbols = allMetadata.Take(70).Select(m => m.Symbol)
                         };
 
                         var top70Json = JsonSerializer.Serialize(top70Message);
@@ -419,7 +441,8 @@ public class TradeAggregatorService : IDisposable
                 m.TradesPerMin = CalculateTradesInWindow(symbolKey, TimeSpan.FromMinutes(1));
                 m.Trades2Min = CalculateTradesInWindow(symbolKey, TimeSpan.FromMinutes(2));
                 m.Trades3Min = CalculateTradesInWindow(symbolKey, TimeSpan.FromMinutes(3));
-                
+                m.Trades5Min = CalculateTradesInWindow(symbolKey, TimeSpan.FromMinutes(5));  // SPRINT-10: for table sorting
+
                 // Keep pump score for compatibility (but not used for sorting)
                 m.Score = CalculatePumpScore(symbolKey, m.TradesPerMin);
                 
@@ -509,4 +532,9 @@ public class SymbolMetadata
     // SPRINT-7: Volume metrics
     public decimal Volume1Min { get; set; }         // USD volume in last 1 minute
     public decimal Volume3Min { get; set; }         // USD volume in last 3 minutes
+
+    // SPRINT-10: Table view metrics
+    public int Trades5Min { get; set; }             // Trades in last 5 minutes (for table sorting)
+    public decimal Volume24h { get; set; }          // 24h volume from ticker
+    public decimal PriceChangePercent24h { get; set; }  // 24h price change % from ticker
 }

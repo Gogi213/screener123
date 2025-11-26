@@ -522,11 +522,10 @@ function stopSmartSort() {
 function reorderCardsWithoutDestroy() {
     if (!smartSortEnabled) return;
 
-    // SPRINT-3: Sort ALL symbols by trades/3m activity (descending)
+    // SPRINT-R4-FIX: Sort by trades3m from object itself (no Map indirection)
+    // Simpler, faster, no risk of desynchronization
     allSymbols.sort((a, b) => {
-        const actA = symbolActivity.get(a.symbol)?.trades3m || 0;
-        const actB = symbolActivity.get(b.symbol)?.trades3m || 0;
-        return actB - actA; // Descending - most active first
+        return (b.trades3m || 0) - (a.trades3m || 0); // Descending - most active first
     });
 
     // Re-render with sorted data (TOP-30 displayed)

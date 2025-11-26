@@ -105,12 +105,12 @@ public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, I
 
                         if (_tradeAggregatorService != null)
                         {
-                            var allMetadata = _tradeAggregatorService.GetAllSymbolsMetadata().ToList();
-                            var symbolsOnPage = allMetadata
+                            // SPRINT-R4: Removed intermediate .ToList() calls - evaluate lazily
+                            var symbolsOnPage = _tradeAggregatorService.GetAllSymbolsMetadata()
                                 .Skip((page - 1) * pageSize)
                                 .Take(pageSize)
                                 .Select(m => $"MEXC_{m.Symbol}")
-                                .ToList();
+                                .ToList(); // Final ToList() needed for GetTradesForSymbols()
 
                             var tradesData = _tradeAggregatorService.GetTradesForSymbols(symbolsOnPage);
                             var response = new

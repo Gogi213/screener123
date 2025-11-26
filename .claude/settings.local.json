@@ -60,7 +60,11 @@
       "Bash(del /F \"src\\SpreadAggregator.Application\\Class1.cs\")",
       "Bash(del /F \"tests\\SpreadAggregator.Tests\\UnitTest1.cs\")",
       "Bash(del /F \"TestClient.cs\")",
-      "Bash(del /F \"test_websocket.html\")"
+      "Bash(del /F \"test_websocket.html\")",
+      "Bash(cmd //c \"taskkill /F /PID 3880\")",
+      "Bash(cmd //c \"tasklist | findstr dotnet\")",
+      "Bash(exit 0)",
+      "Bash(cmd //c \"taskkill /F /PID 22408\")"
     ],
     "deny": [],
     "ask": []
