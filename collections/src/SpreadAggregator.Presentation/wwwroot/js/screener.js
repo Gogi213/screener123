@@ -285,7 +285,35 @@ function initGlobalWebSocket() {
         try {
             const msg = JSON.parse(event.data);
 
-            if (msg.type === 'trade_update' && msg.symbol && msg.trades) {
+            // SPRINT-9: Handle OHLCV aggregates (200ms timeframe)
+            if (msg.type === 'trade_aggregate' && msg.symbol && msg.aggregate) {
+                const symbol = msg.symbol.replace('MEXC_', '');
+
+                if (!chartData.has(symbol)) {
+                    chartData.set(symbol, {
+                        times: [],
+                        buys: [],
+                        sells: [],
+                        startIndex: 0
+                    });
+                }
+
+                lastTradeTimestamp = Date.now();
+
+                // Convert aggregate to pseudo-trade (use close price, side from volume ratio)
+                const agg = msg.aggregate;
+                const pseudoTrade = {
+                    price: agg.close,
+                    quantity: agg.volume / agg.close,
+                    side: agg.buyVolume > agg.sellVolume ? 'Buy' : 'Sell',
+                    timestamp: agg.timestamp
+                };
+
+                const pending = pendingChartUpdates.get(symbol) || [];
+                pending.push(pseudoTrade);
+                pendingChartUpdates.set(symbol, pending);
+            }
+            else if (msg.type === 'trade_update' && msg.symbol && msg.trades) {
                 // Handle individual trade updates for charts
                 const symbol = msg.symbol.replace('MEXC_', '');
 

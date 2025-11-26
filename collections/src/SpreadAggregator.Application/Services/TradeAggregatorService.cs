@@ -22,7 +22,7 @@ public class TradeAggregatorService : IDisposable
     private const int MAX_TRADES_PER_SYMBOL = 1000; // Memory bound per symbol
     private const int MAX_SYMBOLS = 5000; // LRU safety margin
     private readonly TimeSpan WINDOW_SIZE = TimeSpan.FromMinutes(30);
-    private const int BATCH_INTERVAL_MS = 100; // 100ms batching for reduced CPU
+    private const int BATCH_INTERVAL_MS = 200; // SPRINT-8: 200ms batching for reduced CPU (~50% fewer broadcasts)
 
     private readonly ChannelReader<MarketData> _channelReader;
     private readonly IWebSocketServer _webSocketServer;
@@ -133,12 +133,12 @@ public class TradeAggregatorService : IDisposable
     }
 
     /// <summary>
-    /// Batching loop: flush pending broadcasts every 100ms + send metadata every 2 seconds
+    /// SPRINT-8: Batching loop - flush pending broadcasts every 200ms + send metadata every 2 seconds
     /// </summary>
     private async Task BatchBroadcastLoop(CancellationToken cancellationToken)
     {
         int tickCounter = 0;
-        const int METADATA_BROADCAST_INTERVAL = 20; // Every 20 ticks (2 seconds at 100ms interval)
+        const int METADATA_BROADCAST_INTERVAL = 10; // SPRINT-8: Every 10 ticks (2 seconds at 200ms interval)
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -147,7 +147,7 @@ public class TradeAggregatorService : IDisposable
                 await _batchTimer.WaitForNextTickAsync(cancellationToken);
                 tickCounter++;
 
-                // 1. ALWAYS send trade_update for pending trades (for charts)
+                // 1. SPRINT-9: Send OHLCV aggregates (200ms timeframe) instead of individual trades
                 if (!_pendingBroadcasts.IsEmpty)
                 {
                     var snapshot = _pendingBroadcasts.ToArray();
@@ -156,7 +156,7 @@ public class TradeAggregatorService : IDisposable
                         _pendingBroadcasts.TryRemove(kvp.Key, out _);
                     }
 
-                    // Broadcast trade updates
+                    // Broadcast OHLCV aggregates
                     foreach (var (key, trades) in snapshot)
                     {
                         if (trades == null || trades.Count == 0) continue;
@@ -164,17 +164,27 @@ public class TradeAggregatorService : IDisposable
                         List<TradeData> tradesCopy;
                         lock (trades) { tradesCopy = trades.ToList(); }
 
+                        // Compute OHLCV aggregate for 200ms bucket
+                        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        var buyTrades = tradesCopy.Where(t => t.Side.Equals("Buy", StringComparison.OrdinalIgnoreCase)).ToList();
+                        var sellTrades = tradesCopy.Where(t => !t.Side.Equals("Buy", StringComparison.OrdinalIgnoreCase)).ToList();
+
                         var message = new
                         {
-                            type = "trade_update",
+                            type = "trade_aggregate",
                             symbol = key,
-                            trades = tradesCopy.Select(t => new
+                            aggregate = new
                             {
-                                price = t.Price,
-                                quantity = t.Quantity,
-                                side = t.Side,
-                                timestamp = ((DateTimeOffset)t.Timestamp).ToUnixTimeMilliseconds()
-                            })
+                                timestamp = timestamp,
+                                open = tradesCopy.First().Price,
+                                high = tradesCopy.Max(t => t.Price),
+                                low = tradesCopy.Min(t => t.Price),
+                                close = tradesCopy.Last().Price,
+                                volume = tradesCopy.Sum(t => t.Price * t.Quantity),
+                                tradeCount = tradesCopy.Count,
+                                buyVolume = buyTrades.Sum(t => t.Price * t.Quantity),
+                                sellVolume = sellTrades.Sum(t => t.Price * t.Quantity)
+                            }
                         };
 
                         var json = JsonSerializer.Serialize(message);

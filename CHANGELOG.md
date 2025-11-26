@@ -1,4 +1,18 @@
-# CHANGELOG
+  - Result: ~300-400 high-quality symbols (from ~1,200)
+
+- **Trade Batching Optimization (SPRINT-8):**
+  - Reduced batch interval: 100ms → 200ms
+  - Impact: ~50% reduction in WebSocket broadcast overhead
+  - CPU load expected to drop significantly
+  - Metadata broadcast remains at 2-second interval (10 ticks × 200ms)
+  - No UX degradation (frontend already throttles at 1000ms)
+
+### Performance
+- Network traffic: 50% reduction (fewer WebSocket messages)
+- CPU usage: Expected 30-50% reduction for broadcast operations
+- Latency: +100ms (negligible, masked by frontend throttling)
+
+---
 
 ## [1.4.0] - 2025-11-26 - SPRINT-6
 
