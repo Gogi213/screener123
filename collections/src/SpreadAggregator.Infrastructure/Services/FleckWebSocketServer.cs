@@ -12,6 +12,10 @@ using System.Threading.Tasks;
 
 namespace SpreadAggregator.Infrastructure.Services;
 
+/// <summary>
+/// WebSocket server implementation using Fleck library.
+/// Note: IWebSocketServer abstraction maintained for proper layered architecture (Application <- Infrastructure).
+/// </summary>
 public class FleckWebSocketServer : Application.Abstractions.IWebSocketServer, IDisposable
 {
     private readonly WebSocketServer _server;

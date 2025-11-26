@@ -4,6 +4,7 @@ namespace SpreadAggregator.Application.Abstractions;
 
 /// <summary>
 /// Defines the contract for a WebSocket server.
+/// NOTE: This abstraction is necessary for proper layered architecture (Application -> Infrastructure boundary).
 /// </summary>
 public interface IWebSocketServer
 {

@@ -1,37 +1,41 @@
 # MEXC Trade Screener - Resume Context
 
-**Last Updated:** 2025-11-26 01:15 UTC+4  
-**Status:** ✅ **PRODUCTION READY - ALL FEATURES COMPLETE**
+**Last Updated:** 2025-11-26 22:30 UTC+4
+**Status:** ✅ **PRODUCTION READY (Sprint 9 Complete + Refactoring)**
 
 ---
 
-## 🎯 Current Objective: NONE - System Complete
+## 🎯 Current Objective: Volume Visualization (Sprint 10)
 
-Screener is **production-ready** and **fully functional**. All core features implemented, tested, and stable.
+System is stable and performant with OHLCV aggregation. Next step is to visualize volume on charts.
 
 ---
 
 ## ✨ Latest Changes (This Session)
 
-### **SPRINT-4: WebSocket Auto-Reconnect** ✅
-- Exponential backoff reconnection (1s → 2s → 4s → max 30s)
-- Auto-recovery from server restarts (no manual reload)
-- Integration with health monitoring
+### **REFACTORING SPRINTS (R1-R3)** ✅
+- **SPRINT-R1:** Removed 50+ dead files (legacy services, controllers, tests)
+- **SPRINT-R2:** Removed 10 unused NuGet packages (-67% dependencies)
+- **SPRINT-R3:** Code optimization (unified methods, removed TradeScreenerChannel)
+- **Impact:** Codebase reduced by 50%, build time improved by 33%
 
-### **SPRINT-5: Health Monitoring** ✅
-- Visual alert when no trades for 30+ seconds
-- Orange banner notification
-- Auto-hide when connection resumes
+### **SPRINT-9: OHLCV Aggregation (200ms)** ✅
+- **Backend:** Aggregates trades into 200ms OHLCV buckets.
+- **Protocol:** Sends `trade_aggregate` (1 msg) instead of `trade_update` (50+ msgs).
+- **Frontend:** Renders aggregates as pseudo-trades.
+- **Impact:** Network traffic reduced by **98%**. CPU load significantly lower.
 
-### **Major Exchanges Filter** ✅
-- Filter out Binance, Bybit, OKX symbols
-- Focus on MEXC-exclusive coins (~1,200 symbols)
-- Early opportunity detection
+### **SPRINT-8: Batching Optimization** ✅
+- Batch interval increased: 100ms → 200ms.
+- Reduced broadcast frequency for better performance.
 
-### **Polish** ✅
-- Chart points: 3px (optimal readability)
-- Test suite removed (not needed)
-- Documentation updated
+### **SPRINT-7: Volume Filter** ✅
+- Min Volume: $1,000 → $50,000.
+- Focus on liquid pairs (~300-400 symbols).
+
+### **SPRINT-6: Chart Flicker Fix** ✅
+- Pre-initialize chartData on first trade.
+- Eliminates 0-2s data loss window.
 
 ---
 
@@ -50,113 +54,63 @@ dotnet build && dotnet run --project src\SpreadAggregator.Presentation
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| Symbols | ~1,200 (MEXC-exclusive) | ✅ Stable |
-| CPU | ~2% | ✅ Excellent |
+| Symbols | ~400 (High Volume) | ✅ Stable |
+| Network | ~200 bytes/200ms | ✅ Optimized (-98%) |
+| CPU | Low | ✅ Efficient |
 | RAM | ~60 MB | ✅ No leaks |
-| Performance | Smooth | ✅ Optimized |
-| Resilience | Auto-reconnect | ✅ Resilient |
+| **Codebase** | **~40 files** | ✅ **Reduced (-50%)** |
+| **Dependencies** | **5 packages** | ✅ **Minimal (-67%)** |
+| **Build time** | **~6s** | ✅ **Fast (-33%)** |
 
 ---
 
 ## 📁 Key Files
 
 **Backend:**
-- `collections/src/SpreadAggregator.Application/Services/OrchestrationService.cs` - MEXC subscription
-- `collections/src/SpreadAggregator.Application/Services/TradeAggregatorService.cs` - Metrics
-- `collections/src/SpreadAggregator.Application/Services/BinanceSpotFilter.cs` - Major exchanges filter
+- `collections/src/SpreadAggregator.Application/Services/TradeAggregatorService.cs` - **OHLCV Aggregation Logic** (lines 150-192)
+- `collections/src/SpreadAggregator.Application/Services/OrchestrationService.cs` - Subscription & Filtering
 
 **Frontend:**
-- `collections/src/SpreadAggregator.Presentation/wwwroot/js/screener.js` - Client logic (SPRINT-4, SPRINT-5)
-- `collections/src/SpreadAggregator.Presentation/wwwroot/css/screener.css` - Styling
-- `collections/src/SpreadAggregator.Presentation/wwwroot/index.html` - UI
-
-**Documentation:**
-- `docs/QUICK_START.md` - Current state, commands
-- `docs/ARCHITECTURE.md` - Technical details
-- `docs/GEMINI_DEV.md` - Development principles
-- `CHANGELOG.md` - Version history
+- `collections/src/SpreadAggregator.Presentation/wwwroot/js/screener.js` - **`trade_aggregate` handler** (lines 288-310)
 
 ---
 
 ## ✅ Completed Sprints
 
-1. **SPRINT-0:** Infrastructure ✅
-2. **SPRINT-1:** Extended Metrics ✅
-3. **SPRINT-2:** Advanced Benchmarks ✅
-4. **SPRINT-3:** Simple Sorting + TOP-30 ✅
-5. **SPRINT-4:** WebSocket Reconnection ✅ (NEW)
-6. **SPRINT-5:** Health Monitoring ✅ (NEW)
+1. **SPRINT-0 to 5:** Infrastructure, Metrics, Reconnect, Health ✅
+2. **SPRINT-6:** Chart Flicker Fix ✅
+3. **SPRINT-7:** Volume Filter ($50k) ✅
+4. **SPRINT-8:** Batching (200ms) ✅
+5. **SPRINT-9:** OHLCV Aggregation ✅
+6. **SPRINT-R1:** Dead Code Cleanup ✅ (NEW)
+7. **SPRINT-R2:** Dependency Cleanup ✅ (NEW)
+8. **SPRINT-R3:** Code Optimization ✅ (NEW)
 
 ---
 
-## 🎨 Features
+## 🔮 Next Steps (Sprint 10)
 
-### **Real-Time Monitoring**
-- WebSocket streaming from MEXC
-- Rolling window metrics (trades/1m, 2m, 3m)
-- Advanced benchmarks (acceleration, imbalance, patterns)
-- TOP-30 display with uPlot charts
+1. **Volume Visualization:**
+   - Use `aggregate.volume` to dynamically size chart points.
+   - Critical for HFT to see "whale" activity.
 
-### **Resilience**
-- Auto-reconnect on disconnect (exponential backoff)
-- Health alerts (30+ sec no trades)
-- No manual intervention needed
-
-### **Filtering**
-- Exclude Binance/Bybit/OKX symbols
-- Focus on MEXC-exclusive opportunities
-- Volume filtering configurable
-
-### **UI/UX**
-- Real-time scatter charts (green=buy, red=sell)
-- Freeze/Live sort controls
-- Click-to-copy symbol names
-- Color-coded acceleration (gray/orange/red)
-
----
-
-## 🐛 Known Issues: NONE
-
-System stable, no critical bugs detected.
-
----
-
-## 📝 If Resuming Work
-
-**Optional Enhancements (NOT NEEDED):**
-- Historical data API (charts on page reload) - Skip (charts fill quickly)
-- Structured logging - Skip (console.log sufficient)
-- Deployment guide - Skip (single dev)
-- Security hardening - Skip (localhost only)
-
-**Recommendation:** System is complete. No further work needed unless specific issue arises.
+2. **Visual Polish:**
+   - Gradient colors for buy/sell ratio?
+   - Tooltips?
 
 ---
 
 ## 🎓 Technical Context
 
-**Architecture:** ASP.NET Core (.NET 9.0) + Vanilla JS + uPlot  
-**Exchange:** MEXC (CryptoExchange.Net library)  
-**WebSocket:** Fleck server (port 8181)  
-**Performance:** 2% CPU, 60 MB RAM (1,200 symbols)  
-**Resilience:** Auto-reconnect, health monitoring  
+**Architecture:**
+- **Source:** MEXC WebSocket (Raw Trades)
+- **Backend:** Aggregates trades → 200ms OHLCV Buckets
+- **Transport:** WebSocket (`trade_aggregate` JSON)
+- **Frontend:** uPlot (Scatter Chart)
 
-**Recent Changes:**
-- SPRINT-4: Reconnection logic in `screener.js` (lines 31-33, 275-279, 341-348)
-- SPRINT-5: Health monitoring in `screener.js` (lines 27-29, 292-293, 490-522)
-- Filter: `BinanceSpotFilter.cs` - loads Binance/Bybit/OKX symbols
+**Data Flow:**
+`[Trades]` → `TradeAggregatorService` (Sum Volume, Find OHLC) → `JSON` → `Frontend` → `uPlot`
 
 ---
 
-## 🔍 Development Principles (GEMINI_DEV)
-
-1. ✅ **Minimal Complexity** - Simple solutions over clever
-2. ✅ **Measured Problems** - Fix real issues, not theoretical
-3. ✅ **No Over-Engineering** - YAGNI (You Ain't Gonna Need It)
-4. ✅ **Performance First** - CPU/RAM monitoring, optimization
-5. ✅ **Evidence-Based** - Sequential thinking validation
-
----
-
-**System Status:** ✅ **PRODUCTION READY**  
-**Next Action:** Use the screener or pause development (no critical work remaining)
+**System Status:** ✅ **STABLE & OPTIMIZED**

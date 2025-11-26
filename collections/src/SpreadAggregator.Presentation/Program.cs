@@ -17,12 +17,6 @@ using SpreadAggregator.Application.Diagnostics;
 
 namespace SpreadAggregator.Presentation;
 
-public class TradeScreenerChannel
-{
-    public Channel<MarketData> Channel { get; }
-    public TradeScreenerChannel(Channel<MarketData> channel) => Channel = channel;
-}
-
 class Program
 {
     static async Task Main(string[] args)
@@ -88,34 +82,26 @@ class Program
         // Simple monitor for leak detection (CPU, Memory)
         services.AddSingleton<SimpleMonitor>();
 
+        // SPRINT-R3: Register Channel directly (removed TradeScreenerChannel wrapper)
         var channelOptions = new BoundedChannelOptions(1_000_000)
         {
             FullMode = BoundedChannelFullMode.DropOldest
         };
 
         var tradeScreenerChannel = Channel.CreateBounded<MarketData>(channelOptions);
-        services.AddSingleton<TradeScreenerChannel>(new TradeScreenerChannel(tradeScreenerChannel));
+        services.AddSingleton(tradeScreenerChannel);
 
         // Register all exchange clients
         // MEXC TRADES VIEWER: Only MEXC enabled
         services.AddSingleton<IExchangeClient, MexcExchangeClient>();
 
-        // SPRINT-0-FIX-1: PerformanceMonitor DISABLED - sync file I/O was causing 658ms freezes
-        // TODO: Re-enable with async file writes if needed for monitoring
-        // services.AddSingleton<PerformanceMonitor>(sp =>
-        // {
-        //     var logDir = "./data/performance";
-        //     return new PerformanceMonitor(logDir);
-        // });
-
-        // MEXC TRADES VIEWER: TradeAggregatorService - processes trades from TradeScreenerChannel
+        // MEXC TRADES VIEWER: TradeAggregatorService - processes trades
         services.AddSingleton<TradeAggregatorService>(sp =>
         {
-            var tradeChannel = sp.GetRequiredService<TradeScreenerChannel>().Channel;
+            var tradeChannel = sp.GetRequiredService<Channel<MarketData>>();
             var webSocketServer = sp.GetRequiredService<IWebSocketServer>();
             var logger = sp.GetRequiredService<ILogger<TradeAggregatorService>>();
-            // SPRINT-0-FIX-1: Pass null instead of PerformanceMonitor
-            return new TradeAggregatorService(tradeChannel, webSocketServer, logger, null);
+            return new TradeAggregatorService(tradeChannel, webSocketServer, logger);
         });
 
         services.AddSingleton<OrchestrationService>(sp =>
@@ -125,7 +111,7 @@ class Program
                 sp.GetRequiredService<IConfiguration>(),
                 sp.GetRequiredService<VolumeFilter>(),
                 sp.GetRequiredService<IEnumerable<IExchangeClient>>(),
-                sp.GetRequiredService<TradeScreenerChannel>().Channel,
+                sp.GetRequiredService<Channel<MarketData>>(),
                 sp.GetRequiredService<BinanceSpotFilter>() // Add Binance filter
             );
         });
@@ -171,7 +157,7 @@ public class OrchestrationServiceHost : IHostedService
 public class TradeAggregatorServiceHost : IHostedService
 {
     private readonly TradeAggregatorService _tradeAggregatorService;
-    private readonly TradeScreenerChannel _tradeScreenerChannel;
+    private readonly Channel<MarketData> _tradeScreenerChannel;
     private readonly IWebSocketServer _webSocketServer;
     private readonly ILogger<TradeAggregatorServiceHost> _logger;
     private Task? _runningTask;
@@ -179,7 +165,7 @@ public class TradeAggregatorServiceHost : IHostedService
 
     public TradeAggregatorServiceHost(
         TradeAggregatorService tradeAggregatorService,
-        TradeScreenerChannel tradeScreenerChannel,
+        Channel<MarketData> tradeScreenerChannel,
         IWebSocketServer webSocketServer,
         ILogger<TradeAggregatorServiceHost> logger)
     {
@@ -213,7 +199,7 @@ public class TradeAggregatorServiceHost : IHostedService
         _cts?.Cancel();
 
         // Complete the channel to stop processing
-        _tradeScreenerChannel.Channel.Writer.Complete();
+        _tradeScreenerChannel.Writer.Complete();
 
         // Wait for task to finish (with timeout)
         if (_runningTask != null)

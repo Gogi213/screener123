@@ -1,52 +1,19 @@
 using System;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SpreadAggregator.Infrastructure.Services;
 
 /// <summary>
-/// A simple static logger to write WebSocket connection status to a file.
+/// A simple static logger for WebSocket connection status.
+/// REFACTORED: Removed file I/O, uses Console only for better performance.
 /// </summary>
 public static class WebSocketLogger
 {
-    private static readonly string LogDirectory = @"C:\visual projects\arb1\collections\logs";
-    private static readonly string LogFilePath = Path.Combine(LogDirectory, "websocket.log");
-    private static readonly object FileLock = new();
-
-    static WebSocketLogger()
-    {
-        try
-        {
-            Directory.CreateDirectory(LogDirectory);
-            if (File.Exists(LogFilePath))
-            {
-                File.Delete(LogFilePath);
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[CRITICAL] Failed to create log directory: {ex.Message}");
-        }
-    }
-
     /// <summary>
-    /// Logs a message to the websocket.log file.
+    /// Logs a message to the console.
     /// </summary>
     /// <param name="message">The message to log.</param>
     public static void Log(string message)
     {
-        try
-        {
-            lock (FileLock)
-            {
-                var logMessage = $"{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff} | {message}{Environment.NewLine}";
-                File.AppendAllText(LogFilePath, logMessage, Encoding.UTF8);
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[ERROR] Failed to write to log file: {ex.Message}");
-        }
+        Console.WriteLine($"[WS] {DateTime.UtcNow:HH:mm:ss.fff} | {message}");
     }
 }

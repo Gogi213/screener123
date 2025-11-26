@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using SpreadAggregator.Application.Abstractions;
-using SpreadAggregator.Application.Diagnostics;
 using SpreadAggregator.Domain.Entities;
 using System;
 using System.Collections.Concurrent;
@@ -27,7 +26,6 @@ public class TradeAggregatorService : IDisposable
     private readonly ChannelReader<MarketData> _channelReader;
     private readonly IWebSocketServer _webSocketServer;
     private readonly ILogger<TradeAggregatorService> _logger;
-    private readonly PerformanceMonitor? _performanceMonitor;
 
     // Symbol → Queue<TradeData> (FIFO for incremental expiry)
     private readonly ConcurrentDictionary<string, Queue<TradeData>> _symbolTrades = new();
@@ -43,13 +41,11 @@ public class TradeAggregatorService : IDisposable
     public TradeAggregatorService(
         Channel<MarketData> tradeChannel,
         IWebSocketServer webSocketServer,
-        ILogger<TradeAggregatorService>? logger = null,
-        PerformanceMonitor? performanceMonitor = null)
+        ILogger<TradeAggregatorService>? logger = null)
     {
         _channelReader = tradeChannel.Reader;
         _webSocketServer = webSocketServer;
         _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<TradeAggregatorService>.Instance;
-        _performanceMonitor = performanceMonitor;
         _batchTimer = new System.Threading.PeriodicTimer(TimeSpan.FromMilliseconds(BATCH_INTERVAL_MS));
     }
 
@@ -76,10 +72,6 @@ public class TradeAggregatorService : IDisposable
     {
         var key = $"{trade.Exchange}_{trade.Symbol}";
         var now = DateTime.UtcNow;
-
-        // SPRINT-0-FIX-2: RecordEvent disabled (PerformanceMonitor is null)
-        // Was causing string allocations on EVERY trade
-        // _performanceMonitor?.RecordEvent($"Trade_{key}");
 
         // PHASE-1-FIX-4: Pre-check BEFORE adding to prevent symbol explosion
         if (_symbolTrades.Count >= MAX_SYMBOLS && !_symbolTrades.ContainsKey(key))
@@ -256,68 +248,22 @@ public class TradeAggregatorService : IDisposable
     }
 
     /// <summary>
-    /// Calculate trades per minute for a symbol
+    /// SPRINT-R3: Unified method to calculate trades within a time window (DRY principle)
+    /// Replaces: CalculateTradesPerMinute, CalculateTrades2Min, CalculateTrades3Min
     /// </summary>
-    private int CalculateTradesPerMinute(string symbolKey)
+    private int CalculateTradesInWindow(string symbolKey, TimeSpan window)
     {
         if (!_symbolTrades.TryGetValue(symbolKey, out var queue))
             return 0;
 
-        var oneMinuteAgo = DateTime.UtcNow.AddMinutes(-1);
-        int count = 0;
-
-        lock (queue)
-        {
-            // Count trades in the last minute
-            foreach (var trade in queue)
-            {
-                if (trade.Timestamp >= oneMinuteAgo)
-                    count++;
-            }
-        }
-
-        return count;
-    }
-
-    /// <summary>
-    /// Calculate trades in the last 2 minutes for a symbol
-    /// </summary>
-    private int CalculateTrades2Min(string symbolKey)
-    {
-        if (!_symbolTrades.TryGetValue(symbolKey, out var queue))
-            return 0;
-
-        var twoMinutesAgo = DateTime.UtcNow.AddMinutes(-2);
+        var cutoff = DateTime.UtcNow - window;
         int count = 0;
 
         lock (queue)
         {
             foreach (var trade in queue)
             {
-                if (trade.Timestamp >= twoMinutesAgo)
-                    count++;
-            }
-        }
-
-        return count;
-    }
-
-    /// <summary>
-    /// Calculate trades in the last 3 minutes for a symbol
-    /// </summary>
-    private int CalculateTrades3Min(string symbolKey)
-    {
-        if (!_symbolTrades.TryGetValue(symbolKey, out var queue))
-            return 0;
-
-        var threeMinutesAgo = DateTime.UtcNow.AddMinutes(-3);
-        int count = 0;
-
-        lock (queue)
-        {
-            foreach (var trade in queue)
-            {
-                if (trade.Timestamp >= threeMinutesAgo)
+                if (trade.Timestamp >= cutoff)
                     count++;
             }
         }
@@ -468,11 +414,11 @@ public class TradeAggregatorService : IDisposable
             .Select(m =>
             {
                 var symbolKey = $"{(m.Symbol.StartsWith("MEXC_") ? "" : "MEXC_")}{m.Symbol}";
-                
-                // Calculate rolling window metrics
-                m.TradesPerMin = CalculateTradesPerMinute(symbolKey);
-                m.Trades2Min = CalculateTrades2Min(symbolKey);
-                m.Trades3Min = CalculateTrades3Min(symbolKey);
+
+                // SPRINT-R3: Calculate rolling window metrics using unified method
+                m.TradesPerMin = CalculateTradesInWindow(symbolKey, TimeSpan.FromMinutes(1));
+                m.Trades2Min = CalculateTradesInWindow(symbolKey, TimeSpan.FromMinutes(2));
+                m.Trades3Min = CalculateTradesInWindow(symbolKey, TimeSpan.FromMinutes(3));
                 
                 // Keep pump score for compatibility (but not used for sorting)
                 m.Score = CalculatePumpScore(symbolKey, m.TradesPerMin);
