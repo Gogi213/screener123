@@ -1,295 +1,309 @@
-# Роль: HFT Development Engineer
+# GEMINI_DEV - Development Protocol
 
-## Контекст
-Разработка высокочастотной торговой системы на C#. Проекты: `analyzer`, `collections`, `trader`.
-Критичны: latency, CPU/memory leaks, архитектурная прозрачность.
-
----
-
-## Принцип работы: Доказательная разработка
-
-### 1. Добавление функционала
-
-**Обязательный алгоритм:**
-
-1. **Sequential Thinking Consilium** (sq) - доказательство необходимости:
-   - Зачем нужна фича? Какую проблему решает?
-   - Какие альтернативы существуют?
-   - Какой риск для CPU/memory?
-   - Как фича повлияет на latency?
-   - Какие зависимости между проектами (`analyzer` ↔ `collections` ↔ `trader`)?
-   - **Вердикт:** фича релевантна/блокируется
-
-2. **Системный анализ влияния:**
-   - Потребление ресурсов (CPU, Memory, Network, Disk I/O)
-   - Точки интеграции с другими компонентами
-   - Риски: race conditions, ThreadPool starvation, GC pressure
-   - Monitoring points: что и как будем мерять?
-
-3. **Архитектурное решение:**
-   - Минимум новых сущностей
-   - Явные контракты (interfaces, DTOs)
-   - Fail-fast при ошибках
-   - Документация: зачем, как, где измеряем
-
-**Запрет:** Добавлять код без прохождения sq-консилиума.
+**Version:** 2.0  
+**Last Updated:** 2025-11-26
 
 ---
 
-### 2. Мониторинг: Централизованная прозрачность
+## 🎯 Core Principle
 
-**Правило:** Мониторинг всегда централизован. Никогда — разрозненные логи.
+**Build systems that work, not systems that look good on paper.**
 
-**Архитектура мониторинга:**
-- **Один источник истины:** TUI Dashboard или единый коннектор
-- **Все метрики системы** в одном месте:
-  - CPU/Memory (per-process)
-  - Events/sec, Latency (p50/p95/p99)
-  - ThreadPool saturation
-  - GC stats
-  - Websocket connections, message rates
-- **Связность элементов:** явная трассировка от источника до потребителя
-- **Алерты:** пороги для CPU/Memory leak detection
+Evidence-based development. Minimize complexity. Validate against reality (codebase), not assumptions.
 
-**Антипаттерн:** "Логи-бомжи" — что-то где-то спамится, никто не знает куда.
+---
 
-**Реализация:**
+## 🔴 CRITICAL: Validation Protocol
+
+### **MANDATORY VALIDATION STEPS**
+
+When validating ANY code change:
+
+1. **Read Actual File** - use `view_file` tool
+2. **Verify Line-by-Line** - check what's REALLY there
+3. **Never Trust Mental Model** - even your own recent changes
+4. **Source of Truth = Codebase** - not docs, not memory, not plans
+
+**ORDER (STRICT):**
 ```
-collections/tools/PerformanceMonitor/  ← централизованный мониторинг
+Write code → Apply changes → Read ACTUAL file → Validate logic → Verdict
+```
+
+**FORBIDDEN:**
+- ❌ Validate based on plan/documentation
+- ❌ Validate based on memory of what you wrote
+- ❌ Assume code is correct without reading file
+- ❌ Trust diff output without viewing full file context
+
+**ALLOWED:**
+- ✅ `view_file` → analyze → validate
+- ✅ `grep_search` for cross-references
+- ✅ `view_code_item` for specific methods
+- ✅ Admit "I need to check the file first"
+
+**EXAMPLE:**
+```
+❌ BAD:  "I added reconnectAttempt variable, so it should be at line 32"
+✅ GOOD: view_file(screener.js, lines 30-35) → verify variable exists → validate logic
 ```
 
 ---
 
-### 3. Документация: Чёткая таксономия
+## 📏 Entity Minimalism
 
-**Структура:**
-```
-docs/
-├── {project}/
-│   ├── architecture.md          # Архитектура компонента
-│   ├── process_flow.md          # Основной процесс
-│   ├── integration.md           # Взаимодействие с другими проектами
-│   └── monitoring.md            # Что и как мониторим
-├── performance/
-│   └── investigations/          # Расследования проблем производительности
-└── proposals/                   # Архитектурные решения (до внедрения)
-```
+### **High-Cost Entities (MINIMIZE)**
 
-**Требования к документу:**
-- **Code References:** `FileName.cs:line_number`
-- **Диаграммы:** Mermaid для flow и архитектуры
-- **Риски:** явное указание архитектурных проблем
-- **Метрики:** как измеряем корректность решения
+Require strong justification + alternatives analysis:
 
----
+- New NuGet package
+- New project in solution  
+- New external service (database, API)
+- New background process/thread
+- New network dependency
 
-### 4. Общие подходы
+**Rule:** Before adding high-cost entity, answer:
+1. Why is it needed? (real problem)
+2. What are alternatives? (simpler solutions)
+3. What is the cost? (complexity, maintenance)
 
-#### 4.1 Запрет на плодение сущностей
+### **Low-Cost Entities (OK)**
 
-**Правило:** Новая сущность создаётся только с весомой причиной.
+Add freely if improves code quality:
 
-**Checklist перед созданием:**
-- [ ] Нельзя ли использовать существующий компонент?
-- [ ] Решает ли новая сущность строго одну задачу (SRP)?
-- [ ] Какие зависимости она вводит?
-- [ ] Как она повлияет на тестируемость?
+- New method in existing class
+- New variable
+- New CSS class / JS function
+- Helper functions
+- Comments
 
-**Примеры весомых причин:**
-- ✅ Разделение concerns (orchestration vs business logic)
-- ✅ Изоляция внешних зависимостей (exchange API → interface)
-- ❌ "Мне так удобнее"
-- ❌ "Это красивее выглядит"
-
-#### 4.2 Критичность производительности
-
-**HFT ≠ обычная разработка.** Каждая аллокация критична.
-
-**Обязательно:**
-- Профилирование перед merge (CPU, Memory, Allocations)
-- Benchmark для hot paths (BenchmarkDotNet)
-- Анализ GC pressure: `dotnet-counters`, `dotnet-trace`
-
-**Red flags:**
-- Синхронные операции на ThreadPool (`Task.Wait`, `.Result`)
-- Unbounded collections без cleanup
-- Рефлексия в hot path
-- Boxing value types
-
-#### 4.3 Fail-Fast vs Graceful Degradation
-
-**Правило:** Fail-fast при критичных ошибках. Graceful degradation — для ожидаемых.
-
-**Fail-fast:**
-- Некорректная конфигурация → crash at startup
-- Отсутствие required зависимости → exception
-- Data corruption → stop processing
-
-**Graceful:**
-- Exchange disconnect → reconnect loop
-- Stale data → skip, log, alert
-- Rate limit → backoff
+**Examples:**
+- ✅ Add `reconnectAttempt` variable → Low-cost, clear purpose
+- ❌ Add Redis for simple in-memory cache → High-cost, overkill for MVP
+- ✅ Add `BinanceSpotFilter` class → Low/Medium cost, single responsibility
+- ❌ Add QuestDB without benchmarking first → High-cost, unproven need
 
 ---
 
-## Алгоритм работы
+## 🧠 Sequential Thinking - When to Use
 
-### Для feature запроса:
+### **USE Sequential Thinking For:**
 
-1. **sq-консилиум** (sequential thinking):
-   ```
-   thought_1: Зачем нужна фича?
-   thought_2: Какие альтернативы?
-   thought_3: CPU/Memory impact?
-   thought_4: Latency impact?
-   thought_5: Integration points?
-   thought_6: Monitoring strategy?
-   thought_N: ВЕРДИКТ (GO/NO-GO)
-   ```
+- **Planning new features** - architecture, approach
+- **Validating complex logic** - edge cases, race conditions
+- **Critical decisions** - technology choice, major refactor
+- **Post-mortem analysis** - understanding bugs
 
-2. **Анализ связности проектов** (для multi-project задач):
-   - Какие проекты затрагиваются? (analyzer, collections, trader)
-   - Как они взаимодействуют СЕЙЧАС? (in-process, WebSocket, shared files, etc.)
-   - Какие зависимости существуют? (shared types, protocols, APIs)
-   - Готовность к объединению/интеграции:
-     * Есть ли dead code в integration points?
-     * Актуальны ли контракты между проектами?
-     * Какие breaking changes потребуются?
-   - **НЕ ПРЕДПОЛАГАТЬ** что проект работает — **ПРОВЕРИТЬ КОД**!
+**Complexity threshold:** >10 lines OR non-obvious logic OR critical path
 
-3. **Если GO → Архитектурный дизайн:**
-   - Минимум новых типов
-   - Явные контракты
-   - Точки мониторинга
-   - Документация (proposal)
+### **SKIP Sequential Thinking For:**
 
-4. **Реализация:**
-   - Code + Tests
-   - Monitoring integration
-   - Documentation update
+- Simple changes (<5 lines, trivial logic)
+- Renaming variables
+- Fixing typos
+- Adding comments
+- Adjusting constants (e.g., point size 3 → 4)
 
-5. **Верификация:**
-   - Профилирование
-   - Мониторинг метрик (CPU, Memory, Latency)
-   - Документация актуализирована
-   - **Межпроектная интеграция протестирована**
-
-### Для bug investigation:
-
-1. **Сбор данных:**
-   - Централизованный мониторинг (PerformanceMonitor)
-   - Профилирование (dotnet-trace, dotnet-counters)
-   - Логи (structured, временные корреляции)
-
-2. **sq-анализ:**
-   ```
-   thought_1: Симптомы (CPU spike? Memory leak? Hang?)
-   thought_2: Когда появилось? Корреляция с событиями?
-   thought_3: Гипотезы (ThreadPool? GC? I/O?)
-   thought_4: Эксперименты для проверки гипотез
-   thought_N: Root cause
-   ```
-
-3. **Решение:**
-   - Fix + Test
-   - Добавить мониторинг для раннего обнаружения
-   - Документировать (performance investigation)
+**Rule:** If the change is obvious and risk is low → just do it.
 
 ---
 
-## Критерии качества
+## 📝 Documentation Minimalism
 
-### Code Review Checklist:
+### **Write Docs ONLY IF Useful**
 
-**Архитектура:**
-- [ ] Минимум новых сущностей?
-- [ ] Явные контракты (interfaces)?
-- [ ] Fail-fast для критичных ошибок?
+**Write:**
+- ✅ `SPRINT_CONTEXT.md` - resume for new chat
+- ✅ `QUICK_START.md` - how to run
+- ✅ `ARCHITECTURE.md` - high-level decisions (WHY, not HOW)
+- ✅ `CHANGELOG.md` - version history
+- ✅ README - project overview
 
-**Производительность:**
-- [ ] Нет sync-over-async (`Task.Result`, `Task.Wait`)?
-- [ ] Unbounded коллекции имеют cleanup?
-- [ ] Hot path не содержит аллокаций?
+**DON'T Write:**
+- ❌ Duplicate of code logic
+- ❌ "How it works" if code is self-explanatory
+- ❌ Detailed implementation notes (code documents itself)
+- ❌ Theoretical design docs nobody reads
 
-**Мониторинг:**
-- [ ] Метрики добавлены в централизованный мониторинг?
-- [ ] Alerting для аномалий?
+### **Code as Documentation**
 
-**Документация:**
-- [ ] Архитектурное решение задокументировано?
-- [ ] Code references актуальны?
-- [ ] Диаграммы обновлены?
+- Good naming (variables, functions, classes)
+- Comments for **WHY**, not **WHAT**
+- Structured code (clear separation of concerns)
+- Examples in README for complex usage
 
----
-
-## Инструментарий
-
-### Обязательные инструменты:
-
-**Профилирование:**
-- `dotnet-trace` — CPU profiling, allocations
-- `dotnet-counters` — real-time metrics (GC, ThreadPool, etc.)
-- BenchmarkDotNet — microbenchmarks
-
-**Мониторинг:**
-- `PerformanceMonitor` (TUI) — централизованный дашборд
-- Structured logging (Serilog) → единый формат
-
-**Анализ:**
-- Sequential Thinking (sq) — для консилиума и deep analysis
-- Codebase search — понимание архитектуры
+**Principle:** If you need docs to understand code → refactor code first.
 
 ---
 
-## Примеры применения
+## 📊 Performance & Monitoring
 
-### Пример 1: Запрос на добавление кэширования spread данных
+### **Development (MVP/Screener)**
 
-**sq-консилиум:**
-1. **Зачем?** Уменьшить latency при расчёте spread
-2. **Альтернативы?** Оптимизировать существующий расчёт
-3. **CPU/Memory?** +Memory для кэша, -CPU на recalculation
-4. **Latency?** -latency на hit, +latency на miss (GC pressure)
-5. **Integration?** `SpreadListener` → Cache → `SpreadAggregator`
-6. **Monitoring?** Cache hit/miss rate, memory usage
-7. **ВЕРДИКТ:** GO, если cache hit rate >80%
+- `Console.WriteLine` - sufficient ✅
+- Task Manager - RAM/CPU checks ✅
+- Periodic manual checks - acceptable ✅
 
-**Архитектура:**
-```csharp
-interface ISpreadCache
-{
-    bool TryGet(string symbol, out SpreadData data);
-    void Set(string symbol, SpreadData data, TimeSpan ttl);
-}
-```
+**No complex monitoring needed** for single-instance tools.
 
-**Monitoring:**
-```
-PerformanceMonitor:
-  - cache_hit_rate_percent
-  - cache_memory_bytes
-  - cache_evictions_per_sec
-```
+### **Production (Multi-Instance/Critical)**
 
-### Пример 2: CPU spike investigation
+- Structured logging (Serilog)
+- Prometheus/Grafana
+- Alerts (CPU, RAM, errors)
 
-**Симптомы:** CPU 100% в collections, freeze на 5 секунд
+### **Rule: Monitoring Must Be Used**
 
-**sq-анализ:**
-1. **Данные:** PerformanceMonitor показывает spike в `RollingWindowService`
-2. **Гипотеза 1:** `RemoveAll()` — synchronous operation на ThreadPool
-3. **Эксперимент:** dotnet-trace → подтверждение, ThreadPool starvation
-4. **Root cause:** `List<T>.RemoveAll()` блокирует ThreadPool threads
-5. **Решение:** Smart add with capacity limit + async cleanup
+- If you don't look at metrics → remove monitoring
+- If monitoring is broken → fix or remove
+- Simple working > Complex broken
 
-**Верификация:**
-- После fix: CPU <10%, no freezes
-- Monitoring: events/sec stable, no alerts
+**Example from project:**
+- SimpleMonitor добавили, но console не обновлялся
+- Реально смотрели Task Manager
+- Lesson: Working simple wins over broken fancy
 
 ---
 
-## Заключение
+## 🔬 Evidence-Based Development
 
-**Философия:** Каждая строка кода должна быть обоснована. Каждая метрика — измерена. Каждая проблема — задокументирована.
+### **Measured Problems Only**
 
-**HFT = наука, не искусство.**
+Before solving a problem:
+
+1. **Reproduce** - can you trigger it consistently?
+2. **Measure** - CPU spike? RAM leak? Latency?
+3. **Evidence** - logs, metrics, profiler output
+4. **Hypothesis** - what's the root cause?
+5. **Fix** - implement solution
+6. **Verify** - measure again, confirm fix
+
+**FORBIDDEN:**
+- ❌ "This might be slow" without profiling
+- ❌ "Users probably want X" without asking
+- ❌ "Scaling to 10k symbols" without current need
+
+**ALLOWED:**
+- ✅ "CPU is 80%, profiler shows X function" → optimize
+- ✅ "User reported freeze, reproduced in 3 scenarios" → fix
+- ✅ "Memory grows 10MB/hour, leak detected" → fix
+
+---
+
+## 🚫 No Over-Engineering
+
+### **YAGNI Examples (from project)**
+
+**Rejected (correctly):**
+- QuestDB migration → no evidence RAM is problem
+- Structured logging → single-instance tool, console.log sufficient
+- REST API for historical trades → charts fill in 30 sec, acceptable
+- Prometheus metrics → overkill for MVP
+- UI status indicator for reconnect → works silently, acceptable
+
+**Accepted (correctly):**
+- WebSocket reconnection → measured problem (restart kills client)
+- Health monitoring → visible issue detection
+- Major exchanges filter → clear user value
+
+### **Decision Framework**
+
+Ask:
+1. Is there a **measured problem** this solves?
+2. Is this the **simplest solution**?
+3. Will you **actually use** this feature?
+4. What's the **cost** (complexity, maintenance)?
+
+**If answer to 1-3 is "no" → don't build it.**
+
+---
+
+## 🛠️ Practical Workflow
+
+### **1. Understand the Problem**
+
+- What's broken? (specific, measurable)
+- Can you reproduce?
+- What's the impact?
+
+### **2. Plan (Sequential Thinking if complex)**
+
+- Simple solution first
+- Alternatives considered
+- Complexity assessment
+
+### **3. Implement**
+
+- Write code
+- Apply changes
+- **READ ACTUAL FILE** (validation protocol)
+
+### **4. Validate**
+
+- Against **codebase** (not mental model)
+- Line-by-line check
+- Logic validation (sequential thinking if needed)
+
+### **5. Test**
+
+- Manual test (main scenario)
+- Edge cases if critical
+- Performance check if relevant
+
+### **6. Document (if needed)**
+
+- Update SPRINT_CONTEXT if major change
+- Update CHANGELOG
+- Skip detailed docs (code documents itself)
+
+---
+
+## ✅ Checklist для Changes
+
+Before committing code:
+
+- [ ] Read actual file (view_file) - validation protocol
+- [ ] Verified logic against real codebase
+- [ ] Tested manually (main scenario)
+- [ ] Performance acceptable (if relevant)
+- [ ] No new high-cost entities without justification
+- [ ] Docs updated (if needed - SPRINT_CONTEXT, CHANGELOG)
+- [ ] Code is self-documenting (good naming, clear structure)
+
+---
+
+## 🎓 Lessons from Project
+
+### **What Worked ✅**
+
+1. Minimal approach (WebSocket reconnect = 15 lines)
+2. Consilium validation (reject over-engineering)
+3. Code-first, docs-later
+4. Performance focus (2% CPU, 60 MB RAM)
+5. Simple solutions (exponential backoff > complex state machine)
+
+### **What Didn't ❌**
+
+1. SimpleMonitor не использовали (broken display)
+2. Тесты удалили (не нужны для screener)
+3. QuestDB обсуждали долго (rejected, правильно)
+4. Документация местами устаревала (sync issue)
+
+### **Key Takeaway**
+
+**Working simple code > Perfect complex architecture**
+
+Ship features that solve real problems. Iterate based on actual usage, not theoretical scenarios.
+
+---
+
+## 📜 Summary
+
+1. **Validate against codebase** - not mental model
+2. **Minimize high-cost entities** - justify before adding
+3. **Sequential thinking for complex** - skip for trivial
+4. **Docs only if useful** - code documents itself
+5. **Measured problems only** - evidence-based
+6. **No over-engineering** - YAGNI principle
+7. **Simple working > Complex broken** - pragmatism wins
+
+**Core Philosophy:** Build what's needed, when it's needed, as simply as possible. Validate ruthlessly against reality.

@@ -1,6 +1,6 @@
-# 🚀 MEXC Trade Screener Pro
+# 🚀 MEXC Trade Screener
 
-Real-time monitoring and analysis for 2000+ MEXC trading pairs with advanced metrics.
+Real-time monitoring and analysis for MEXC-exclusive trading pairs with advanced metrics.
 
 ## ⚡ Quick Start
 
@@ -16,10 +16,12 @@ Open: **http://localhost:5000/index.html**
 ## 📊 Features
 
 - **Real-time Streaming:** WebSocket connection to MEXC exchange
+- **MEXC-Exclusive Filter:** Excludes Binance/Bybit/OKX symbols (~1,200 unique pairs)
 - **TOP-30 Display:** Most active pairs by trades/3m
 - **Advanced Metrics:** Acceleration, bot detection, buy/sell imbalance
-- **Performance Optimized:** Scatter-only graphs, 1s batch updates
-- **Freeze Control:** Stop sorting to study coins
+- **Auto-Reconnect:** Resilient WebSocket with exponential backoff
+- **Health Monitoring:** Visual alerts for connection issues
+- **Performance Optimized:** 2% CPU, 60 MB RAM (stable)
 
 ---
 
@@ -29,6 +31,7 @@ Open: **http://localhost:5000/index.html**
 |--------|-------|-------------|
 | 🔥 Live Sort | Active | Auto re-sort every 10s |
 | ❄️ Frozen | Inactive | Freeze to study coins |
+| Click Symbol | - | Copy to clipboard |
 
 ---
 
@@ -36,7 +39,7 @@ Open: **http://localhost:5000/index.html**
 
 ```
 BTCUSDT              45000
-285/3m  ↑2.5x  📊
+285/3m  ↑2.5x
 ═══════ Chart ═══════
 ```
 
@@ -45,39 +48,45 @@ BTCUSDT              45000
   - ⚫ Gray: < 2.0x (normal)
   - 🟠 Orange: 2.0-3.0x (high)
   - 🔴 Red: >= 3.0x (extreme)
-- `📊` - Imbalance indicator (if > 0.7)
+- **Chart:** Green=Buy, Red=Sell (scatter points)
 
 ---
 
 ## 📁 Documentation
 
-- **QUICK_START.md** - Resume work in new session
-- **SPRINT_CONTEXT.md** - Full sprint history and implementation details
-- **ARCHITECTURE.md** - System architecture
+- **[SPRINT_CONTEXT.md](docs/SPRINT_CONTEXT.md)** - Current state, resume for new chat
+- **[QUICK_START.md](docs/QUICK_START.md)** - Detailed guide
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Technical design
+- **[GEMINI_DEV.md](docs/GEMINI_DEV.md)** - Development protocol
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history
 
 ---
 
-## 🐛 Troubleshooting
+## 🛠️ Tech Stack
 
-**Charts flickering?**
-- Check `isFirstLoad` flag in `screener.js`
-
-**Sorting wrong?**
-- Verify `symbolActivity` updated only from WebSocket
-
-**WebSocket disconnects?**
-- Reduce chart count (currently TOP-30)
+- **Backend:** ASP.NET Core (.NET 9.0)
+- **Exchange Client:** CryptoExchange.Net
+- **WebSocket:** Fleck (port 8181)
+- **Frontend:** Vanilla JS + uPlot charts
+- **Filter:** Public APIs (Binance, Bybit, OKX)
 
 ---
 
-## 📝 Tech Stack
+## ⚠️ Known Behavior
 
-- **Backend:** .NET 9, C#
-- **Frontend:** Vanilla JS, uPlot charts
-- **Communication:** WebSocket (Fleck)
-- **Data:** Rolling window (30min), circular buffers
+- **Charts empty on reload** - Fill within 30 seconds as trades arrive
+- **Health alert** - Shows if no trades for 30+ seconds (MEXC disconnect)
+- **TOP-30 rotation** - Symbols change based on activity (expected)
 
 ---
 
-**Status:** Production Ready ✅  
-**Last Updated:** 2025-11-25
+## 📊 Performance
+
+- **CPU:** ~2% (1,200 symbols)
+- **RAM:** ~60 MB (stable, no leaks)
+- **Symbols:** ~1,200 MEXC-exclusive (filtered from ~2,400 total)
+- **Uptime:** Resilient (auto-reconnect on disconnect)
+
+---
+
+**Status:** ✅ Production Ready | **Version:** 1.3.0 (SPRINT-4/5 Complete)

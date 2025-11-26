@@ -549,4 +549,8 @@ public class SymbolMetadata
     public bool HasVolumePattern { get; set; }      // Repeated volumes (bot detection)
     public double BuySellImbalance { get; set; }    // Buy/sell pressure (0-1)
     public double CompositeScore { get; set; }      // Weighted sum of all benchmarks
+    
+    // SPRINT-7: Volume metrics
+    public decimal Volume1Min { get; set; }         // USD volume in last 1 minute
+    public decimal Volume3Min { get; set; }         // USD volume in last 3 minutes
 }

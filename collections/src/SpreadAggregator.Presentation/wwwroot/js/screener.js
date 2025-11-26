@@ -28,6 +28,10 @@ const pendingChartUpdates = new Map(); // symbol -> [trades]
 let lastTradeTimestamp = Date.now();
 let healthCheckInterval = null;
 
+// WEBSOCKET RECONNECTION STATE (SPRINT-4)
+let reconnectAttempt = 0;
+const MAX_RECONNECT_DELAY = 30000; // 30 seconds
+
 // DOM ELEMENTS
 const grid = document.getElementById('grid');
 const statusText = document.getElementById('status-text');
@@ -267,6 +271,13 @@ function initGlobalWebSocket() {
 
     globalWebSocket.onopen = () => {
         console.log('[WebSocket] Connected to broadcast server');
+
+        // SPRINT-4: Reset reconnection counter on successful connect
+        reconnectAttempt = 0;
+
+        // SPRINT-5 integration: Reset health timestamp to prevent false alerts
+        lastTradeTimestamp = Date.now();
+
         statusText.textContent = `Live: ${allSymbols.length} Pairs`;
     };
 
@@ -277,6 +288,17 @@ function initGlobalWebSocket() {
             if (msg.type === 'trade_update' && msg.symbol && msg.trades) {
                 // Handle individual trade updates for charts
                 const symbol = msg.symbol.replace('MEXC_', '');
+
+                // SPRINT-6: Pre-initialize chartData to prevent data loss on page reload
+                // Without this, trades received before all_symbols_scored (0-2 sec) are lost
+                if (!chartData.has(symbol)) {
+                    chartData.set(symbol, {
+                        times: [],
+                        buys: [],
+                        sells: [],
+                        startIndex: 0
+                    });
+                }
 
                 // SPRINT-5: Update health timestamp
                 lastTradeTimestamp = Date.now();
@@ -326,8 +348,15 @@ function initGlobalWebSocket() {
 
     globalWebSocket.onclose = () => {
         console.log('[WebSocket] Disconnected');
+
+        // SPRINT-4: Exponential backoff reconnection
+        const delay = Math.min(1000 * Math.pow(2, reconnectAttempt), MAX_RECONNECT_DELAY);
+        reconnectAttempt++;
+
+        console.log(`[WebSocket] Reconnecting in ${delay}ms (attempt ${reconnectAttempt})...`);
         statusText.textContent = "Reconnecting...";
-        setTimeout(initGlobalWebSocket, 3000);
+
+        setTimeout(initGlobalWebSocket, delay);
     };
 }
 
