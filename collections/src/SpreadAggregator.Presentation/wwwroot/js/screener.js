@@ -8,36 +8,30 @@ const BLACKLIST = [
     'FDUSDUSDT', 'CRVUSDC'
 ].map(s => s.toUpperCase());
 
-// STATE
-let allSymbols = [];
+// STATE - Use window object directly to avoid "already declared" errors
+// When loaded via index.html, variables are already declared there
+// When loaded standalone, we initialize them here
+window.allSymbols = window.allSymbols || [];
+window.isFirstLoad = window.isFirstLoad !== undefined ? window.isFirstLoad : true;
+window.smartSortEnabled = window.smartSortEnabled !== undefined ? window.smartSortEnabled : true;
+window.smartSortInterval = window.smartSortInterval || null;
+window.lastTradeTimestamp = window.lastTradeTimestamp || Date.now();
+window.healthCheckInterval = window.healthCheckInterval || null;
+window.reconnectAttempt = window.reconnectAttempt || 0;
+window.globalWebSocket = window.globalWebSocket || null;
+
+// Local state (not shared)
 const activeCharts = new Map();     // Symbol -> uPlot Instance
-let isFirstLoad = true;              // ANTI-FLICKER: Track if this is the first data load
-
-// uPlot DATA STRUCTURE - Map<symbol, {times: [], buys: [], sells: [], startIndex: number}>
-const chartData = new Map();
-
-// SMART SORTING STATE
-let smartSortEnabled = true;
-const symbolActivity = new Map(); // Symbol -> { trades3m: number, lastUpdate: timestamp }
-let smartSortInterval = null;
-
-// BATCHING STATE
+const chartData = new Map();         // uPlot DATA STRUCTURE
+const symbolActivity = new Map();    // Symbol -> { trades3m: number, lastUpdate: timestamp }
 const pendingChartUpdates = new Map(); // symbol -> [trades]
 
-// HEALTH MONITORING STATE (SPRINT-5)
-let lastTradeTimestamp = Date.now();
-let healthCheckInterval = null;
-
-// WEBSOCKET RECONNECTION STATE (SPRINT-4)
-let reconnectAttempt = 0;
+// CONSTANTS
 const MAX_RECONNECT_DELAY = 30000; // 30 seconds
 
 // DOM ELEMENTS
 const grid = document.getElementById('grid');
 const statusText = document.getElementById('status-text'); // May be null in tab mode
-
-// GLOBAL WebSocket connection (shared or standalone)
-let globalWebSocket = null;
 const isEmbeddedMode = !statusText; // Detect if running in unified tab mode
 
 // CORE LOGIC
@@ -78,9 +72,9 @@ function renderPage(autoScroll = false) {
     cleanupPage();
 
     // Render TOP-30 only (prevent browser crash from too many charts)
-    const top30 = allSymbols.slice(0, 30);
+    const top30 = window.allSymbols.slice(0, 30);
     if (statusText) {
-        statusText.textContent = `Live: TOP-30 of ${allSymbols.length} Pairs (sorted by trades/3m)`;
+        statusText.textContent = `Live: TOP-30 of ${window.allSymbols.length} Pairs (sorted by trades/3m)`;
     }
 
     // Render only top 30 symbols
@@ -274,25 +268,25 @@ batchingLoop();
 // WEBSOCKET CONNECTION
 // ===================================================================
 function initGlobalWebSocket() {
-    if (globalWebSocket && globalWebSocket.readyState === WebSocket.OPEN) return;
+    if (window.globalWebSocket && window.globalWebSocket.readyState === WebSocket.OPEN) return;
 
-    globalWebSocket = new WebSocket(`ws://${window.location.hostname}:8181`);
+    window.globalWebSocket = new WebSocket(`ws://${window.location.hostname}:8181`);
 
-    globalWebSocket.onopen = () => {
+    window.globalWebSocket.onopen = () => {
         console.log('[WebSocket] Connected to broadcast server');
 
         // SPRINT-4: Reset reconnection counter on successful connect
-        reconnectAttempt = 0;
+        window.reconnectAttempt = 0;
 
         // SPRINT-5 integration: Reset health timestamp to prevent false alerts
-        lastTradeTimestamp = Date.now();
+        window.lastTradeTimestamp = Date.now();
 
         if (statusText) {
-            statusText.textContent = `Live: ${allSymbols.length} Pairs`;
+            statusText.textContent = `Live: ${window.allSymbols.length} Pairs`;
         }
     };
 
-    globalWebSocket.onmessage = (event) => {
+    window.globalWebSocket.onmessage = (event) => {
         try {
             const msg = JSON.parse(event.data);
 
@@ -309,7 +303,7 @@ function initGlobalWebSocket() {
                     });
                 }
 
-                lastTradeTimestamp = Date.now();
+                window.lastTradeTimestamp = Date.now();
 
                 // Convert aggregate to pseudo-trade (use close price, side from volume ratio)
                 const agg = msg.aggregate;
@@ -340,7 +334,7 @@ function initGlobalWebSocket() {
                 }
 
                 // SPRINT-5: Update health timestamp
-                lastTradeTimestamp = Date.now();
+                window.lastTradeTimestamp = Date.now();
 
                 // Accumulate trades for ALL symbols (even not visible on current page)
                 const pending = pendingChartUpdates.get(symbol) || [];
@@ -350,7 +344,7 @@ function initGlobalWebSocket() {
             else if (msg.type === 'all_symbols_scored') {
                 // SPRINT-3: Server now sorts by trades3m, receive and store it
                 // FILTER: Remove blacklisted pairs
-                allSymbols = msg.symbols
+                window.allSymbols = msg.symbols
                     .filter(s => !BLACKLIST.includes(s.symbol.toUpperCase()))
                     .map(s => {
                         // Update activity map with trades3m AND acceleration from server
@@ -373,9 +367,9 @@ function initGlobalWebSocket() {
 
                 // ANTI-FLICKER FIX: Only render page on first load
                 // After that, Smart Sort will handle re-rendering if enabled
-                if (isFirstLoad) {
+                if (window.isFirstLoad) {
                     renderPage();
-                    isFirstLoad = false;
+                    window.isFirstLoad = false;
                     console.log('[Screener] Initial render complete. Flicker protection enabled.');
                 }
                 // Data is updated in allSymbols, but no re-render unless Smart Sort triggers it
@@ -385,14 +379,14 @@ function initGlobalWebSocket() {
         }
     };
 
-    globalWebSocket.onclose = () => {
+    window.globalWebSocket.onclose = () => {
         console.log('[WebSocket] Disconnected');
 
         // SPRINT-4: Exponential backoff reconnection
-        const delay = Math.min(1000 * Math.pow(2, reconnectAttempt), MAX_RECONNECT_DELAY);
-        reconnectAttempt++;
+        const delay = Math.min(1000 * Math.pow(2, window.reconnectAttempt), MAX_RECONNECT_DELAY);
+        window.reconnectAttempt++;
 
-        console.log(`[WebSocket] Reconnecting in ${delay}ms (attempt ${reconnectAttempt})...`);
+        console.log(`[WebSocket] Reconnecting in ${delay}ms (attempt ${window.reconnectAttempt})...`);
         if (statusText) {
             statusText.textContent = "Reconnecting...";
         }
@@ -500,14 +494,14 @@ function formatTickSize(tick) {
     return tick.toFixed(8).replace(/\.?0+$/, '');
 }
 
-// SMART SORTING
-function toggleSmartSort() {
-    smartSortEnabled = !smartSortEnabled;
+// SMART SORTING - Export to window for onclick handlers
+window.toggleSmartSort = function() {
+    window.smartSortEnabled = !window.smartSortEnabled;
     const btn = document.getElementById('btnSortToggle');
     const icon = document.getElementById('sortIcon');
     btn.classList.toggle('active');
 
-    if (smartSortEnabled) {
+    if (window.smartSortEnabled) {
         icon.textContent = '🔥';
         btn.innerHTML = '<span id="sortIcon">🔥</span> Live Sort';
         startSmartSort();
@@ -516,28 +510,28 @@ function toggleSmartSort() {
         btn.innerHTML = '<span id="sortIcon">❄️</span> Frozen';
         stopSmartSort();
     }
-}
+};
 
 function startSmartSort() {
-    if (smartSortInterval) clearInterval(smartSortInterval);
+    if (window.smartSortInterval) clearInterval(window.smartSortInterval);
     // ANTI-FLICKER: 10 seconds instead of 2 - less aggressive re-sorting
-    smartSortInterval = setInterval(reorderCardsWithoutDestroy, 10000);
+    window.smartSortInterval = setInterval(reorderCardsWithoutDestroy, 10000);
 }
 
 function stopSmartSort() {
-    if (smartSortInterval) {
-        clearInterval(smartSortInterval);
-        smartSortInterval = null;
+    if (window.smartSortInterval) {
+        clearInterval(window.smartSortInterval);
+        window.smartSortInterval = null;
     }
 }
 
 
 function reorderCardsWithoutDestroy() {
-    if (!smartSortEnabled) return;
+    if (!window.smartSortEnabled) return;
 
     // SPRINT-R4-FIX: Sort by trades3m from object itself (no Map indirection)
     // Simpler, faster, no risk of desynchronization
-    allSymbols.sort((a, b) => {
+    window.allSymbols.sort((a, b) => {
         return (b.trades3m || 0) - (a.trades3m || 0); // Descending - most active first
     });
 
@@ -547,10 +541,10 @@ function reorderCardsWithoutDestroy() {
 
 // SPRINT-5: Health Check Functions
 function startHealthCheck() {
-    if (healthCheckInterval) clearInterval(healthCheckInterval);
+    if (window.healthCheckInterval) clearInterval(window.healthCheckInterval);
 
-    healthCheckInterval = setInterval(() => {
-        const timeSinceLastTrade = Date.now() - lastTradeTimestamp;
+    window.healthCheckInterval = setInterval(() => {
+        const timeSinceLastTrade = Date.now() - window.lastTradeTimestamp;
 
         if (timeSinceLastTrade > 30000) { // 30 seconds
             showHealthAlert('⚠️ No trades for 30+ seconds. MEXC connection may be down.');
@@ -583,7 +577,7 @@ function hideHealthAlert() {
 // EXPORT FUNCTIONS for embedded mode (called by parent index.html)
 window.handleAllSymbolsScored = function (msg) {
     // Update allSymbols from parent data
-    allSymbols = msg.symbols
+    window.allSymbols = msg.symbols
         .filter(s => !BLACKLIST.includes(s.symbol.toUpperCase()))
         .map(s => ({
             symbol: s.symbol,
@@ -596,9 +590,9 @@ window.handleAllSymbolsScored = function (msg) {
         }));
 
     // Render page if first load
-    if (isFirstLoad) {
+    if (window.isFirstLoad) {
         renderPage();
-        isFirstLoad = false;
+        window.isFirstLoad = false;
         console.log('[Screener] Initial render complete (embedded mode)');
     }
 };
@@ -617,7 +611,7 @@ window.handleTradeAggregate = function (msg) {
             });
         }
 
-        lastTradeTimestamp = Date.now();
+        window.lastTradeTimestamp = Date.now();
 
         const agg = msg.aggregate;
         const pseudoTrade = {

@@ -53,14 +53,26 @@ public class MexcExchangeClient : ExchangeClientBase<MexcRestClient, MexcSocketC
     public override async Task<IEnumerable<TickerData>> GetTickersAsync()
     {
         var tickers = await _restClient.SpotApi.ExchangeData.GetTickersAsync();
-        return tickers.Data.Select(t => new TickerData
+        return tickers.Data.Select(t =>
         {
-            Symbol = t.Symbol,
-            QuoteVolume = t.QuoteVolume ?? 0,
-            // SPRINT-10: Add 24h metrics from MEXC ticker
-            Volume24h = t.QuoteVolume ?? 0,  // MEXC QuoteVolume is already 24h
-            PriceChangePercent24h = t.PriceChange * 100,  // MEXC PriceChange is decimal (0.05 = 5%), convert to %
-            LastPrice = t.LastPrice
+            // MEXC API returns PriceChange already in percent format (e.g., 5.25 = 5.25%)
+            // Do NOT multiply by 100, it's already a percentage
+            decimal priceChangePercent = t.PriceChange;
+
+            // Validate and clamp to reasonable range
+            // New coins or data anomalies can produce extreme values
+            // Clamp to [-100%, +1000%] range to filter out obvious errors from MEXC API
+            priceChangePercent = Math.Max(-100, Math.Min(1000, priceChangePercent));
+
+            return new TickerData
+            {
+                Symbol = t.Symbol,
+                QuoteVolume = t.QuoteVolume ?? 0,
+                // SPRINT-10: Add 24h metrics from MEXC ticker
+                Volume24h = t.QuoteVolume ?? 0,  // MEXC QuoteVolume is already 24h
+                PriceChangePercent24h = priceChangePercent,
+                LastPrice = t.LastPrice
+            };
         });
     }
 
