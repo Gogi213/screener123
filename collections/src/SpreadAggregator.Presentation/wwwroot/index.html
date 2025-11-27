@@ -307,6 +307,7 @@
                         <th class="sortable" data-column="change4h">4h Change</th>
                         <th class="sortable" data-column="natr">NATR %</th>
                         <th class="sortable" data-column="spreadPercent">Spread %</th>
+                        <th class="sortable" data-column="largePrints">Large Prints</th>
                         <th class="sortable" data-column="price">Price</th>
                     </tr>
                 </thead>
@@ -369,6 +370,8 @@
                             change4h: s.priceChangePercent4h || 0,
                             natr: s.natr || 0,
                             spreadPercent: s.spreadPercent || 0,
+                            largePrintCount5m: s.largePrintCount5m || 0,
+                            lastLargePrintRatio: s.lastLargePrintRatio || 0,
                             price: s.lastPrice || 0,
                             // Keep all data for charts
                             ...s
@@ -402,8 +405,13 @@
         // TABLE VIEW: Sort and render
         function sortAndRenderTable() {
             const sorted = [...allSymbols].sort((a, b) => {
-                let aVal = a[currentSort.column];
-                let bVal = b[currentSort.column];
+                let column = currentSort.column;
+
+                // Map column names to actual data fields
+                if (column === 'largePrints') column = 'largePrintCount5m';
+
+                let aVal = a[column];
+                let bVal = b[column];
 
                 if (currentSort.column === 'symbol') {
                     return currentSort.direction === 'asc'
@@ -425,6 +433,9 @@
                     </td>
                     <td class="natr ${s.natr > 5 ? 'high' : ''}">${s.natr > 0 ? s.natr.toFixed(2) + '%' : '---'}</td>
                     <td class="spread ${getSpreadClass(s.spreadPercent)}">${s.spreadPercent.toFixed(3)}%</td>
+                    <td class="large-prints ${s.largePrintCount5m > 0 ? 'active' : ''}">
+                        ${s.largePrintCount5m > 0 ? '⚡ ' : ''}${s.largePrintCount5m}${s.largePrintCount5m > 0 ? ` (${s.lastLargePrintRatio.toFixed(1)}x)` : ''}
+                    </td>
                     <td class="price">${formatPrice(s.price)}</td>
                 </tr>
             `).join('');

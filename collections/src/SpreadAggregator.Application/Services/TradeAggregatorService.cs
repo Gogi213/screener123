@@ -39,6 +39,9 @@ public class TradeAggregatorService : IDisposable
     // SPRINT-12: Orderbook data storage for spread calculation
     private readonly ConcurrentDictionary<string, (decimal bid, decimal ask)> _orderbookData = new();
 
+    // SPRINT-14: Large prints (прострелы) tracking - trades > 5x average volume
+    private readonly ConcurrentDictionary<string, Queue<LargePrint>> _largePrints = new();
+
     // Batching: accumulate trades per symbol before broadcast
     private readonly ConcurrentDictionary<string, List<TradeData>> _pendingBroadcasts = new();
     private readonly System.Threading.PeriodicTimer _batchTimer;
@@ -125,6 +128,9 @@ public class TradeAggregatorService : IDisposable
         _symbolMetadata.AddOrUpdate(key,
             new SymbolMetadata { Symbol = trade.Symbol, LastPrice = trade.Price, LastUpdate = now },
             (_, existing) => { existing.LastPrice = trade.Price; existing.LastUpdate = now; return existing; });
+
+        // SPRINT-14: Detect large prints (прострелы)
+        DetectLargePrint(trade);
 
         // 6. Add to pending broadcasts (batching)
         var pending = _pendingBroadcasts.GetOrAdd(key, _ => new List<TradeData>());
@@ -248,7 +254,10 @@ public class TradeAggregatorService : IDisposable
                                 spreadPercent = m.SpreadPercent,
                                 spreadAbsolute = m.SpreadAbsolute,
                                 // SPRINT-11: NATR indicator
-                                natr = m.NATR
+                                natr = m.NATR,
+                                // SPRINT-14: Large prints tracking
+                                largePrintCount5m = m.LargePrintCount5m,
+                                lastLargePrintRatio = m.LastLargePrintRatio
                             })
                         };
 
@@ -575,6 +584,23 @@ public class TradeAggregatorService : IDisposable
                 // SPRINT-11: Calculate NATR for symbols with sufficient trade data
                 m.NATR = CalculateNATR(symbolKey);
 
+                // SPRINT-14: Calculate large print metrics
+                m.LargePrintCount5m = GetLargePrintCount5m(symbolKey);
+
+                // Get last large print ratio and timestamp
+                if (_largePrints.TryGetValue(symbolKey, out var largePrintHistory))
+                {
+                    lock (largePrintHistory)
+                    {
+                        var lastPrint = largePrintHistory.LastOrDefault();
+                        if (lastPrint != null)
+                        {
+                            m.LastLargePrintRatio = lastPrint.Ratio;
+                            m.LastLargePrintTime = lastPrint.Timestamp;
+                        }
+                    }
+                }
+
                 // Calculate advanced benchmarks only for TOP-500 (performance optimization)
                 if (index < 500)
                 {
@@ -739,6 +765,124 @@ public class TradeAggregatorService : IDisposable
     }
 
     /// <summary>
+    /// SPRINT-14: Detect large prints (прострелы) - trades > 5x average volume
+    /// Called on every trade in ProcessTrade hot path
+    /// </summary>
+    private void DetectLargePrint(TradeData trade)
+    {
+        var symbolKey = $"{trade.Exchange}_{trade.Symbol}";
+
+        // Calculate average trade volume (1-minute rolling window)
+        var oneMinAgo = DateTime.UtcNow.AddMinutes(-1);
+        if (!_symbolTrades.TryGetValue(symbolKey, out var queue))
+            return;
+
+        decimal avgVolume = 0;
+        int recentTradeCount = 0;
+
+        lock (queue)
+        {
+            // Calculate average volume from recent trades
+            foreach (var t in queue)
+            {
+                if (t.Timestamp >= oneMinAgo)
+                {
+                    avgVolume += t.Price * t.Quantity;
+                    recentTradeCount++;
+                }
+            }
+        }
+
+        // Need minimum 10 trades for baseline
+        if (recentTradeCount < 10)
+            return;
+
+        avgVolume /= recentTradeCount;
+        var currentVolume = trade.Price * trade.Quantity;
+
+        // Threshold: 5x average trade volume
+        const decimal THRESHOLD = 5.0m;
+        var ratio = avgVolume > 0 ? currentVolume / avgVolume : 0;
+
+        if (ratio >= THRESHOLD)
+        {
+            // Detected large print
+            var largePrint = new LargePrint
+            {
+                Timestamp = trade.Timestamp,
+                Price = trade.Price,
+                Quantity = trade.Quantity,
+                VolumeUSD = currentVolume,
+                Side = trade.Side,
+                AvgTradeVolume = avgVolume,
+                Ratio = ratio
+            };
+
+            // Store in history (keep last 10 large prints)
+            var history = _largePrints.GetOrAdd(symbolKey, _ => new Queue<LargePrint>());
+            lock (history)
+            {
+                history.Enqueue(largePrint);
+                if (history.Count > 10)
+                    history.Dequeue();
+            }
+
+            // Broadcast large print event
+            BroadcastLargePrint(symbolKey, largePrint);
+
+            _logger.LogInformation("[LargePrint] {Symbol}: {Ratio:F1}x {Side} @ {Price:F6} (Vol: ${Volume:F2}, Avg: ${Avg:F2})",
+                trade.Symbol, ratio, trade.Side, trade.Price, currentVolume, avgVolume);
+        }
+    }
+
+    /// <summary>
+    /// SPRINT-14: Broadcast large print event to all WebSocket clients
+    /// </summary>
+    private void BroadcastLargePrint(string symbolKey, LargePrint print)
+    {
+        var symbol = symbolKey.Contains('_') ? symbolKey.Split('_')[1] : symbolKey;
+
+        var msg = new
+        {
+            type = "large_print",
+            symbol = symbol,
+            timestamp = ((DateTimeOffset)print.Timestamp).ToUnixTimeMilliseconds(),
+            price = print.Price,
+            quantity = print.Quantity,
+            volumeUSD = print.VolumeUSD,
+            side = print.Side,
+            ratio = print.Ratio,
+            avgVolume = print.AvgTradeVolume
+        };
+
+        var json = JsonSerializer.Serialize(msg);
+        _ = _webSocketServer.BroadcastRealtimeAsync(json);
+    }
+
+    /// <summary>
+    /// SPRINT-14: Get count of large prints in last 5 minutes for a symbol
+    /// </summary>
+    private int GetLargePrintCount5m(string symbolKey)
+    {
+        if (!_largePrints.TryGetValue(symbolKey, out var history))
+            return 0;
+
+        var fiveMinAgo = DateTime.UtcNow.AddMinutes(-5);
+        int count = 0;
+
+        lock (history)
+        {
+            foreach (var print in history)
+            {
+                if (print.Timestamp >= fiveMinAgo)
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
+    /// <summary>
     /// SPRINT-2: Get TOP-70 symbols by composite score (for chart rendering)
     /// </summary>
     public List<string> GetTop70Symbols()
@@ -815,4 +959,23 @@ public class SymbolMetadata
 
     // SPRINT-11: NATR (Normalized Average True Range) indicator
     public decimal NATR { get; set; }               // NATR percentage (10-period EMA of TR / Close * 100)
+
+    // SPRINT-14: Large prints tracking
+    public int LargePrintCount5m { get; set; }      // Count of large prints in last 5 minutes
+    public decimal LastLargePrintRatio { get; set; } // Most recent large print ratio (e.g., 8.5x)
+    public DateTime? LastLargePrintTime { get; set; } // Timestamp of last large print
+}
+
+/// <summary>
+/// SPRINT-14: Large Print (Прострел) - individual trade significantly larger than average
+/// </summary>
+public class LargePrint
+{
+    public DateTime Timestamp { get; set; }
+    public decimal Price { get; set; }
+    public decimal Quantity { get; set; }
+    public decimal VolumeUSD { get; set; }
+    public string Side { get; set; } = string.Empty; // "Buy" or "Sell"
+    public decimal AvgTradeVolume { get; set; }
+    public decimal Ratio { get; set; } // VolumeUSD / AvgTradeVolume (e.g., 5.0 = 500%)
 }

@@ -206,3 +206,56 @@ header {
         transform: translate(-50%, 0);
     }
 }
+
+/* SPRINT-14: Large Prints (Прострелы) */
+.large-prints {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-secondary);
+}
+
+.large-prints.active {
+    color: #ff7700;
+    font-weight: 600;
+}
+
+/* Flash animation for cards when large print detected */
+.large-print-flash {
+    animation: flash 1s ease-out 3;
+    border: 2px solid #ff7700 !important;
+}
+
+@keyframes flash {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(255, 119, 0, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 40px rgba(255, 119, 0, 0.8);
+    }
+}
+
+/* Badge for large print notifications */
+.large-print-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, #ff7700, #ff5500);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    z-index: 10;
+    animation: slideIn 0.3s ease-out;
+    box-shadow: 0 2px 8px rgba(255, 119, 0, 0.4);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}

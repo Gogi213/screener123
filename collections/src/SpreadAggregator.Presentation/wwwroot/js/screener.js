@@ -299,8 +299,12 @@ function initGlobalWebSocket() {
         try {
             const msg = JSON.parse(event.data);
 
+            // SPRINT-14: Handle large print events (прострелы)
+            if (msg.type === 'large_print' && msg.symbol) {
+                handleLargePrint(msg);
+            }
             // SPRINT-9: Handle OHLCV aggregates (200ms timeframe)
-            if (msg.type === 'trade_aggregate' && msg.symbol && msg.aggregate) {
+            else if (msg.type === 'trade_aggregate' && msg.symbol && msg.aggregate) {
                 const symbol = msg.symbol.replace('MEXC_', '');
 
                 if (!chartData.has(symbol)) {
@@ -371,6 +375,8 @@ function initGlobalWebSocket() {
                             acceleration: s.acceleration || 1.0,
                             natr: s.natr || 0,
                             spreadPercent: s.spreadPercent || 0,
+                            largePrintCount5m: s.largePrintCount5m || 0,
+                            lastLargePrintRatio: s.lastLargePrintRatio || 0,
                             lastPrice: s.lastPrice,
                             lastUpdate: s.lastUpdate
                         };
@@ -631,6 +637,39 @@ window.handleTradeAggregate = function (msg) {
         pendingChartUpdates.set(symbol, pending);
     }
 };
+
+// SPRINT-14: Handle large print events with flash animation and badge
+function handleLargePrint(msg) {
+    const symbol = msg.symbol.replace('MEXC_', '');
+
+    // Find card for this symbol
+    const card = document.querySelector(`[data-symbol="${symbol}"]`)?.closest('.card');
+    if (!card) return; // Symbol not currently visible
+
+    console.log(`[LargePrint] ${symbol}: ${msg.ratio.toFixed(1)}x ${msg.side} @ ${msg.price} (Vol: $${msg.volumeUSD.toFixed(2)})`);
+
+    // Flash animation on card
+    card.classList.add('large-print-flash');
+    setTimeout(() => card.classList.remove('large-print-flash'), 3000);
+
+    // Create badge with ratio and side
+    const cardHeader = card.querySelector('.card-header');
+    if (!cardHeader) return;
+
+    // Remove existing badge if present
+    const existingBadge = cardHeader.querySelector('.large-print-badge');
+    if (existingBadge) {
+        existingBadge.remove();
+    }
+
+    const badge = document.createElement('div');
+    badge.className = 'large-print-badge';
+    badge.innerHTML = `⚡ ${msg.ratio.toFixed(1)}x ${msg.side}`;
+    cardHeader.appendChild(badge);
+
+    // Auto-remove badge after 10 seconds
+    setTimeout(() => badge.remove(), 10000);
+}
 
 // Start (only in standalone mode)
 if (!isEmbeddedMode) {
