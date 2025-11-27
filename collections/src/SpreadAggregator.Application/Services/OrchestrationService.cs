@@ -144,7 +144,9 @@ public class OrchestrationService
         var minVolume = exchangeConfig.GetValue<decimal?>("MinUsdVolume") ?? 0;
         var maxVolume = exchangeConfig.GetValue<decimal?>("MaxUsdVolume") ?? decimal.MaxValue;
 
+        Console.WriteLine($"[{exchangeName}] Loading symbols...");
         var allSymbols = (await exchangeClient.GetSymbolsAsync()).ToList();
+        Console.WriteLine($"[{exchangeName}] ✅ Loaded {allSymbols.Count} symbols");
 
         // PROPOSAL-2025-0095: Thread-safe symbol addition
         lock (_symbolLock)
@@ -153,9 +155,11 @@ public class OrchestrationService
             var newSymbols = allSymbols.Where(s => !existingSymbols.Contains(s.Name)).ToList();
             _allSymbolInfo.AddRange(newSymbols);
         }
-        
+
+        Console.WriteLine($"[{exchangeName}] Loading tickers...");
         var tickers = (await exchangeClient.GetTickersAsync()).ToList();
         Console.WriteLine($"[{exchangeName}] Received {tickers.Count} tickers and {allSymbols.Count} symbol info objects.");
+
 
         var tickerLookup = tickers.ToDictionary(t => t.Symbol, t => t.QuoteVolume);
 
@@ -225,6 +229,46 @@ public class OrchestrationService
             }
             tickerTimer.Dispose();
         }, cancellationToken);
+
+        // SPRINT-12: Periodic orderbook refresh for MEXC (spread calculation)
+        if (exchangeName.Equals("MEXC", StringComparison.OrdinalIgnoreCase))
+        {
+            var orderbookTimer = new System.Threading.PeriodicTimer(TimeSpan.FromSeconds(30));
+            _ = Task.Run(async () =>
+            {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await orderbookTimer.WaitForNextTickAsync(cancellationToken);
+
+                        // Get active symbols from TradeAggregatorService
+                        var activeSymbols = _tradeAggregator.GetActiveSymbols();
+                        if (activeSymbols.Any() && exchangeClient.GetType().Name == "MexcExchangeClient")
+                        {
+                            // Use reflection to call GetOrderbookForSymbolsAsync
+                            var method = exchangeClient.GetType().GetMethod("GetOrderbookForSymbolsAsync");
+                            if (method != null)
+                            {
+                                var task = (Task<Dictionary<string, (decimal, decimal)>>)method.Invoke(exchangeClient, new object[] { activeSymbols });
+                                var orderbookData = await task;
+                                _tradeAggregator.UpdateOrderbookData(orderbookData);
+                                Console.WriteLine($"[{exchangeName}] Orderbook refreshed for {orderbookData.Count} active symbols");
+                            }
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[{exchangeName}] Orderbook refresh error: {ex.Message}");
+                    }
+                }
+                orderbookTimer.Dispose();
+            }, cancellationToken);
+        }
 
         // MEXC TRADES VIEWER: Subscriptions must stay alive until cancellation
         // Tasks run in background and keep the stream alive

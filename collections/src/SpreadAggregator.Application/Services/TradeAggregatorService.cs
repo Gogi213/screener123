@@ -36,9 +36,15 @@ public class TradeAggregatorService : IDisposable
     // SPRINT-10: Ticker data storage (Volume24h, PriceChangePercent24h)
     private readonly ConcurrentDictionary<string, TickerData> _tickerData = new();
 
+    // SPRINT-12: Orderbook data storage for spread calculation
+    private readonly ConcurrentDictionary<string, (decimal bid, decimal ask)> _orderbookData = new();
+
     // Batching: accumulate trades per symbol before broadcast
     private readonly ConcurrentDictionary<string, List<TradeData>> _pendingBroadcasts = new();
     private readonly System.Threading.PeriodicTimer _batchTimer;
+
+    // SPRINT-12: Orderbook refresh timer (every 30 seconds for active symbols)
+    private readonly System.Threading.PeriodicTimer _orderbookTimer;
     private bool _disposed;
 
     public TradeAggregatorService(
@@ -50,6 +56,7 @@ public class TradeAggregatorService : IDisposable
         _webSocketServer = webSocketServer;
         _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<TradeAggregatorService>.Instance;
         _batchTimer = new System.Threading.PeriodicTimer(TimeSpan.FromMilliseconds(BATCH_INTERVAL_MS));
+        _orderbookTimer = new System.Threading.PeriodicTimer(TimeSpan.FromSeconds(30)); // SPRINT-12: Refresh orderbook every 30 seconds
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -236,7 +243,10 @@ public class TradeAggregatorService : IDisposable
                                 lastUpdate = ((DateTimeOffset)m.LastUpdate).ToUnixTimeMilliseconds(),
                                 // SPRINT-10: Table metrics (24h volume + 4h price change)
                                 volume24h = m.Volume24h,
-                                priceChangePercent4h = m.PriceChangePercent4h
+                                priceChangePercent4h = m.PriceChangePercent4h,
+                                // SPRINT-12: Spread metrics
+                                spreadPercent = m.SpreadPercent,
+                                spreadAbsolute = m.SpreadAbsolute
                             })
                         };
 
@@ -294,6 +304,25 @@ public class TradeAggregatorService : IDisposable
         }
 
         return count;
+    }
+
+    /// <summary>
+    /// SPRINT-12: Calculate spread from orderbook data
+    /// </summary>
+    private (decimal spreadPercent, decimal spreadAbsolute) CalculateSpread(string symbolKey)
+    {
+        if (_orderbookData.TryGetValue(symbolKey, out var orderbook))
+        {
+            var (bid, ask) = orderbook;
+            if (ask <= 0 || bid <= 0) return (0, 0);
+
+            var spreadAbs = ask - bid;
+            var spreadPct = (spreadAbs / ask) * 100;
+
+            return (spreadPct, spreadAbs);
+        }
+
+        return (0, 0);
     }
 
     /// <summary>
@@ -442,6 +471,43 @@ public class TradeAggregatorService : IDisposable
     }
 
     /// <summary>
+    /// SPRINT-12: Update orderbook data for spread calculation
+    /// Called periodically for active symbols only
+    /// </summary>
+    public void UpdateOrderbookData(Dictionary<string, (decimal bid, decimal ask)> orderbookData)
+    {
+        foreach (var kvp in orderbookData)
+        {
+            var key = $"MEXC_{kvp.Key}"; // Match trade data key format
+            _orderbookData.AddOrUpdate(key, kvp.Value, (_, __) => kvp.Value);
+        }
+    }
+
+    /// <summary>
+    /// SPRINT-12: Get active symbols (those with recent trades) for orderbook updates
+    /// </summary>
+    public List<string> GetActiveSymbols()
+    {
+        var cutoff = DateTime.UtcNow.AddMinutes(-5); // Symbols with trades in last 5 minutes
+        return _symbolTrades.Keys
+            .Where(key => key.StartsWith("MEXC_"))
+            .Where(key =>
+            {
+                if (_symbolTrades.TryGetValue(key, out var queue))
+                {
+                    lock (queue)
+                    {
+                        return queue.Any(t => t.Timestamp >= cutoff);
+                    }
+                }
+                return false;
+            })
+            .Select(key => key.Replace("MEXC_", "")) // Remove prefix for API calls
+            .Take(400) // Limit to avoid rate limits
+            .ToList();
+    }
+
+    /// <summary>
     /// SPRINT-3: Get metadata for all symbols sorted by trades/3m
     /// Simple sorting by activity - no complex composite scores
     /// </summary>
@@ -469,20 +535,25 @@ public class TradeAggregatorService : IDisposable
             .OrderByDescending(m => m.Trades3Min)  // SPRINT-3: Sort by trades/3m - SIMPLE!
             .Select((m, index) =>
             {
+                var symbolKey = $"{(m.Symbol.StartsWith("MEXC_") ? "" : "MEXC_")}{m.Symbol}";
+
+                // SPRINT-12: Calculate spread for ALL symbols that have ticker data
+                if (_tickerData.TryGetValue(symbolKey, out var ticker))
+                {
+                    // SPRINT-12: Calculate spread from orderbook data
+                    var (spreadPct, spreadAbs) = CalculateSpread(symbolKey);
+                    m.SpreadPercent = spreadPct;
+                    m.SpreadAbsolute = spreadAbs;
+                    m.Volume24h = ticker.Volume24h;  // Also populate volume for all symbols
+                }
+
                 // Calculate advanced benchmarks only for TOP-500 (performance optimization)
                 if (index < 500)
                 {
-                    var symbolKey = $"{(m.Symbol.StartsWith("MEXC_") ? "" : "MEXC_")}{m.Symbol}";
                     m.Acceleration = CalculateAcceleration(symbolKey, m.TradesPerMin, m.Trades2Min);
                     m.HasVolumePattern = DetectVolumePattern(symbolKey);
                     m.BuySellImbalance = CalculateBuySellImbalance(symbolKey);
                     m.CompositeScore = CalculateCompositeScore(m.Score, m.Acceleration, m.HasVolumePattern, m.BuySellImbalance);
-
-                    // SPRINT-10: Populate 24h volume from ticker (keep 24h volume)
-                    if (_tickerData.TryGetValue(symbolKey, out var ticker))
-                    {
-                        m.Volume24h = ticker.Volume24h;
-                    }
 
                     // Calculate 4h price change from local trade data
                     m.PriceChangePercent4h = Calculate4hPriceChange(symbolKey);
@@ -490,6 +561,19 @@ public class TradeAggregatorService : IDisposable
                 return m;
             })
             .ToList();
+    }
+
+    /// <summary>
+    /// SPRINT-12: Calculate spread (bid-ask difference)
+    /// </summary>
+    private (decimal spreadPercent, decimal spreadAbsolute) CalculateSpread(decimal bid, decimal ask)
+    {
+        if (ask <= 0 || bid <= 0 || bid >= ask) return (0, 0);
+
+        var spreadAbs = ask - bid;
+        var spreadPct = (spreadAbs / ask) * 100;
+
+        return (spreadPct, spreadAbs);
     }
 
     /// <summary>
@@ -602,4 +686,8 @@ public class SymbolMetadata
     public int Trades5Min { get; set; }             // Trades in last 5 minutes (for table sorting)
     public decimal Volume24h { get; set; }          // 24h volume from ticker
     public decimal PriceChangePercent4h { get; set; }  // 4h price change % calculated from local trades
+
+    // SPRINT-12: Spread metrics
+    public decimal SpreadPercent { get; set; }      // Spread percentage ((ask-bid)/ask * 100)
+    public decimal SpreadAbsolute { get; set; }     // Absolute spread (ask - bid)
 }

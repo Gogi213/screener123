@@ -369,6 +369,7 @@ function initGlobalWebSocket() {
                             tradesPerMin: s.tradesPerMin,
                             trades5m: s.trades5m || 0,
                             acceleration: s.acceleration || 1.0,
+                            spreadPercent: s.spreadPercent || 0,
                             lastPrice: s.lastPrice,
                             lastUpdate: s.lastUpdate
                         };
@@ -446,6 +447,7 @@ function updateCardStats(symbol, price) {
     // This ensures charts and table show identical values
     const symbolData = window.allSymbols.find(s => s.symbol === symbol);
     const trades5m = symbolData?.trades5m || 0;
+    const spreadPercent = symbolData?.spreadPercent || 0;
 
     // Update UI
     const priceEl = document.getElementById(`price-${symbol}`);
@@ -457,7 +459,7 @@ function updateCardStats(symbol, price) {
     }
 
     if (statsEl) {
-        statsEl.textContent = `${trades5m}/5m`;  // Use server data (matches table view EXACTLY)
+        statsEl.textContent = `${trades5m}/5m | Spread: ${spreadPercent.toFixed(3)}%`;  // Add spread info
     }
 
     // ACCELERATION: ALWAYS SHOW (gray if < 2.0x, colored if >= 2.0x)
@@ -583,6 +585,7 @@ window.handleAllSymbolsScored = function (msg) {
             tradesPerMin: s.tradesPerMin,
             trades5m: s.trades5m || 0,
             acceleration: s.acceleration || 1.0,
+            spreadPercent: s.spreadPercent || 0,
             lastPrice: s.lastPrice,
             lastUpdate: s.lastUpdate
         }));
