@@ -231,29 +231,30 @@ public class OrchestrationService
         }, cancellationToken);
 
         // SPRINT-12: Periodic orderbook refresh for MEXC (spread calculation)
+        // High activity symbols: every 10 seconds
+        // Low activity symbols: every 60 seconds
         if (exchangeName.Equals("MEXC", StringComparison.OrdinalIgnoreCase))
         {
-            var orderbookTimer = new System.Threading.PeriodicTimer(TimeSpan.FromSeconds(30));
+            // High activity timer (10 seconds)
+            var highActivityTimer = new System.Threading.PeriodicTimer(TimeSpan.FromSeconds(10));
             _ = Task.Run(async () =>
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     try
                     {
-                        await orderbookTimer.WaitForNextTickAsync(cancellationToken);
+                        await highActivityTimer.WaitForNextTickAsync(cancellationToken);
 
-                        // Get active symbols from TradeAggregatorService
-                        var activeSymbols = _tradeAggregator.GetActiveSymbols();
-                        if (activeSymbols.Any() && exchangeClient.GetType().Name == "MexcExchangeClient")
+                        var (highActivity, _) = _tradeAggregator.GetActiveSymbolsByActivity();
+                        if (highActivity.Any() && exchangeClient.GetType().Name == "MexcExchangeClient")
                         {
-                            // Use reflection to call GetOrderbookForSymbolsAsync
                             var method = exchangeClient.GetType().GetMethod("GetOrderbookForSymbolsAsync");
                             if (method != null)
                             {
-                                var task = (Task<Dictionary<string, (decimal, decimal)>>)method.Invoke(exchangeClient, new object[] { activeSymbols });
+                                var task = (Task<Dictionary<string, (decimal, decimal)>>)method.Invoke(exchangeClient, new object[] { highActivity });
                                 var orderbookData = await task;
                                 _tradeAggregator.UpdateOrderbookData(orderbookData);
-                                Console.WriteLine($"[{exchangeName}] Orderbook refreshed for {orderbookData.Count} active symbols");
+                                Console.WriteLine($"[{exchangeName}] High-activity orderbook refreshed: {orderbookData.Count} symbols (10s interval)");
                             }
                         }
                     }
@@ -263,10 +264,45 @@ public class OrchestrationService
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"[{exchangeName}] Orderbook refresh error: {ex.Message}");
+                        Console.WriteLine($"[{exchangeName}] High-activity orderbook refresh error: {ex.Message}");
                     }
                 }
-                orderbookTimer.Dispose();
+                highActivityTimer.Dispose();
+            }, cancellationToken);
+
+            // Low activity timer (60 seconds)
+            var lowActivityTimer = new System.Threading.PeriodicTimer(TimeSpan.FromSeconds(60));
+            _ = Task.Run(async () =>
+            {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await lowActivityTimer.WaitForNextTickAsync(cancellationToken);
+
+                        var (_, lowActivity) = _tradeAggregator.GetActiveSymbolsByActivity();
+                        if (lowActivity.Any() && exchangeClient.GetType().Name == "MexcExchangeClient")
+                        {
+                            var method = exchangeClient.GetType().GetMethod("GetOrderbookForSymbolsAsync");
+                            if (method != null)
+                            {
+                                var task = (Task<Dictionary<string, (decimal, decimal)>>)method.Invoke(exchangeClient, new object[] { lowActivity });
+                                var orderbookData = await task;
+                                _tradeAggregator.UpdateOrderbookData(orderbookData);
+                                Console.WriteLine($"[{exchangeName}] Low-activity orderbook refreshed: {orderbookData.Count} symbols (60s interval)");
+                            }
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[{exchangeName}] Low-activity orderbook refresh error: {ex.Message}");
+                    }
+                }
+                lowActivityTimer.Dispose();
             }, cancellationToken);
         }
 

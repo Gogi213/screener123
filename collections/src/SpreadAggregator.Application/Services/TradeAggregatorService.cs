@@ -485,26 +485,49 @@ public class TradeAggregatorService : IDisposable
 
     /// <summary>
     /// SPRINT-12: Get active symbols (those with recent trades) for orderbook updates
+    /// Separated by activity level for different refresh frequencies
     /// </summary>
-    public List<string> GetActiveSymbols()
+    public (List<string> highActivity, List<string> lowActivity) GetActiveSymbolsByActivity()
     {
         var cutoff = DateTime.UtcNow.AddMinutes(-5); // Symbols with trades in last 5 minutes
-        return _symbolTrades.Keys
+        var oneMinuteAgo = DateTime.UtcNow.AddMinutes(-1);
+
+        var symbolActivities = _symbolTrades.Keys
             .Where(key => key.StartsWith("MEXC_"))
-            .Where(key =>
+            .Select(key =>
             {
                 if (_symbolTrades.TryGetValue(key, out var queue))
                 {
                     lock (queue)
                     {
-                        return queue.Any(t => t.Timestamp >= cutoff);
+                        var recentTrades = queue.Where(t => t.Timestamp >= cutoff).ToList();
+                        var lastMinuteTrades = queue.Count(t => t.Timestamp >= oneMinuteAgo);
+                        return new
+                        {
+                            Symbol = key.Replace("MEXC_", ""),
+                            HasRecentTrades = recentTrades.Any(),
+                            LastMinuteTradeCount = lastMinuteTrades
+                        };
                     }
                 }
-                return false;
+                return null;
             })
-            .Select(key => key.Replace("MEXC_", "")) // Remove prefix for API calls
-            .Take(400) // Limit to avoid rate limits
+            .Where(x => x?.HasRecentTrades == true)
             .ToList();
+
+        var highActivity = symbolActivities
+            .Where(x => x.LastMinuteTradeCount >= 30)
+            .Select(x => x.Symbol)
+            .Take(200) // Limit high activity symbols
+            .ToList();
+
+        var lowActivity = symbolActivities
+            .Where(x => x.LastMinuteTradeCount < 30)
+            .Select(x => x.Symbol)
+            .Take(200) // Limit low activity symbols
+            .ToList();
+
+        return (highActivity, lowActivity);
     }
 
     /// <summary>
