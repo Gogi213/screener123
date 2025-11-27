@@ -5,7 +5,7 @@ const HISTORY_MINUTES = 30;
 const BLACKLIST = [
     'BTCUSDT', 'ETHUSDT', 'BTCUSDE', 'USDCUSDT', 'ETHUSDC',
     'BNBUSDT', 'DOGEUSDT', 'SOLUSDT', 'XRPUSDC', 'SUIUSDT', 'DOGEUSDE',
-    'FDUSDUSDT', 'CRVUSDC'
+    'FDUSDUSDT', 'CRVUSDC', 'XRPUSDE', 'BTCUSD1', 'ETHUSD1'
 ].map(s => s.toUpperCase());
 
 // STATE - Use window object directly to avoid "already declared" errors

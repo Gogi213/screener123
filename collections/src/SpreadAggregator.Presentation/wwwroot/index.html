@@ -266,6 +266,56 @@
             font-weight: 600;
         }
 
+        /* Filters */
+        .filters-container {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 120px;
+        }
+
+        .filter-group label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .filter-group input {
+            padding: 6px 10px;
+            background: var(--bg-app);
+            border: 1px solid var(--border-subtle);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+
+        .filter-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        #clear-filters {
+            align-self: end;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
         /* CHARTS VIEW STYLES */
         #chartsView {
             max-width: 1920px;
@@ -301,6 +351,39 @@
 
     <!-- TABLE VIEW -->
     <div id="tableView" class="view active">
+        <!-- Filters Row -->
+        <div class="filters-container">
+            <div class="filter-group">
+                <label>Trades 5m ≥</label>
+                <input type="number" id="filter-trades5m" min="0" placeholder="0">
+            </div>
+            <div class="filter-group">
+                <label>24h Volume ≥</label>
+                <input type="number" id="filter-volume24h" min="0" step="0.01" placeholder="0">
+            </div>
+            <div class="filter-group">
+                <label>4h Change ≥</label>
+                <input type="number" id="filter-change4h" step="0.01" placeholder="-100">
+            </div>
+            <div class="filter-group">
+                <label>NATR % ≥</label>
+                <input type="number" id="filter-natr" min="0" step="0.01" placeholder="0">
+            </div>
+            <div class="filter-group">
+                <label>Spread % ≥</label>
+                <input type="number" id="filter-spread" min="0" step="0.01" placeholder="0">
+            </div>
+            <div class="filter-group">
+                <label>Large Prints ≥</label>
+                <input type="number" id="filter-largePrints" min="0" placeholder="0">
+            </div>
+            <div class="filter-group">
+                <label>Breakthroughs ≥</label>
+                <input type="number" id="filter-breakthroughs" min="0" placeholder="0">
+            </div>
+            <button id="clear-filters" class="nav-btn">Clear Filters</button>
+        </div>
+
         <div class="table-container">
             <table id="symbolsTable">
                 <thead>
@@ -333,6 +416,7 @@
 
         // Global state
         let allSymbols = [];
+        let filteredSymbols = [];
         let ws = null;
         let currentView = 'table';
         let chartsInitialized = false;
@@ -340,11 +424,23 @@
         // Table view state
         let currentSort = { column: 'trades5m', direction: 'desc' };
 
-        // Update status with active symbols count
+        // Filters state
+        let filters = {
+            trades5m: '',
+            volume24h: '',
+            change4h: '',
+            natr: '',
+            spreadPercent: '',
+            largePrintCount5m: '',
+            priceBreakthroughCount5m: ''
+        };
+
+        // Update status with filtered symbols count
         function updateStatusWithCount() {
             const activeCount = allSymbols.filter(s => s.trades5m > 0).length;
+            const filteredCount = filteredSymbols.length;
             const statusEl = document.getElementById('status');
-            statusEl.textContent = `✅ Connected (${activeCount} active)`;
+            statusEl.textContent = `✅ Connected (${filteredCount} shown, ${activeCount} active)`;
             statusEl.className = 'status connected';
         }
 
@@ -382,7 +478,9 @@
                         // Update status with active symbols count
                         updateStatusWithCount();
 
-                        // Update active view
+                        // Apply filters and update active view
+                        applyFilters();
+                        updateStatusWithCount();
                         if (currentView === 'table') {
                             sortAndRenderTable();
                         } else if (chartsInitialized && window.handleAllSymbolsScored) {
@@ -406,7 +504,7 @@
 
         // TABLE VIEW: Sort and render
         function sortAndRenderTable() {
-            const sorted = [...allSymbols].sort((a, b) => {
+            const sorted = [...filteredSymbols].sort((a, b) => {
                 let column = currentSort.column;
 
                 // Map column names to actual data fields
@@ -500,6 +598,73 @@
                 }
                 sortAndRenderTable();
             });
+        });
+
+        // FILTERS
+        function applyFilters() {
+            filteredSymbols = allSymbols.filter(s => {
+                if (filters.trades5m && s.trades5m < parseInt(filters.trades5m)) return false;
+                if (filters.volume24h && s.volume24h < parseFloat(filters.volume24h)) return false;
+                if (filters.change4h && s.change4h < parseFloat(filters.change4h)) return false;
+                if (filters.natr && s.natr < parseFloat(filters.natr)) return false;
+                if (filters.spreadPercent && s.spreadPercent < parseFloat(filters.spreadPercent)) return false;
+                if (filters.largePrintCount5m && s.largePrintCount5m < parseInt(filters.largePrintCount5m)) return false;
+                if (filters.priceBreakthroughCount5m && s.priceBreakthroughCount5m < parseInt(filters.priceBreakthroughCount5m)) return false;
+                return true;
+            });
+        }
+
+        // Filter input event listeners
+        document.getElementById('filter-trades5m').addEventListener('input', (e) => {
+            filters.trades5m = e.target.value;
+            applyFilters();
+            updateStatusWithCount();
+            sortAndRenderTable();
+        });
+        document.getElementById('filter-volume24h').addEventListener('input', (e) => {
+            filters.volume24h = e.target.value;
+            applyFilters();
+            updateStatusWithCount();
+            sortAndRenderTable();
+        });
+        document.getElementById('filter-change4h').addEventListener('input', (e) => {
+            filters.change4h = e.target.value;
+            applyFilters();
+            updateStatusWithCount();
+            sortAndRenderTable();
+        });
+        document.getElementById('filter-natr').addEventListener('input', (e) => {
+            filters.natr = e.target.value;
+            applyFilters();
+            updateStatusWithCount();
+            sortAndRenderTable();
+        });
+        document.getElementById('filter-spread').addEventListener('input', (e) => {
+            filters.spreadPercent = e.target.value;
+            applyFilters();
+            updateStatusWithCount();
+            sortAndRenderTable();
+        });
+        document.getElementById('filter-largePrints').addEventListener('input', (e) => {
+            filters.largePrintCount5m = e.target.value;
+            applyFilters();
+            updateStatusWithCount();
+            sortAndRenderTable();
+        });
+        document.getElementById('filter-breakthroughs').addEventListener('input', (e) => {
+            filters.priceBreakthroughCount5m = e.target.value;
+            applyFilters();
+            updateStatusWithCount();
+            sortAndRenderTable();
+        });
+
+        // Clear filters
+        document.getElementById('clear-filters').addEventListener('click', () => {
+            Object.keys(filters).forEach(key => filters[key] = '');
+            document.querySelectorAll('.filters-container input').forEach(input => input.value = '');
+            applyFilters();
+            updateStatusWithCount();
+            sortAndRenderTable();
         });
 
         // TAB SWITCHING
