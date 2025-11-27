@@ -246,7 +246,9 @@ public class TradeAggregatorService : IDisposable
                                 priceChangePercent4h = m.PriceChangePercent4h,
                                 // SPRINT-12: Spread metrics
                                 spreadPercent = m.SpreadPercent,
-                                spreadAbsolute = m.SpreadAbsolute
+                                spreadAbsolute = m.SpreadAbsolute,
+                                // SPRINT-11: NATR indicator
+                                natr = m.NATR
                             })
                         };
 
@@ -570,6 +572,9 @@ public class TradeAggregatorService : IDisposable
                     m.Volume24h = ticker.Volume24h;  // Also populate volume for all symbols
                 }
 
+                // SPRINT-11: Calculate NATR for symbols with sufficient trade data
+                m.NATR = CalculateNATR(symbolKey);
+
                 // Calculate advanced benchmarks only for TOP-500 (performance optimization)
                 if (index < 500)
                 {
@@ -637,6 +642,100 @@ public class TradeAggregatorService : IDisposable
 
         // Clamp to reasonable range
         return Math.Max(-100, Math.Min(1000, priceChange));
+    }
+
+    /// <summary>
+    /// SPRINT-11: Calculate NATR (Normalized Average True Range) for 10 periods over 1-minute timeframe
+    /// Only calculates for symbols with >30 trades in last 10 minutes
+    /// Formula: NATR = (ATR / Close) * 100 where ATR is 10-period EMA of TR
+    /// </summary>
+    private decimal CalculateNATR(string symbolKey)
+    {
+        if (!_symbolTrades.TryGetValue(symbolKey, out var queue))
+            return 0;
+
+        var now = DateTime.UtcNow;
+        var tenMinutesAgo = now.AddMinutes(-10);
+
+        // Group trades into 1-minute candles
+        var candles = new List<(decimal high, decimal low, decimal close, DateTime timestamp)>();
+
+        lock (queue)
+        {
+            // Get trades from last 10 minutes
+            var recentTrades = queue.Where(t => t.Timestamp >= tenMinutesAgo).ToList();
+
+            // Filter: Only calculate for symbols with >30 trades in last 10 minutes
+            if (recentTrades.Count <= 30)
+            {
+                _logger.LogDebug("[NATR] {Symbol}: Skipped - only {Count} trades in last 10min (<=30)", symbolKey, recentTrades.Count);
+                return 0;
+            }
+
+            // Group by minute
+            var groupedByMinute = recentTrades
+                .GroupBy(t => new DateTime(t.Timestamp.Year, t.Timestamp.Month, t.Timestamp.Day,
+                                          t.Timestamp.Hour, t.Timestamp.Minute, 0))
+                .OrderBy(g => g.Key)
+                .ToList();
+
+            // Create candles (OHLC) for each minute
+            foreach (var group in groupedByMinute)
+            {
+                var trades = group.OrderBy(t => t.Timestamp).ToList();
+                if (trades.Count == 0) continue;
+
+                var high = trades.Max(t => t.Price);
+                var low = trades.Min(t => t.Price);
+                var close = trades.Last().Price;
+                var timestamp = group.Key;
+
+                candles.Add((high, low, close, timestamp));
+            }
+        }
+
+        // Need at least 10 candles for 10-period EMA
+        if (candles.Count < 10)
+        {
+            _logger.LogDebug("[NATR] {Symbol}: Skipped - only {Count} candles (<10)", symbolKey, candles.Count);
+            return 0;
+        }
+
+        // Calculate True Range for each candle
+        var trueRanges = new List<decimal>();
+        for (int i = 0; i < candles.Count; i++)
+        {
+            var (high, low, close, _) = candles[i];
+            decimal prevClose = (i > 0) ? candles[i - 1].close : close;
+
+            var tr = Math.Max(high - low, Math.Max(Math.Abs(high - prevClose), Math.Abs(low - prevClose)));
+            trueRanges.Add(tr);
+        }
+
+        // Calculate 10-period EMA of True Range (ATR)
+        if (trueRanges.Count < 10)
+            return 0;
+
+        decimal multiplier = 2.0m / (10 + 1); // EMA multiplier
+        decimal atr = trueRanges[0]; // First value
+
+        for (int i = 1; i < trueRanges.Count; i++)
+        {
+            atr = ((trueRanges[i] - atr) * multiplier) + atr;
+        }
+
+        // Get current close price
+        var currentClose = candles.Last().close;
+        if (currentClose <= 0)
+            return 0;
+
+        // Calculate NATR: (ATR / Close) * 100
+        var natr = (atr / currentClose) * 100;
+
+        // Clamp to reasonable range (0-100%)
+        var clampedNatr = Math.Max(0, Math.Min(100, natr));
+        _logger.LogDebug("[NATR] {Symbol}: Calculated NATR = {Natr:F2}% (ATR={Atr:F6}, Close={Close:F6})", symbolKey, clampedNatr, atr, currentClose);
+        return clampedNatr;
     }
 
     /// <summary>
@@ -713,4 +812,7 @@ public class SymbolMetadata
     // SPRINT-12: Spread metrics
     public decimal SpreadPercent { get; set; }      // Spread percentage ((ask-bid)/ask * 100)
     public decimal SpreadAbsolute { get; set; }     // Absolute spread (ask - bid)
+
+    // SPRINT-11: NATR (Normalized Average True Range) indicator
+    public decimal NATR { get; set; }               // NATR percentage (10-period EMA of TR / Close * 100)
 }

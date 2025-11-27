@@ -3,6 +3,10 @@
 | |- TestBuild
 | |- docs
 | | `- sprints
+| |   |- SPRINT-11-NATR.md
+| |   |- SPRINT-12-SPREAD.md
+| |   |- SPRINT-13-VOLUME-SPIKE.md
+| |   `- SPRINT-14-LARGE-PRINTS.md
 | |- src
 | | |- SpreadAggregator.Application
 | | | |- Abstractions
@@ -90,9 +94,6 @@
 | |- performance
 | |- ARCHITECTURE.md
 | |- GEMINI_DEV.md
-| |- REFACTORING_AUDIT.md
-| |- REFACTORING_SUMMARY.md
-| |- SPRINT_CONTEXT.md
 | `- project_structure.txt
 |- README.md
 |- dotnet-install.sh

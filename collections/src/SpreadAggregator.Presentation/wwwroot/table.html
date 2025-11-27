@@ -181,6 +181,12 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
+        .natr {
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .natr.high { color: var(--accent); }  /* NATR > 5% */
+
         /* Charts view placeholder */
         #chartsContainer {
             padding: 40px;
@@ -230,6 +236,7 @@
                         <th class="sortable" data-column="trades5m">Trades 5m</th>
                         <th class="sortable" data-column="volume24h">24h Volume</th>
                         <th class="sortable" data-column="change4h">4h Change</th>
+                        <th class="sortable" data-column="natr">NATR %</th>
                         <th class="sortable" data-column="price">Price</th>
                     </tr>
                 </thead>
@@ -279,6 +286,7 @@
                             trades5m: s.trades5m || 0,
                             volume24h: s.volume24h || 0,
                             change4h: s.priceChangePercent4h || 0,
+                            natr: s.natr || 0,
                             price: s.lastPrice || 0,
                             // Keep all data for potential charts
                             ...s
@@ -327,6 +335,7 @@
                     <td class="${s.change4h >= 0 ? 'positive' : 'negative'}">
                         ${s.change4h >= 0 ? '+' : ''}${s.change4h.toFixed(2)}%
                     </td>
+                    <td class="natr">${s.natr > 0 ? s.natr.toFixed(2) + '%' : '---'}</td>
                     <td class="price">${formatPrice(s.price)}</td>
                 </tr>
             `).join('');
