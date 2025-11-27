@@ -40,7 +40,25 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+        }
+
+        .header-top-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .sort-toggle-btn.active {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
 
         .brand {
@@ -254,35 +272,6 @@
             margin: 0 auto;
         }
 
-        #chartsHeader {
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        #btnSortToggle {
-            padding: 8px 16px;
-            background: transparent;
-            border: 1px solid var(--border-subtle);
-            color: var(--text-secondary);
-            cursor: pointer;
-            border-radius: 6px;
-            font-size: 13px;
-            font-family: 'JetBrains Mono', monospace;
-            transition: all 0.2s ease;
-        }
-
-        #btnSortToggle:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: var(--border-hover);
-        }
-
-        #btnSortToggle.active {
-            background: var(--accent-dim);
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
         #grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -296,12 +285,17 @@
 <body>
     <div class="header">
         <div class="header-top">
-            <div class="brand">MEXC Screener Pro</div>
-            <div id="status" class="status">⏳ Connecting...</div>
-        </div>
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('table')">📊 Table</button>
-            <button class="tab" onclick="switchTab('charts')">📈 Charts</button>
+            <div class="header-top-left">
+                <div class="brand">MEXC Screener Pro</div>
+                <div id="status" class="status">⏳ Connecting...</div>
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('table')">📊 Table</button>
+                    <button class="tab" onclick="switchTab('charts')">📈 Charts</button>
+                </div>
+                <button id="btnSortToggle" class="tab sort-toggle-btn" onclick="toggleSmartSort()" style="display: none;">
+                    <span id="sortIcon">🔥</span> Live Sort
+                </button>
+            </div>
         </div>
     </div>
 
@@ -331,11 +325,6 @@
 
     <!-- CHARTS VIEW -->
     <div id="chartsView" class="view">
-        <div id="chartsHeader">
-            <button id="btnSortToggle" class="active" onclick="toggleSmartSort()">
-                <span id="sortIcon">🔥</span> Live Sort
-            </button>
-        </div>
         <div id="grid"></div>
     </div>
 
@@ -524,10 +513,14 @@
             // Update views
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
 
+            // Show/hide Live Sort button
+            const sortBtn = document.getElementById('btnSortToggle');
             if (tabName === 'table') {
                 document.getElementById('tableView').classList.add('active');
+                sortBtn.style.display = 'none';
             } else if (tabName === 'charts') {
                 document.getElementById('chartsView').classList.add('active');
+                sortBtn.style.display = 'inline-block';
 
                 // Lazy load charts logic
                 if (!chartsInitialized) {
