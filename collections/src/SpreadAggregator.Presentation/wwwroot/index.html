@@ -238,6 +238,16 @@
 
         .natr.high { color: var(--accent); }  /* NATR > 5% */
 
+        .large-prints.active {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .breakthroughs.active {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
         /* CHARTS VIEW STYLES */
         #chartsView {
             max-width: 1920px;
@@ -308,6 +318,7 @@
                         <th class="sortable" data-column="natr">NATR %</th>
                         <th class="sortable" data-column="spreadPercent">Spread %</th>
                         <th class="sortable" data-column="largePrints">Large Prints</th>
+                        <th class="sortable" data-column="breakthroughs">Breakthroughs</th>
                         <th class="sortable" data-column="price">Price</th>
                     </tr>
                 </thead>
@@ -372,6 +383,8 @@
                             spreadPercent: s.spreadPercent || 0,
                             largePrintCount5m: s.largePrintCount5m || 0,
                             lastLargePrintRatio: s.lastLargePrintRatio || 0,
+                            priceBreakthroughCount5m: s.priceBreakthroughCount5m || 0,
+                            lastPriceBreakthroughChange: s.lastPriceBreakthroughChange || 0,
                             price: s.lastPrice || 0,
                             // Keep all data for charts
                             ...s
@@ -409,6 +422,7 @@
 
                 // Map column names to actual data fields
                 if (column === 'largePrints') column = 'largePrintCount5m';
+                if (column === 'breakthroughs') column = 'priceBreakthroughCount5m';
 
                 let aVal = a[column];
                 let bVal = b[column];
@@ -435,6 +449,9 @@
                     <td class="spread ${getSpreadClass(s.spreadPercent)}">${s.spreadPercent.toFixed(3)}%</td>
                     <td class="large-prints ${s.largePrintCount5m > 0 ? 'active' : ''}">
                         ${s.largePrintCount5m > 0 ? '⚡ ' : ''}${s.largePrintCount5m}${s.largePrintCount5m > 0 ? ` (${s.lastLargePrintRatio.toFixed(1)}x)` : ''}
+                    </td>
+                    <td class="breakthroughs ${s.priceBreakthroughCount5m > 0 ? 'active' : ''}">
+                        ${s.priceBreakthroughCount5m > 0 ? '🚀 ' : ''}${s.priceBreakthroughCount5m}${s.priceBreakthroughCount5m > 0 ? ` (${s.lastPriceBreakthroughChange.toFixed(1)}%)` : ''}
                     </td>
                     <td class="price">${formatPrice(s.price)}</td>
                 </tr>

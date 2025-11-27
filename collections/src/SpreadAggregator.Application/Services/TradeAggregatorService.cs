@@ -826,11 +826,36 @@ public class TradeAggregatorService : IDisposable
         avgVolume /= recentTradeCount;
         var currentVolume = trade.Price * trade.Quantity;
 
-        // Threshold: 5x average trade volume
-        const decimal THRESHOLD = 5.0m;
+        // Threshold: 4x average trade volume AND minimum $200 AND price change < 1%
+        const decimal THRESHOLD = 4.0m;
+        const decimal MIN_VOLUME = 200.0m;
+        const decimal MAX_PRICE_CHANGE = 1.0m; // To avoid detecting breakthroughs as large prints
+
         var ratio = avgVolume > 0 ? currentVolume / avgVolume : 0;
 
-        if (ratio >= THRESHOLD)
+        // Check if this trade caused significant price movement (might be a breakthrough instead)
+        var priceChange = 0.0m;
+        if (recentTradeCount >= 2)
+        {
+            // Get previous trade price
+            TradeData prevTrade = null;
+            lock (queue)
+            {
+                foreach (var t in queue)
+                {
+                    if (t.Timestamp < trade.Timestamp)
+                    {
+                        prevTrade = t;
+                    }
+                }
+            }
+            if (prevTrade != null)
+            {
+                priceChange = Math.Abs(((trade.Price - prevTrade.Price) / prevTrade.Price) * 100);
+            }
+        }
+
+        if (ratio >= THRESHOLD && currentVolume >= MIN_VOLUME && priceChange < MAX_PRICE_CHANGE)
         {
             // Detected large print
             var largePrint = new LargePrint
@@ -844,13 +869,11 @@ public class TradeAggregatorService : IDisposable
                 Ratio = ratio
             };
 
-            // Store in history (keep last 10 large prints)
+            // Store in history (auto-clean old on count)
             var history = _largePrints.GetOrAdd(symbolKey, _ => new Queue<LargePrint>());
             lock (history)
             {
                 history.Enqueue(largePrint);
-                if (history.Count > 10)
-                    history.Dequeue();
             }
 
             // Broadcast large print event
@@ -918,32 +941,65 @@ public class TradeAggregatorService : IDisposable
 
         if (Math.Abs(priceChange) >= BREAKTHROUGH_THRESHOLD)
         {
-            // This is a PRICE BREAKTHROUGH!
-            var breakthrough = new PriceBreakthrough
-            {
-                Timestamp = trade.Timestamp,
-                StartPrice = startPrice,
-                EndPrice = currentPrice,
-                PriceChange = priceChange,
-                TimeSpan = (decimal)window.TotalSeconds,
-                Direction = priceChange > 0 ? "Up" : "Down",
-                VolumeInBreakthrough = recentTrades.Sum(t => t.Price * t.Quantity)
-            };
+            // Calculate volume in breakthrough
+            var volumeInBreakthrough = recentTrades.Sum(t => t.Price * t.Quantity);
 
-            // Store in history (keep last 10 breakthroughs)
-            var history = _priceBreakthroughs.GetOrAdd(symbolKey, _ => new Queue<PriceBreakthrough>());
-            lock (history)
+            // Calculate average trade volume (1-minute rolling window)
+            var oneMinAgo = DateTime.UtcNow.AddMinutes(-1);
+            decimal avgVolume = 0;
+            int recentTradeCount = 0;
+
+            lock (queue)
             {
-                history.Enqueue(breakthrough);
-                if (history.Count > 10)
-                    history.Dequeue();
+                // Calculate average volume from recent trades
+                foreach (var t in queue)
+                {
+                    if (t.Timestamp >= oneMinAgo)
+                    {
+                        avgVolume += t.Price * t.Quantity;
+                        recentTradeCount++;
+                    }
+                }
             }
 
-            // Broadcast breakthrough event
-            BroadcastPriceBreakthrough(symbolKey, breakthrough);
+            // Need minimum 10 trades for baseline
+            if (recentTradeCount < 10)
+                return;
 
-            _logger.LogInformation("[PriceBreakthrough] {Symbol}: {Direction} {PriceChange:F2}% in {TimeSpan}s (Start: ${StartPrice:F6}, End: ${EndPrice:F6}, Vol: ${Volume:F2})",
-                trade.Symbol, breakthrough.Direction, priceChange, window.TotalSeconds, startPrice, currentPrice, breakthrough.VolumeInBreakthrough);
+            avgVolume /= recentTradeCount;
+
+            // Volume threshold: 300% above average AND minimum $500
+            const decimal VOLUME_THRESHOLD_MULTIPLIER = 3.0m;
+            const decimal MIN_VOLUME_THRESHOLD = 500.0m;
+            var volumeThreshold = Math.Max(avgVolume * VOLUME_THRESHOLD_MULTIPLIER, MIN_VOLUME_THRESHOLD);
+
+            if (volumeInBreakthrough >= volumeThreshold)
+            {
+                // This is a PRICE BREAKTHROUGH!
+                var breakthrough = new PriceBreakthrough
+                {
+                    Timestamp = trade.Timestamp,
+                    StartPrice = startPrice,
+                    EndPrice = currentPrice,
+                    PriceChange = priceChange,
+                    TimeSpan = (decimal)window.TotalSeconds,
+                    Direction = priceChange > 0 ? "Up" : "Down",
+                    VolumeInBreakthrough = volumeInBreakthrough
+                };
+
+                // Store in history (auto-clean old on count)
+                var history = _priceBreakthroughs.GetOrAdd(symbolKey, _ => new Queue<PriceBreakthrough>());
+                lock (history)
+                {
+                    history.Enqueue(breakthrough);
+                }
+
+                // Broadcast breakthrough event
+                BroadcastPriceBreakthrough(symbolKey, breakthrough);
+
+                _logger.LogInformation("[PriceBreakthrough] {Symbol}: {Direction} {PriceChange:F2}% in {TimeSpan}s (Start: ${StartPrice:F6}, End: ${EndPrice:F6}, Vol: ${Volume:F2}, Avg: ${Avg:F2}, Ratio: {Ratio:F1}x)",
+                    trade.Symbol, breakthrough.Direction, priceChange, window.TotalSeconds, startPrice, currentPrice, volumeInBreakthrough, avgVolume, volumeInBreakthrough / avgVolume);
+            }
         }
     }
 
@@ -972,30 +1028,33 @@ public class TradeAggregatorService : IDisposable
     }
 
     /// <summary>
-    /// SPRINT-14: Get count of large prints in last 5 minutes for a symbol
+    /// SPRINT-14: Get count of large prints in last 1.5 minutes for a symbol (auto-clean old)
     /// </summary>
     private int GetLargePrintCount5m(string symbolKey)
     {
         if (!_largePrints.TryGetValue(symbolKey, out var history))
             return 0;
 
-        var fiveMinAgo = DateTime.UtcNow.AddMinutes(-5);
+        var oneAndHalfMinAgo = DateTime.UtcNow.AddMinutes(-1.5);
         int count = 0;
 
         lock (history)
         {
-            foreach (var print in history)
+            // Remove prints older than 1.5 minutes
+            while (history.Count > 0 && history.Peek().Timestamp < oneAndHalfMinAgo)
             {
-                if (print.Timestamp >= fiveMinAgo)
-                    count++;
+                history.Dequeue();
             }
+
+            // Count remaining (all are within 1.5 minutes)
+            count = history.Count;
         }
 
         return count;
     }
 
     /// <summary>
-    /// Get count of price breakthroughs in last 5 minutes for a symbol
+    /// Get count of price breakthroughs in last 5 minutes for a symbol (auto-clean old)
     /// </summary>
     private int GetPriceBreakthroughCount5m(string symbolKey)
     {
@@ -1007,11 +1066,14 @@ public class TradeAggregatorService : IDisposable
 
         lock (history)
         {
-            foreach (var breakthrough in history)
+            // Remove breakthroughs older than 5 minutes
+            while (history.Count > 0 && history.Peek().Timestamp < fiveMinAgo)
             {
-                if (breakthrough.Timestamp >= fiveMinAgo)
-                    count++;
+                history.Dequeue();
             }
+
+            // Count remaining (all are within 5 minutes)
+            count = history.Count;
         }
 
         return count;
