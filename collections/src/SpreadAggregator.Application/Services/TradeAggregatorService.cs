@@ -42,6 +42,9 @@ public class TradeAggregatorService : IDisposable
     // SPRINT-14: Large prints (прострелы) tracking - trades > 5x average volume
     private readonly ConcurrentDictionary<string, Queue<LargePrint>> _largePrints = new();
 
+    // Price breakthroughs tracking - rapid price movements >1% in 1-5 seconds
+    private readonly ConcurrentDictionary<string, Queue<PriceBreakthrough>> _priceBreakthroughs = new();
+
     // Batching: accumulate trades per symbol before broadcast
     private readonly ConcurrentDictionary<string, List<TradeData>> _pendingBroadcasts = new();
     private readonly System.Threading.PeriodicTimer _batchTimer;
@@ -131,6 +134,9 @@ public class TradeAggregatorService : IDisposable
 
         // SPRINT-14: Detect large prints (прострелы)
         DetectLargePrint(trade);
+
+        // Detect price breakthroughs (rapid price movements)
+        DetectPriceBreakthrough(trade);
 
         // 6. Add to pending broadcasts (batching)
         var pending = _pendingBroadcasts.GetOrAdd(key, _ => new List<TradeData>());
@@ -257,7 +263,10 @@ public class TradeAggregatorService : IDisposable
                                 natr = m.NATR,
                                 // SPRINT-14: Large prints tracking
                                 largePrintCount5m = m.LargePrintCount5m,
-                                lastLargePrintRatio = m.LastLargePrintRatio
+                                lastLargePrintRatio = m.LastLargePrintRatio,
+                                // Price breakthroughs tracking
+                                priceBreakthroughCount5m = m.PriceBreakthroughCount5m,
+                                lastPriceBreakthroughChange = m.LastPriceBreakthroughChange
                             })
                         };
 
@@ -601,6 +610,23 @@ public class TradeAggregatorService : IDisposable
                     }
                 }
 
+                // Calculate price breakthrough metrics
+                m.PriceBreakthroughCount5m = GetPriceBreakthroughCount5m(symbolKey);
+
+                // Get last price breakthrough change and timestamp
+                if (_priceBreakthroughs.TryGetValue(symbolKey, out var breakthroughHistory))
+                {
+                    lock (breakthroughHistory)
+                    {
+                        var lastBreakthrough = breakthroughHistory.LastOrDefault();
+                        if (lastBreakthrough != null)
+                        {
+                            m.LastPriceBreakthroughChange = lastBreakthrough.PriceChange;
+                            m.LastPriceBreakthroughTime = lastBreakthrough.Timestamp;
+                        }
+                    }
+                }
+
                 // Calculate advanced benchmarks only for TOP-500 (performance optimization)
                 if (index < 500)
                 {
@@ -860,6 +886,92 @@ public class TradeAggregatorService : IDisposable
     }
 
     /// <summary>
+    /// Detect price breakthroughs - rapid price movements >1% in 2 seconds
+    /// </summary>
+    private void DetectPriceBreakthrough(TradeData trade)
+    {
+        var symbolKey = $"{trade.Exchange}_{trade.Symbol}";
+
+        // Look at price 2 seconds ago
+        var window = TimeSpan.FromSeconds(2);
+        var cutoff = DateTime.UtcNow - window;
+
+        if (!_symbolTrades.TryGetValue(symbolKey, out var queue))
+            return;
+
+        List<TradeData> recentTrades;
+        lock (queue)
+        {
+            recentTrades = queue.Where(t => t.Timestamp >= cutoff).OrderBy(t => t.Timestamp).ToList();
+        }
+
+        if (recentTrades.Count < 3) return; // Need minimum trades
+
+        var startPrice = recentTrades.First().Price;
+        var currentPrice = trade.Price;
+
+        // Calculate price change %
+        var priceChange = ((currentPrice - startPrice) / startPrice) * 100;
+
+        // Threshold: price changed >1% in 2 seconds
+        const decimal BREAKTHROUGH_THRESHOLD = 1.0m;
+
+        if (Math.Abs(priceChange) >= BREAKTHROUGH_THRESHOLD)
+        {
+            // This is a PRICE BREAKTHROUGH!
+            var breakthrough = new PriceBreakthrough
+            {
+                Timestamp = trade.Timestamp,
+                StartPrice = startPrice,
+                EndPrice = currentPrice,
+                PriceChange = priceChange,
+                TimeSpan = (decimal)window.TotalSeconds,
+                Direction = priceChange > 0 ? "Up" : "Down",
+                VolumeInBreakthrough = recentTrades.Sum(t => t.Price * t.Quantity)
+            };
+
+            // Store in history (keep last 10 breakthroughs)
+            var history = _priceBreakthroughs.GetOrAdd(symbolKey, _ => new Queue<PriceBreakthrough>());
+            lock (history)
+            {
+                history.Enqueue(breakthrough);
+                if (history.Count > 10)
+                    history.Dequeue();
+            }
+
+            // Broadcast breakthrough event
+            BroadcastPriceBreakthrough(symbolKey, breakthrough);
+
+            _logger.LogInformation("[PriceBreakthrough] {Symbol}: {Direction} {PriceChange:F2}% in {TimeSpan}s (Start: ${StartPrice:F6}, End: ${EndPrice:F6}, Vol: ${Volume:F2})",
+                trade.Symbol, breakthrough.Direction, priceChange, window.TotalSeconds, startPrice, currentPrice, breakthrough.VolumeInBreakthrough);
+        }
+    }
+
+    /// <summary>
+    /// Broadcast price breakthrough event to all WebSocket clients
+    /// </summary>
+    private void BroadcastPriceBreakthrough(string symbolKey, PriceBreakthrough breakthrough)
+    {
+        var symbol = symbolKey.Contains('_') ? symbolKey.Split('_')[1] : symbolKey;
+
+        var msg = new
+        {
+            type = "price_breakthrough",
+            symbol = symbol,
+            timestamp = ((DateTimeOffset)breakthrough.Timestamp).ToUnixTimeMilliseconds(),
+            startPrice = breakthrough.StartPrice,
+            endPrice = breakthrough.EndPrice,
+            priceChange = breakthrough.PriceChange,
+            timeSpan = breakthrough.TimeSpan,
+            direction = breakthrough.Direction,
+            volumeInBreakthrough = breakthrough.VolumeInBreakthrough
+        };
+
+        var json = JsonSerializer.Serialize(msg);
+        _ = _webSocketServer.BroadcastRealtimeAsync(json);
+    }
+
+    /// <summary>
     /// SPRINT-14: Get count of large prints in last 5 minutes for a symbol
     /// </summary>
     private int GetLargePrintCount5m(string symbolKey)
@@ -875,6 +987,29 @@ public class TradeAggregatorService : IDisposable
             foreach (var print in history)
             {
                 if (print.Timestamp >= fiveMinAgo)
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
+    /// <summary>
+    /// Get count of price breakthroughs in last 5 minutes for a symbol
+    /// </summary>
+    private int GetPriceBreakthroughCount5m(string symbolKey)
+    {
+        if (!_priceBreakthroughs.TryGetValue(symbolKey, out var history))
+            return 0;
+
+        var fiveMinAgo = DateTime.UtcNow.AddMinutes(-5);
+        int count = 0;
+
+        lock (history)
+        {
+            foreach (var breakthrough in history)
+            {
+                if (breakthrough.Timestamp >= fiveMinAgo)
                     count++;
             }
         }
@@ -964,6 +1099,11 @@ public class SymbolMetadata
     public int LargePrintCount5m { get; set; }      // Count of large prints in last 5 minutes
     public decimal LastLargePrintRatio { get; set; } // Most recent large print ratio (e.g., 8.5x)
     public DateTime? LastLargePrintTime { get; set; } // Timestamp of last large print
+
+    // Price breakthroughs tracking
+    public int PriceBreakthroughCount5m { get; set; }      // Count of breakthroughs in last 5 minutes
+    public decimal LastPriceBreakthroughChange { get; set; } // Most recent breakthrough change %
+    public DateTime? LastPriceBreakthroughTime { get; set; } // Timestamp of last breakthrough
 }
 
 /// <summary>
@@ -978,4 +1118,18 @@ public class LargePrint
     public string Side { get; set; } = string.Empty; // "Buy" or "Sell"
     public decimal AvgTradeVolume { get; set; }
     public decimal Ratio { get; set; } // VolumeUSD / AvgTradeVolume (e.g., 5.0 = 500%)
+}
+
+/// <summary>
+/// Price Breakthrough - rapid price movement in short timeframe (>1% in 1-5 seconds)
+/// </summary>
+public class PriceBreakthrough
+{
+    public DateTime Timestamp { get; set; }
+    public decimal StartPrice { get; set; }
+    public decimal EndPrice { get; set; }
+    public decimal PriceChange { get; set; }      // % изменения
+    public decimal TimeSpan { get; set; }         // секунды
+    public string Direction { get; set; } = string.Empty;         // "Up" / "Down"
+    public decimal VolumeInBreakthrough { get; set; }
 }

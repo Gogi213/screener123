@@ -303,6 +303,10 @@ function initGlobalWebSocket() {
             if (msg.type === 'large_print' && msg.symbol) {
                 handleLargePrint(msg);
             }
+            // Handle price breakthrough events
+            if (msg.type === 'price_breakthrough' && msg.symbol) {
+                handlePriceBreakthrough(msg);
+            }
             // SPRINT-9: Handle OHLCV aggregates (200ms timeframe)
             else if (msg.type === 'trade_aggregate' && msg.symbol && msg.aggregate) {
                 const symbol = msg.symbol.replace('MEXC_', '');
@@ -665,6 +669,39 @@ function handleLargePrint(msg) {
     const badge = document.createElement('div');
     badge.className = 'large-print-badge';
     badge.innerHTML = `⚡ ${msg.ratio.toFixed(1)}x ${msg.side}`;
+    cardHeader.appendChild(badge);
+
+    // Auto-remove badge after 10 seconds
+    setTimeout(() => badge.remove(), 10000);
+}
+
+// Handle price breakthrough events with flash animation and badge
+function handlePriceBreakthrough(msg) {
+    const symbol = msg.symbol.replace('MEXC_', '');
+
+    // Find card for this symbol
+    const card = document.querySelector(`[data-symbol="${symbol}"]`)?.closest('.card');
+    if (!card) return; // Symbol not currently visible
+
+    console.log(`[PriceBreakthrough] ${symbol}: ${msg.direction} ${msg.priceChange.toFixed(2)}% in ${msg.timeSpan}s (Start: $${msg.startPrice.toFixed(6)}, End: $${msg.endPrice.toFixed(6)}, Vol: $${msg.volumeInBreakthrough.toFixed(2)})`);
+
+    // Flash animation on card (different color for breakthroughs)
+    card.classList.add('price-breakthrough-flash');
+    setTimeout(() => card.classList.remove('price-breakthrough-flash'), 3000);
+
+    // Create badge with change and direction
+    const cardHeader = card.querySelector('.card-header');
+    if (!cardHeader) return;
+
+    // Remove existing badge if present
+    const existingBadge = cardHeader.querySelector('.price-breakthrough-badge');
+    if (existingBadge) {
+        existingBadge.remove();
+    }
+
+    const badge = document.createElement('div');
+    badge.className = 'price-breakthrough-badge';
+    badge.innerHTML = `🚀 ${msg.priceChange.toFixed(1)}% ${msg.direction}`;
     cardHeader.appendChild(badge);
 
     // Auto-remove badge after 10 seconds
