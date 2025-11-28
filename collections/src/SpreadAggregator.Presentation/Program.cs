@@ -76,9 +76,6 @@ class Program
 
         services.AddSingleton<VolumeFilter>();
 
-        // Binance Spot Filter - exclude MEXC coins that are on Binance
-        services.AddSingleton<BinanceSpotFilter>();
-
         // Simple monitor for leak detection (CPU, Memory)
         services.AddSingleton<SimpleMonitor>();
 
@@ -92,9 +89,6 @@ class Program
         services.AddSingleton(tradeScreenerChannel);
 
         // Register all exchange clients
-        // MEXC SPOT: Spot market (can be disabled in appsettings.json)
-        services.AddSingleton<IExchangeClient, MexcExchangeClient>();
-
         // MEXC FUTURES: Futures market (can be disabled in appsettings.json)
         services.AddSingleton<IExchangeClient, MexcFuturesExchangeClient>();
 
@@ -115,7 +109,6 @@ class Program
                 sp.GetRequiredService<VolumeFilter>(),
                 sp.GetRequiredService<IEnumerable<IExchangeClient>>(),
                 sp.GetRequiredService<Channel<MarketData>>(),
-                sp.GetRequiredService<BinanceSpotFilter>(), // Add Binance filter
                 sp.GetRequiredService<TradeAggregatorService>() // SPRINT-10: Add TradeAggregatorService
             );
         });

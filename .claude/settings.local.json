@@ -65,7 +65,8 @@
       "Bash(cmd //c \"tasklist | findstr dotnet\")",
       "Bash(exit 0)",
       "Bash(cmd //c \"taskkill /F /PID 22408\")",
-      "Bash(cmd //c \"taskkill /F /PID 3652 2>nul || echo Process not found\")"
+      "Bash(cmd //c \"taskkill /F /PID 3652 2>nul || echo Process not found\")",
+      "Bash(powershell -Command:*)"
     ],
     "deny": [],
     "ask": []

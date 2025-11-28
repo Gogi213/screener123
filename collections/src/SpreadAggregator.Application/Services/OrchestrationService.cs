@@ -19,7 +19,6 @@ public class OrchestrationService
     private readonly IConfiguration _configuration;
     private readonly IEnumerable<IExchangeClient> _exchangeClients;
     private readonly Channel<MarketData> _tradeScreenerChannel;
-    private readonly BinanceSpotFilter _binanceSpotFilter;
     private readonly TradeAggregatorService _tradeAggregator;
 
     // PROPOSAL-2025-0095: Track symbols and tasks for cleanup
@@ -70,7 +69,6 @@ public class OrchestrationService
         VolumeFilter volumeFilter,
         IEnumerable<IExchangeClient> exchangeClients,
         Channel<MarketData> tradeScreenerChannel,
-        BinanceSpotFilter binanceSpotFilter,
         TradeAggregatorService tradeAggregator)
     {
         _webSocketServer = webSocketServer;
@@ -78,7 +76,6 @@ public class OrchestrationService
         _volumeFilter = volumeFilter;
         _exchangeClients = exchangeClients;
         _tradeScreenerChannel = tradeScreenerChannel;
-        _binanceSpotFilter = binanceSpotFilter;
         _tradeAggregator = tradeAggregator;
     }
 
@@ -86,9 +83,6 @@ public class OrchestrationService
     {
         // MEXC TRADES VIEWER: WebSocket server enabled for real-time trade streaming
         _webSocketServer.Start();
-
-        // Load Binance Spot symbols for filtering
-        await _binanceSpotFilter.LoadAsync();
 
         // Create cancellation token source for stopping all exchanges
         _cancellationTokenSource = new CancellationTokenSource();
@@ -174,12 +168,6 @@ public class OrchestrationService
 
         Console.WriteLine($"[{exchangeName}] {filteredSymbolNames.Count} symbols passed the volume filter.");
 
-        // Apply Binance filter (only for MEXC exchange)
-        if (exchangeName.Equals("MEXC", StringComparison.OrdinalIgnoreCase))
-        {
-            filteredSymbolNames = _binanceSpotFilter.FilterExcludeBinance(filteredSymbolNames);
-        }
-
         // BLACKLIST: Remove major coins (XRP, DOGE, ETH, BTC, SOL, PEPE) with any quote asset
         var blacklistBases = new[] { "XRP", "DOGE", "ETH", "BTC", "SOL", "PEPE" };
         var beforeBlacklist = filteredSymbolNames.Count;
@@ -207,12 +195,20 @@ public class OrchestrationService
         if (enableTrades)
         {
             Console.WriteLine($"[{exchangeName}] Adding trade subscription task...");
+            var tradeCount = 0;
             tasks.Add(exchangeClient.SubscribeToTradesAsync(filteredSymbolNames, tradeData =>
             {
+                // DEBUG: Log first 5 trades to verify data flow
+                if (tradeCount < 5)
+                {
+                    Console.WriteLine($"[DEBUG] Trade received: Exchange={tradeData.Exchange} Symbol={tradeData.Symbol} Price={tradeData.Price} Qty={tradeData.Quantity}");
+                    tradeCount++;
+                }
+
                 // MEXC TRADES VIEWER: Write trades to TradeScreenerChannel for TradeAggregatorService
                 if (!_tradeScreenerChannel.Writer.TryWrite(tradeData))
                 {
-                   // Console.WriteLine($"[Orchestration-WARN] Trade screener channel full (system overload), dropping trade data");
+                   Console.WriteLine($"[Orchestration-WARN] Trade screener channel full (system overload), dropping trade data");
                 }
                 return Task.CompletedTask;
             }));
@@ -246,10 +242,10 @@ public class OrchestrationService
             tickerTimer.Dispose();
         }, cancellationToken);
 
-        // SPRINT-12: Periodic orderbook refresh for MEXC (spread calculation)
+        // SPRINT-12: Periodic orderbook refresh for MEXC Futures (spread calculation)
         // High activity symbols: every 10 seconds
         // Low activity symbols: every 60 seconds
-        if (exchangeName.Equals("MEXC", StringComparison.OrdinalIgnoreCase))
+        if (exchangeName.Equals("MexcFutures", StringComparison.OrdinalIgnoreCase))
         {
             // High activity timer (10 seconds)
             var highActivityTimer = new System.Threading.PeriodicTimer(TimeSpan.FromSeconds(10));
@@ -262,7 +258,7 @@ public class OrchestrationService
                         await highActivityTimer.WaitForNextTickAsync(cancellationToken);
 
                         var (highActivity, _) = _tradeAggregator.GetActiveSymbolsByActivity();
-                        if (highActivity.Any() && exchangeClient.GetType().Name == "MexcExchangeClient")
+                        if (highActivity.Any() && exchangeClient.GetType().Name == "MexcFuturesExchangeClient")
                         {
                             var method = exchangeClient.GetType().GetMethod("GetOrderbookForSymbolsAsync");
                             if (method != null)
@@ -297,7 +293,7 @@ public class OrchestrationService
                         await lowActivityTimer.WaitForNextTickAsync(cancellationToken);
 
                         var (_, lowActivity) = _tradeAggregator.GetActiveSymbolsByActivity();
-                        if (lowActivity.Any() && exchangeClient.GetType().Name == "MexcExchangeClient")
+                        if (lowActivity.Any() && exchangeClient.GetType().Name == "MexcFuturesExchangeClient")
                         {
                             var method = exchangeClient.GetType().GetMethod("GetOrderbookForSymbolsAsync");
                             if (method != null)

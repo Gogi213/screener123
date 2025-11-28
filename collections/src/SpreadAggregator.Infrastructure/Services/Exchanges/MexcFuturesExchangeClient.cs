@@ -1,9 +1,6 @@
 using Mexc.Net.Clients;
-using Mexc.Net.Interfaces.Clients.FuturesApi;
-using Mexc.Net.Objects.Models.Futures;
 using SpreadAggregator.Application.Abstractions;
 using SpreadAggregator.Domain.Entities;
-using SpreadAggregator.Infrastructure.Services.Exchanges.Base;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,32 +9,26 @@ using System.Threading.Tasks;
 namespace SpreadAggregator.Infrastructure.Services.Exchanges;
 
 /// <summary>
-/// MEXC Futures exchange client implementation.
-/// SPRINT 1: Implements futures market support using FuturesApi from Mexc.Net (>= 3.4.0)
+/// MEXC Futures exchange client implementation using native WebSocket.
+/// REST API: Mexc.Net for symbols/tickers
+/// WebSocket: Native client for push.deal (real-time trades)
 /// </summary>
-public class MexcFuturesExchangeClient : ExchangeClientBase<MexcRestClient, MexcSocketClient>
+public class MexcFuturesExchangeClient : IExchangeClient
 {
-    public override string ExchangeName => "MexcFutures";
+    private readonly MexcRestClient _restClient;
+    private MexcFuturesNativeWebSocketClient? _nativeWebSocket;
 
-    // SPRINT 1: Start with ChunkSize = 1 for simplicity
-    // Futures WebSocket API accepts only single symbol per subscription (unlike Spot which accepts multiple)
-    // Each ManagedConnection will handle 1 symbol to avoid complexity
-    protected override int ChunkSize => 1;
+    public string ExchangeName => "MexcFutures";
 
-    protected override bool SupportsTradesStream => true;
-
-    protected override MexcRestClient CreateRestClient() => new();
-    protected override MexcSocketClient CreateSocketClient() => new();
-
-    protected override IExchangeSocketApi CreateSocketApi(MexcSocketClient client)
+    public MexcFuturesExchangeClient()
     {
-        return new MexcFuturesSocketApiAdapter(client.FuturesApi);
+        _restClient = new MexcRestClient();
     }
 
     /// <summary>
-    /// SPRINT 1.2: Get Futures symbols/contracts
+    /// Get Futures symbols/contracts via REST API
     /// </summary>
-    public override async Task<IEnumerable<SymbolInfo>> GetSymbolsAsync()
+    public async Task<IEnumerable<SymbolInfo>> GetSymbolsAsync()
     {
         var symbolsData = await _restClient.FuturesApi.ExchangeData.GetSymbolsAsync();
         if (!symbolsData.Success)
@@ -56,9 +47,9 @@ public class MexcFuturesExchangeClient : ExchangeClientBase<MexcRestClient, Mexc
     }
 
     /// <summary>
-    /// SPRINT 1.3: Get Futures tickers
+    /// Get Futures tickers via REST API
     /// </summary>
-    public override async Task<IEnumerable<TickerData>> GetTickersAsync()
+    public async Task<IEnumerable<TickerData>> GetTickersAsync()
     {
         try
         {
@@ -81,7 +72,7 @@ public class MexcFuturesExchangeClient : ExchangeClientBase<MexcRestClient, Mexc
                     Volume24h = t.QuoteVolume24h,  // 24h quote volume
                     PriceChangePercent24h = priceChangePercent,
                     LastPrice = t.LastPrice,
-                    // FUTURES ADVANTAGE: BestBid/BestAsk already in ticker! (no separate orderbook call needed)
+                    // FUTURES ADVANTAGE: BestBid/BestAsk already in ticker!
                     BestBid = t.BestBidPrice,
                     BestAsk = t.BestAskPrice
                 };
@@ -108,8 +99,44 @@ public class MexcFuturesExchangeClient : ExchangeClientBase<MexcRestClient, Mexc
     }
 
     /// <summary>
-    /// SPRINT 1.5: Get orderbook data for specific symbols (active/filtered symbols only)
-    /// NOTE: For Futures, BestBid/BestAsk already in ticker, so this method is less critical
+    /// Subscribe to trade updates using native WebSocket client (push.deal channel)
+    /// </summary>
+    public async Task SubscribeToTradesAsync(IEnumerable<string> symbols, Func<TradeData, Task> onData)
+    {
+        Console.WriteLine($"[MexcFuturesNative] SubscribeToTradesAsync called with {symbols.Count()} symbols");
+
+        // Create and connect native WebSocket client
+        _nativeWebSocket = new MexcFuturesNativeWebSocketClient();
+        await _nativeWebSocket.ConnectAsync();
+
+        Console.WriteLine($"[MexcFuturesNative] Subscribing to {symbols.Count()} symbols...");
+
+        // Subscribe to each symbol
+        var subscriptionTasks = symbols.Select(async symbol =>
+        {
+            try
+            {
+                await _nativeWebSocket.SubscribeToTradesAsync(symbol, async (tradeData) =>
+                {
+                    // Call callback with trade data
+                    await onData(tradeData);
+                });
+
+                Console.WriteLine($"[MexcFuturesNative] ✅ Subscribed to {symbol}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MexcFuturesNative] ❌ Failed to subscribe to {symbol}: {ex.Message}");
+            }
+        });
+
+        await Task.WhenAll(subscriptionTasks);
+
+        Console.WriteLine($"[MexcFuturesNative] All subscriptions complete!");
+    }
+
+    /// <summary>
+    /// Get orderbook data for specific symbols (BestBid/BestAsk already in ticker, but this is for accuracy)
     /// </summary>
     public async Task<Dictionary<string, (decimal bid, decimal ask)>> GetOrderbookForSymbolsAsync(IEnumerable<string> symbols)
     {
@@ -131,18 +158,12 @@ public class MexcFuturesExchangeClient : ExchangeClientBase<MexcRestClient, Mexc
                     orderbookLookup[symbol] = (bestBid, bestAsk);
                     successCount++;
                 }
-                else
-                {
-                    Console.WriteLine($"[MexcFutures] Orderbook failed for {symbol}: Success={orderbookResult.Success}");
-                }
             }
             catch (Exception ex)
             {
-                // Log but continue with other symbols
                 Console.WriteLine($"[MexcFutures] Failed to get orderbook for {symbol}: {ex.Message}");
             }
 
-            // Small delay to be respectful to API
             await Task.Delay(10);
         }
 
@@ -150,112 +171,17 @@ public class MexcFuturesExchangeClient : ExchangeClientBase<MexcRestClient, Mexc
         return orderbookLookup;
     }
 
-    /// <summary>
-    /// SPRINT 1.4: Adapter that wraps MEXC FuturesApi to implement IExchangeSocketApi.
-    /// CRITICAL DIFFERENCE from Spot: Futures API accepts only SINGLE symbol per subscription!
-    /// </summary>
-    private class MexcFuturesSocketApiAdapter : IExchangeSocketApi
+    public async Task StopAsync()
     {
-        private readonly IMexcSocketClientFuturesApi _futuresApi;
+        Console.WriteLine($"[MexcFuturesNative] Stopping...");
 
-        public MexcFuturesSocketApiAdapter(IMexcSocketClientFuturesApi futuresApi)
+        if (_nativeWebSocket != null)
         {
-            _futuresApi = futuresApi;
+            await _nativeWebSocket.DisconnectAsync();
+            _nativeWebSocket.Dispose();
+            _nativeWebSocket = null;
         }
 
-        public Task UnsubscribeAllAsync()
-        {
-            return _futuresApi.UnsubscribeAllAsync();
-        }
-
-        /// <summary>
-        /// SPRINT 1.4: Subscribe to Futures trade updates
-        /// CRITICAL: Futures API accepts only single symbol (not IEnumerable like Spot)
-        /// </summary>
-        public async Task<object> SubscribeToTradeUpdatesAsync(
-            IEnumerable<string> symbols,
-            Func<TradeData, Task> onData)
-        {
-            var subscriptions = new List<object>();
-
-            // CRITICAL DIFFERENCE: Futures API only accepts ONE symbol per subscription
-            // Must subscribe to each symbol individually
-            foreach (var symbol in symbols)
-            {
-                try
-                {
-                    var result = await _futuresApi.SubscribeToTradeUpdatesAsync(
-                        symbol,  // Single symbol only!
-                        async data =>
-                        {
-                            // DEBUG: Log data arrival for first few symbols
-                            if (symbol.Contains("1000") || symbol.Contains("LINK") || symbol.Contains("AVAX"))
-                            {
-                                Console.WriteLine($"[DEBUG] MexcFutures WS callback: symbol={symbol} data.Data={data?.Data?.GetType().Name ?? "NULL"}");
-                            }
-
-                            // Process trades - data.Data could be array or single object
-                            if (data?.Data != null)
-                            {
-                                // Check if it's an array or single object
-                                var trades = data.Data as IEnumerable<MexcFuturesTrade>;
-                                if (trades != null)
-                                {
-                                    // It's an array
-                                    foreach (var trade in trades)
-                                    {
-                                        await onData(new TradeData
-                                        {
-                                            Exchange = "MexcFutures",
-                                            Symbol = symbol,
-                                            Price = trade.Price,
-                                            Quantity = trade.Quantity,
-                                            Side = trade.Side == Mexc.Net.Enums.OrderSide.Buy ? "Buy" : "Sell",
-                                            Timestamp = trade.Timestamp
-                                        });
-                                    }
-                                }
-                                else
-                                {
-                                    // It's a single object
-                                    var trade = data.Data;
-                                    await onData(new TradeData
-                                    {
-                                        Exchange = "MexcFutures",
-                                        Symbol = symbol,
-                                        Price = trade.Price,
-                                        Quantity = trade.Quantity,
-                                        Side = trade.Side == Mexc.Net.Enums.OrderSide.Buy ? "Buy" : "Sell",
-                                        Timestamp = trade.Timestamp
-                                    });
-                                }
-                            }
-                        });
-
-                    if (result.Success)
-                    {
-                        subscriptions.Add(result.Data);
-                        // DEBUG: Log first 3 successful subscriptions
-                        if (subscriptions.Count <= 3)
-                        {
-                            Console.WriteLine($"[MexcFutures] ✅ Successfully subscribed to {symbol}");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine($"[MexcFutures] ❌ Failed to subscribe to {symbol}: {result.Error}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[MexcFutures] ⚠️ Exception subscribing to {symbol}: {ex.Message}");
-                }
-            }
-
-            // Return first subscription (or null if none succeeded)
-            // ExchangeClientBase expects a single subscription object
-            Console.WriteLine($"[MexcFutures] Subscription summary: {subscriptions.Count}/{symbols.Count()} symbols subscribed successfully");
-            return subscriptions.FirstOrDefault() ?? new object();
-        }
+        Console.WriteLine($"[MexcFuturesNative] Stopped");
     }
 }

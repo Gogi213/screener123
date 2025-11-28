@@ -1,0 +1,490 @@
+  XRP_USDT: Trades3m=0, Vol24h=1584571322
+  DOGE_USDT: Trades3m=0, Vol24h=1471046622
+  ZEC_USDT: Trades3m=0, Vol24h=676396333
+  SUI_USDT: Trades3m=0, Vol24h=618976607
+  ASTER_USDT: Trades3m=0, Vol24h=484214612
+  BNB_USDT: Trades3m=0, Vol24h=387721040
+  INJ_USDT: Trades3m=0, Vol24h=278195293
+[DEBUG] First futures symbol at position 0: BTC_USDT (Trades3m=0, Vol24h=11834047449)
+[MexcFutures] DEBUG Ticker: BTC_USDT | Vol24h=11834102119,64 | Bid=90890,10000000 | Ask=90890,40000000
+[MexcFutures] DEBUG Ticker: ETH_USDT | Vol24h=11382654708,11 | Bid=3032,21000000 | Ask=3032,22000000
+[MexcFutures] DEBUG Ticker: SOL_USDT | Vol24h=3295660699,26 | Bid=137,21000000 | Ask=137,22000000
+[DEBUG] UpdateTickerData key=MexcFutures_BTC_USDT | Vol24h=11834102119,64 | Bid=90890,10000000 | Ask=90890,40000000
+[DEBUG] UpdateTickerData key=MexcFutures_ETH_USDT | Vol24h=11382654708,11 | Bid=3032,21000000 | Ask=3032,22000000
+[DEBUG] UpdateTickerData key=MexcFutures_SOL_USDT | Vol24h=3295660699,26 | Bid=137,21000000 | Ask=137,22000000
+[DEBUG] UpdateTickerData: Added 829 MexcFutures symbols to metadata. Total MexcFutures in metadata: 829
+[MexcFutures] Ticker data refreshed (829 symbols)
+[DEBUG] GetAllSymbolsMetadata: Total=829 | Mexc=0 | MEXC=0 | MexcFutures=829 (withTrades=0, withoutTrades=829)
+[DEBUG] First 3 spot keys: MexcFutures_RLC_USDT, MexcFutures_MERL_USDT, MexcFutures_BAY_USDT
+[DEBUG] CalculateSpread MexcFutures_BTC_USDT: FROM TICKER | Bid=90890,10000000 Ask=90890,40000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_ETH_USDT: FROM TICKER | Bid=3032,21000000 Ask=3032,22000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDT: FROM TICKER | Bid=137,21000000 Ask=137,22000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_BTC_USDC: FROM TICKER | Bid=90918,20000000 Ask=90918,30000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_ETH_USDC: FROM TICKER | Bid=3032,92000000 Ask=3032,93000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDC: FROM TICKER | Bid=137,27000000 Ask=137,28000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_ARCSOL_USDT: FROM TICKER | Bid=0,04495000 Ask=0,04497000 Spread%=0,0445
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDT: FROM TICKER | Bid=0,80860000 Ask=0,80870000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDT: FROM TICKER | Bid=0,08476000 Ask=0,08477000 Spread%=0,0118
+[DEBUG] CalculateSpread MexcFutures_SOLV_USDT: FROM TICKER | Bid=0,01925000 Ask=0,01926000 Spread%=0,0519
+[DEBUG] CalculateSpread MexcFutures_ETHW_USDT: FROM TICKER | Bid=0,61000000 Ask=0,61010000 Spread%=0,0164
+[DEBUG] CalculateSpread MexcFutures_PUMPBTC_USDT: FROM TICKER | Bid=0,02822000 Ask=0,02824000 Spread%=0,0708
+[DEBUG] CalculateSpread MexcFutures_SOL_USD: FROM TICKER | Bid=137,26000000 Ask=137,27000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDC: FROM TICKER | Bid=0,08510000 Ask=0,08540000 Spread%=0,3513
+[DEBUG] CalculateSpread MexcFutures_FUNSOL_USDT: FROM TICKER | Bid=0,00082400 Ask=0,00088200 Spread%=6,5760
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDC: FROM TICKER | Bid=0,80870000 Ask=0,80880000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_SOLOMON_USDT: FROM TICKER | Bid=1,01000000 Ask=1,02100000 Spread%=1,0774
+[DEBUG] CalculateSpread MexcFutures_PLAYSOLANA_USDT: FROM TICKER | Bid=0,00441400 Ask=0,00451900 Spread%=2,3235
+[DEBUG] CalculateSpread MexcFutures_ETH_USD: FROM TICKER | Bid=3032,52000000 Ask=3032,53000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_BTC_USD: FROM TICKER | Bid=90914,90000000 Ask=90915,00000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_WBTC_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_MXSOL_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_STETH_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] GetAllSymbolsMetadata RESULT: Total=829 | Futures in result=829 | Futures in TOP-100=100 | Futures in TOP-500=500
+[DEBUG] TOP-10 symbols:
+  BTC_USDT: Trades3m=0, Vol24h=11834102120
+  ETH_USDT: Trades3m=0, Vol24h=11382654708
+  SOL_USDT: Trades3m=0, Vol24h=3295660699
+  XRP_USDT: Trades3m=0, Vol24h=1584579684
+  DOGE_USDT: Trades3m=0, Vol24h=1471155956
+  ZEC_USDT: Trades3m=0, Vol24h=676460224
+  SUI_USDT: Trades3m=0, Vol24h=619017295
+  ASTER_USDT: Trades3m=0, Vol24h=484229559
+  BNB_USDT: Trades3m=0, Vol24h=387722304
+  INJ_USDT: Trades3m=0, Vol24h=278229362
+[DEBUG] First futures symbol at position 0: BTC_USDT (Trades3m=0, Vol24h=11834102120)
+[DEBUG] GetAllSymbolsMetadata: Total=829 | Mexc=0 | MEXC=0 | MexcFutures=829 (withTrades=0, withoutTrades=829)
+[DEBUG] First 3 spot keys: MexcFutures_RLC_USDT, MexcFutures_MERL_USDT, MexcFutures_BAY_USDT
+[DEBUG] CalculateSpread MexcFutures_BTC_USDT: FROM TICKER | Bid=90890,10000000 Ask=90890,40000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_ETH_USDT: FROM TICKER | Bid=3032,21000000 Ask=3032,22000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDT: FROM TICKER | Bid=137,21000000 Ask=137,22000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_BTC_USDC: FROM TICKER | Bid=90918,20000000 Ask=90918,30000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_ETH_USDC: FROM TICKER | Bid=3032,92000000 Ask=3032,93000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDC: FROM TICKER | Bid=137,27000000 Ask=137,28000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_ARCSOL_USDT: FROM TICKER | Bid=0,04495000 Ask=0,04497000 Spread%=0,0445
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDT: FROM TICKER | Bid=0,80860000 Ask=0,80870000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDT: FROM TICKER | Bid=0,08476000 Ask=0,08477000 Spread%=0,0118
+[DEBUG] CalculateSpread MexcFutures_SOLV_USDT: FROM TICKER | Bid=0,01925000 Ask=0,01926000 Spread%=0,0519
+[DEBUG] CalculateSpread MexcFutures_ETHW_USDT: FROM TICKER | Bid=0,61000000 Ask=0,61010000 Spread%=0,0164
+[DEBUG] CalculateSpread MexcFutures_PUMPBTC_USDT: FROM TICKER | Bid=0,02822000 Ask=0,02824000 Spread%=0,0708
+[DEBUG] CalculateSpread MexcFutures_SOL_USD: FROM TICKER | Bid=137,26000000 Ask=137,27000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDC: FROM TICKER | Bid=0,08510000 Ask=0,08540000 Spread%=0,3513
+[DEBUG] CalculateSpread MexcFutures_FUNSOL_USDT: FROM TICKER | Bid=0,00082400 Ask=0,00088200 Spread%=6,5760
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDC: FROM TICKER | Bid=0,80870000 Ask=0,80880000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_SOLOMON_USDT: FROM TICKER | Bid=1,01000000 Ask=1,02100000 Spread%=1,0774
+[DEBUG] CalculateSpread MexcFutures_PLAYSOLANA_USDT: FROM TICKER | Bid=0,00441400 Ask=0,00451900 Spread%=2,3235
+[DEBUG] CalculateSpread MexcFutures_ETH_USD: FROM TICKER | Bid=3032,52000000 Ask=3032,53000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_BTC_USD: FROM TICKER | Bid=90914,90000000 Ask=90915,00000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_WBTC_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_MXSOL_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_STETH_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] GetAllSymbolsMetadata RESULT: Total=829 | Futures in result=829 | Futures in TOP-100=100 | Futures in TOP-500=500
+[DEBUG] TOP-10 symbols:
+  BTC_USDT: Trades3m=0, Vol24h=11834102120
+  ETH_USDT: Trades3m=0, Vol24h=11382654708
+  SOL_USDT: Trades3m=0, Vol24h=3295660699
+  XRP_USDT: Trades3m=0, Vol24h=1584579684
+  DOGE_USDT: Trades3m=0, Vol24h=1471155956
+  ZEC_USDT: Trades3m=0, Vol24h=676460224
+  SUI_USDT: Trades3m=0, Vol24h=619017295
+  ASTER_USDT: Trades3m=0, Vol24h=484229559
+  BNB_USDT: Trades3m=0, Vol24h=387722304
+  INJ_USDT: Trades3m=0, Vol24h=278229362
+[DEBUG] First futures symbol at position 0: BTC_USDT (Trades3m=0, Vol24h=11834102120)
+[DEBUG] GetAllSymbolsMetadata: Total=829 | Mexc=0 | MEXC=0 | MexcFutures=829 (withTrades=0, withoutTrades=829)
+[DEBUG] First 3 spot keys: MexcFutures_RLC_USDT, MexcFutures_MERL_USDT, MexcFutures_BAY_USDT
+[DEBUG] CalculateSpread MexcFutures_BTC_USDT: FROM TICKER | Bid=90890,10000000 Ask=90890,40000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_ETH_USDT: FROM TICKER | Bid=3032,21000000 Ask=3032,22000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDT: FROM TICKER | Bid=137,21000000 Ask=137,22000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_BTC_USDC: FROM TICKER | Bid=90918,20000000 Ask=90918,30000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_ETH_USDC: FROM TICKER | Bid=3032,92000000 Ask=3032,93000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDC: FROM TICKER | Bid=137,27000000 Ask=137,28000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_ARCSOL_USDT: FROM TICKER | Bid=0,04495000 Ask=0,04497000 Spread%=0,0445
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDT: FROM TICKER | Bid=0,80860000 Ask=0,80870000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDT: FROM TICKER | Bid=0,08476000 Ask=0,08477000 Spread%=0,0118
+[DEBUG] CalculateSpread MexcFutures_SOLV_USDT: FROM TICKER | Bid=0,01925000 Ask=0,01926000 Spread%=0,0519
+[DEBUG] CalculateSpread MexcFutures_ETHW_USDT: FROM TICKER | Bid=0,61000000 Ask=0,61010000 Spread%=0,0164
+[DEBUG] CalculateSpread MexcFutures_PUMPBTC_USDT: FROM TICKER | Bid=0,02822000 Ask=0,02824000 Spread%=0,0708
+[DEBUG] CalculateSpread MexcFutures_SOL_USD: FROM TICKER | Bid=137,26000000 Ask=137,27000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDC: FROM TICKER | Bid=0,08510000 Ask=0,08540000 Spread%=0,3513
+[DEBUG] CalculateSpread MexcFutures_FUNSOL_USDT: FROM TICKER | Bid=0,00082400 Ask=0,00088200 Spread%=6,5760
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDC: FROM TICKER | Bid=0,80870000 Ask=0,80880000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_SOLOMON_USDT: FROM TICKER | Bid=1,01000000 Ask=1,02100000 Spread%=1,0774
+[DEBUG] CalculateSpread MexcFutures_PLAYSOLANA_USDT: FROM TICKER | Bid=0,00441400 Ask=0,00451900 Spread%=2,3235
+[DEBUG] CalculateSpread MexcFutures_ETH_USD: FROM TICKER | Bid=3032,52000000 Ask=3032,53000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_BTC_USD: FROM TICKER | Bid=90914,90000000 Ask=90915,00000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_WBTC_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_MXSOL_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_STETH_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] GetAllSymbolsMetadata RESULT: Total=829 | Futures in result=829 | Futures in TOP-100=100 | Futures in TOP-500=500
+[DEBUG] TOP-10 symbols:
+  BTC_USDT: Trades3m=0, Vol24h=11834102120
+  ETH_USDT: Trades3m=0, Vol24h=11382654708
+  SOL_USDT: Trades3m=0, Vol24h=3295660699
+  XRP_USDT: Trades3m=0, Vol24h=1584579684
+  DOGE_USDT: Trades3m=0, Vol24h=1471155956
+  ZEC_USDT: Trades3m=0, Vol24h=676460224
+  SUI_USDT: Trades3m=0, Vol24h=619017295
+  ASTER_USDT: Trades3m=0, Vol24h=484229559
+  BNB_USDT: Trades3m=0, Vol24h=387722304
+  INJ_USDT: Trades3m=0, Vol24h=278229362
+[DEBUG] First futures symbol at position 0: BTC_USDT (Trades3m=0, Vol24h=11834102120)
+[DEBUG] GetAllSymbolsMetadata: Total=829 | Mexc=0 | MEXC=0 | MexcFutures=829 (withTrades=0, withoutTrades=829)
+[DEBUG] First 3 spot keys: MexcFutures_RLC_USDT, MexcFutures_MERL_USDT, MexcFutures_BAY_USDT
+[DEBUG] CalculateSpread MexcFutures_BTC_USDT: FROM TICKER | Bid=90890,10000000 Ask=90890,40000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_ETH_USDT: FROM TICKER | Bid=3032,21000000 Ask=3032,22000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDT: FROM TICKER | Bid=137,21000000 Ask=137,22000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_BTC_USDC: FROM TICKER | Bid=90918,20000000 Ask=90918,30000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_ETH_USDC: FROM TICKER | Bid=3032,92000000 Ask=3032,93000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDC: FROM TICKER | Bid=137,27000000 Ask=137,28000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_ARCSOL_USDT: FROM TICKER | Bid=0,04495000 Ask=0,04497000 Spread%=0,0445
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDT: FROM TICKER | Bid=0,80860000 Ask=0,80870000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDT: FROM TICKER | Bid=0,08476000 Ask=0,08477000 Spread%=0,0118
+[DEBUG] CalculateSpread MexcFutures_SOLV_USDT: FROM TICKER | Bid=0,01925000 Ask=0,01926000 Spread%=0,0519
+[DEBUG] CalculateSpread MexcFutures_ETHW_USDT: FROM TICKER | Bid=0,61000000 Ask=0,61010000 Spread%=0,0164
+[DEBUG] CalculateSpread MexcFutures_PUMPBTC_USDT: FROM TICKER | Bid=0,02822000 Ask=0,02824000 Spread%=0,0708
+[DEBUG] CalculateSpread MexcFutures_SOL_USD: FROM TICKER | Bid=137,26000000 Ask=137,27000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDC: FROM TICKER | Bid=0,08510000 Ask=0,08540000 Spread%=0,3513
+[DEBUG] CalculateSpread MexcFutures_FUNSOL_USDT: FROM TICKER | Bid=0,00082400 Ask=0,00088200 Spread%=6,5760
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDC: FROM TICKER | Bid=0,80870000 Ask=0,80880000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_SOLOMON_USDT: FROM TICKER | Bid=1,01000000 Ask=1,02100000 Spread%=1,0774
+[DEBUG] CalculateSpread MexcFutures_PLAYSOLANA_USDT: FROM TICKER | Bid=0,00441400 Ask=0,00451900 Spread%=2,3235
+[DEBUG] CalculateSpread MexcFutures_ETH_USD: FROM TICKER | Bid=3032,52000000 Ask=3032,53000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_BTC_USD: FROM TICKER | Bid=90914,90000000 Ask=90915,00000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_WBTC_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_MXSOL_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_STETH_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] GetAllSymbolsMetadata RESULT: Total=829 | Futures in result=829 | Futures in TOP-100=100 | Futures in TOP-500=500
+[DEBUG] TOP-10 symbols:
+  BTC_USDT: Trades3m=0, Vol24h=11834102120
+  ETH_USDT: Trades3m=0, Vol24h=11382654708
+  SOL_USDT: Trades3m=0, Vol24h=3295660699
+  XRP_USDT: Trades3m=0, Vol24h=1584579684
+  DOGE_USDT: Trades3m=0, Vol24h=1471155956
+  ZEC_USDT: Trades3m=0, Vol24h=676460224
+  SUI_USDT: Trades3m=0, Vol24h=619017295
+  ASTER_USDT: Trades3m=0, Vol24h=484229559
+  BNB_USDT: Trades3m=0, Vol24h=387722304
+  INJ_USDT: Trades3m=0, Vol24h=278229362
+[DEBUG] First futures symbol at position 0: BTC_USDT (Trades3m=0, Vol24h=11834102120)
+[DEBUG] GetAllSymbolsMetadata: Total=829 | Mexc=0 | MEXC=0 | MexcFutures=829 (withTrades=0, withoutTrades=829)
+[DEBUG] First 3 spot keys: MexcFutures_RLC_USDT, MexcFutures_MERL_USDT, MexcFutures_BAY_USDT
+[DEBUG] CalculateSpread MexcFutures_BTC_USDT: FROM TICKER | Bid=90890,10000000 Ask=90890,40000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_ETH_USDT: FROM TICKER | Bid=3032,21000000 Ask=3032,22000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDT: FROM TICKER | Bid=137,21000000 Ask=137,22000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_BTC_USDC: FROM TICKER | Bid=90918,20000000 Ask=90918,30000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_ETH_USDC: FROM TICKER | Bid=3032,92000000 Ask=3032,93000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDC: FROM TICKER | Bid=137,27000000 Ask=137,28000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_ARCSOL_USDT: FROM TICKER | Bid=0,04495000 Ask=0,04497000 Spread%=0,0445
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDT: FROM TICKER | Bid=0,80860000 Ask=0,80870000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDT: FROM TICKER | Bid=0,08476000 Ask=0,08477000 Spread%=0,0118
+[DEBUG] CalculateSpread MexcFutures_SOLV_USDT: FROM TICKER | Bid=0,01925000 Ask=0,01926000 Spread%=0,0519
+[DEBUG] CalculateSpread MexcFutures_ETHW_USDT: FROM TICKER | Bid=0,61000000 Ask=0,61010000 Spread%=0,0164
+[DEBUG] CalculateSpread MexcFutures_PUMPBTC_USDT: FROM TICKER | Bid=0,02822000 Ask=0,02824000 Spread%=0,0708
+[DEBUG] CalculateSpread MexcFutures_SOL_USD: FROM TICKER | Bid=137,26000000 Ask=137,27000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDC: FROM TICKER | Bid=0,08510000 Ask=0,08540000 Spread%=0,3513
+[DEBUG] CalculateSpread MexcFutures_FUNSOL_USDT: FROM TICKER | Bid=0,00082400 Ask=0,00088200 Spread%=6,5760
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDC: FROM TICKER | Bid=0,80870000 Ask=0,80880000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_SOLOMON_USDT: FROM TICKER | Bid=1,01000000 Ask=1,02100000 Spread%=1,0774
+[DEBUG] CalculateSpread MexcFutures_PLAYSOLANA_USDT: FROM TICKER | Bid=0,00441400 Ask=0,00451900 Spread%=2,3235
+[DEBUG] CalculateSpread MexcFutures_ETH_USD: FROM TICKER | Bid=3032,52000000 Ask=3032,53000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_BTC_USD: FROM TICKER | Bid=90914,90000000 Ask=90915,00000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_WBTC_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_MXSOL_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_STETH_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] GetAllSymbolsMetadata RESULT: Total=829 | Futures in result=829 | Futures in TOP-100=100 | Futures in TOP-500=500
+[DEBUG] TOP-10 symbols:
+  BTC_USDT: Trades3m=0, Vol24h=11834102120
+  ETH_USDT: Trades3m=0, Vol24h=11382654708
+  SOL_USDT: Trades3m=0, Vol24h=3295660699
+  XRP_USDT: Trades3m=0, Vol24h=1584579684
+  DOGE_USDT: Trades3m=0, Vol24h=1471155956
+  ZEC_USDT: Trades3m=0, Vol24h=676460224
+  SUI_USDT: Trades3m=0, Vol24h=619017295
+  ASTER_USDT: Trades3m=0, Vol24h=484229559
+  BNB_USDT: Trades3m=0, Vol24h=387722304
+  INJ_USDT: Trades3m=0, Vol24h=278229362
+[DEBUG] First futures symbol at position 0: BTC_USDT (Trades3m=0, Vol24h=11834102120)
+[MexcFutures] DEBUG Ticker: BTC_USDT | Vol24h=11834560554,31 | Bid=90894,30000000 | Ask=90895,30000000
+[MexcFutures] DEBUG Ticker: ETH_USDT | Vol24h=11384981367,75 | Bid=3032,71000000 | Ask=3032,72000000
+[MexcFutures] DEBUG Ticker: SOL_USDT | Vol24h=3295697332,53 | Bid=137,28000000 | Ask=137,29000000
+[DEBUG] UpdateTickerData key=MexcFutures_BTC_USDT | Vol24h=11834560554,31 | Bid=90894,30000000 | Ask=90895,30000000
+[DEBUG] UpdateTickerData key=MexcFutures_ETH_USDT | Vol24h=11384981367,75 | Bid=3032,71000000 | Ask=3032,72000000
+[DEBUG] UpdateTickerData key=MexcFutures_SOL_USDT | Vol24h=3295697332,53 | Bid=137,28000000 | Ask=137,29000000
+[DEBUG] UpdateTickerData: Added 829 MexcFutures symbols to metadata. Total MexcFutures in metadata: 829
+[MexcFutures] Ticker data refreshed (829 symbols)
+[DEBUG] GetAllSymbolsMetadata: Total=829 | Mexc=0 | MEXC=0 | MexcFutures=829 (withTrades=0, withoutTrades=829)
+[DEBUG] First 3 spot keys: MexcFutures_RLC_USDT, MexcFutures_MERL_USDT, MexcFutures_BAY_USDT
+[DEBUG] CalculateSpread MexcFutures_BTC_USDT: FROM TICKER | Bid=90894,30000000 Ask=90895,30000000 Spread%=0,0011
+[DEBUG] CalculateSpread MexcFutures_ETH_USDT: FROM TICKER | Bid=3032,71000000 Ask=3032,72000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDT: FROM TICKER | Bid=137,28000000 Ask=137,29000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_BTC_USDC: FROM TICKER | Bid=90922,50000000 Ask=90922,60000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_ETH_USDC: FROM TICKER | Bid=3033,44000000 Ask=3033,45000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDC: FROM TICKER | Bid=137,35000000 Ask=137,36000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_ARCSOL_USDT: FROM TICKER | Bid=0,04485000 Ask=0,04486000 Spread%=0,0223
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDT: FROM TICKER | Bid=0,80930000 Ask=0,80940000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDT: FROM TICKER | Bid=0,08479000 Ask=0,08480000 Spread%=0,0118
+[DEBUG] CalculateSpread MexcFutures_SOLV_USDT: FROM TICKER | Bid=0,01925000 Ask=0,01926000 Spread%=0,0519
+[DEBUG] CalculateSpread MexcFutures_ETHW_USDT: FROM TICKER | Bid=0,61020000 Ask=0,61030000 Spread%=0,0164
+[DEBUG] CalculateSpread MexcFutures_PUMPBTC_USDT: FROM TICKER | Bid=0,02823000 Ask=0,02827000 Spread%=0,1415
+[DEBUG] CalculateSpread MexcFutures_SOL_USD: FROM TICKER | Bid=137,28000000 Ask=137,29000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDC: FROM TICKER | Bid=0,08510000 Ask=0,08540000 Spread%=0,3513
+[DEBUG] CalculateSpread MexcFutures_FUNSOL_USDT: FROM TICKER | Bid=0,00082400 Ask=0,00088200 Spread%=6,5760
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDC: FROM TICKER | Bid=0,80930000 Ask=0,80940000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_SOLOMON_USDT: FROM TICKER | Bid=1,01400000 Ask=1,02100000 Spread%=0,6856
+[DEBUG] CalculateSpread MexcFutures_PLAYSOLANA_USDT: FROM TICKER | Bid=0,00441400 Ask=0,00451900 Spread%=2,3235
+[DEBUG] CalculateSpread MexcFutures_ETH_USD: FROM TICKER | Bid=3032,68000000 Ask=3032,69000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_BTC_USD: FROM TICKER | Bid=90914,90000000 Ask=90915,00000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_WBTC_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_MXSOL_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_STETH_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] GetAllSymbolsMetadata RESULT: Total=829 | Futures in result=829 | Futures in TOP-100=100 | Futures in TOP-500=500
+[DEBUG] TOP-10 symbols:
+  BTC_USDT: Trades3m=0, Vol24h=11834560554
+  ETH_USDT: Trades3m=0, Vol24h=11384981368
+  SOL_USDT: Trades3m=0, Vol24h=3295697333
+  XRP_USDT: Trades3m=0, Vol24h=1584583167
+  DOGE_USDT: Trades3m=0, Vol24h=1471494101
+  ZEC_USDT: Trades3m=0, Vol24h=676505823
+  SUI_USDT: Trades3m=0, Vol24h=619073280
+  ASTER_USDT: Trades3m=0, Vol24h=484272257
+  BNB_USDT: Trades3m=0, Vol24h=387924719
+  INJ_USDT: Trades3m=0, Vol24h=278259612
+[DEBUG] First futures symbol at position 0: BTC_USDT (Trades3m=0, Vol24h=11834560554)
+[Fleck] Client disconnected.
+[Fleck] Client connected: 127.0.0.1
+[DEBUG] GetAllSymbolsMetadata: Total=829 | Mexc=0 | MEXC=0 | MexcFutures=829 (withTrades=0, withoutTrades=829)
+[DEBUG] First 3 spot keys: MexcFutures_RLC_USDT, MexcFutures_MERL_USDT, MexcFutures_BAY_USDT
+[DEBUG] CalculateSpread MexcFutures_BTC_USDT: FROM TICKER | Bid=90894,30000000 Ask=90895,30000000 Spread%=0,0011
+[DEBUG] CalculateSpread MexcFutures_ETH_USDT: FROM TICKER | Bid=3032,71000000 Ask=3032,72000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDT: FROM TICKER | Bid=137,28000000 Ask=137,29000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_BTC_USDC: FROM TICKER | Bid=90922,50000000 Ask=90922,60000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_ETH_USDC: FROM TICKER | Bid=3033,44000000 Ask=3033,45000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDC: FROM TICKER | Bid=137,35000000 Ask=137,36000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_ARCSOL_USDT: FROM TICKER | Bid=0,04485000 Ask=0,04486000 Spread%=0,0223
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDT: FROM TICKER | Bid=0,80930000 Ask=0,80940000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDT: FROM TICKER | Bid=0,08479000 Ask=0,08480000 Spread%=0,0118
+[DEBUG] CalculateSpread MexcFutures_SOLV_USDT: FROM TICKER | Bid=0,01925000 Ask=0,01926000 Spread%=0,0519
+[DEBUG] CalculateSpread MexcFutures_ETHW_USDT: FROM TICKER | Bid=0,61020000 Ask=0,61030000 Spread%=0,0164
+[DEBUG] CalculateSpread MexcFutures_PUMPBTC_USDT: FROM TICKER | Bid=0,02823000 Ask=0,02827000 Spread%=0,1415
+[DEBUG] CalculateSpread MexcFutures_SOL_USD: FROM TICKER | Bid=137,28000000 Ask=137,29000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDC: FROM TICKER | Bid=0,08510000 Ask=0,08540000 Spread%=0,3513
+[DEBUG] CalculateSpread MexcFutures_FUNSOL_USDT: FROM TICKER | Bid=0,00082400 Ask=0,00088200 Spread%=6,5760
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDC: FROM TICKER | Bid=0,80930000 Ask=0,80940000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_SOLOMON_USDT: FROM TICKER | Bid=1,01400000 Ask=1,02100000 Spread%=0,6856
+[DEBUG] CalculateSpread MexcFutures_PLAYSOLANA_USDT: FROM TICKER | Bid=0,00441400 Ask=0,00451900 Spread%=2,3235
+[DEBUG] CalculateSpread MexcFutures_ETH_USD: FROM TICKER | Bid=3032,68000000 Ask=3032,69000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_BTC_USD: FROM TICKER | Bid=90914,90000000 Ask=90915,00000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_WBTC_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_MXSOL_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_STETH_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] GetAllSymbolsMetadata RESULT: Total=829 | Futures in result=829 | Futures in TOP-100=100 | Futures in TOP-500=500
+[DEBUG] TOP-10 symbols:
+  BTC_USDT: Trades3m=0, Vol24h=11834560554
+  ETH_USDT: Trades3m=0, Vol24h=11384981368
+  SOL_USDT: Trades3m=0, Vol24h=3295697333
+  XRP_USDT: Trades3m=0, Vol24h=1584583167
+  DOGE_USDT: Trades3m=0, Vol24h=1471494101
+  ZEC_USDT: Trades3m=0, Vol24h=676505823
+  SUI_USDT: Trades3m=0, Vol24h=619073280
+  ASTER_USDT: Trades3m=0, Vol24h=484272257
+  BNB_USDT: Trades3m=0, Vol24h=387924719
+  INJ_USDT: Trades3m=0, Vol24h=278259612
+[DEBUG] First futures symbol at position 0: BTC_USDT (Trades3m=0, Vol24h=11834560554)
+[DEBUG] GetAllSymbolsMetadata: Total=829 | Mexc=0 | MEXC=0 | MexcFutures=829 (withTrades=0, withoutTrades=829)
+[DEBUG] First 3 spot keys: MexcFutures_RLC_USDT, MexcFutures_MERL_USDT, MexcFutures_BAY_USDT
+[DEBUG] CalculateSpread MexcFutures_BTC_USDT: FROM TICKER | Bid=90894,30000000 Ask=90895,30000000 Spread%=0,0011
+[DEBUG] CalculateSpread MexcFutures_ETH_USDT: FROM TICKER | Bid=3032,71000000 Ask=3032,72000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDT: FROM TICKER | Bid=137,28000000 Ask=137,29000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_BTC_USDC: FROM TICKER | Bid=90922,50000000 Ask=90922,60000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_ETH_USDC: FROM TICKER | Bid=3033,44000000 Ask=3033,45000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDC: FROM TICKER | Bid=137,35000000 Ask=137,36000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_ARCSOL_USDT: FROM TICKER | Bid=0,04485000 Ask=0,04486000 Spread%=0,0223
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDT: FROM TICKER | Bid=0,80930000 Ask=0,80940000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDT: FROM TICKER | Bid=0,08479000 Ask=0,08480000 Spread%=0,0118
+[DEBUG] CalculateSpread MexcFutures_SOLV_USDT: FROM TICKER | Bid=0,01925000 Ask=0,01926000 Spread%=0,0519
+[DEBUG] CalculateSpread MexcFutures_ETHW_USDT: FROM TICKER | Bid=0,61020000 Ask=0,61030000 Spread%=0,0164
+[DEBUG] CalculateSpread MexcFutures_PUMPBTC_USDT: FROM TICKER | Bid=0,02823000 Ask=0,02827000 Spread%=0,1415
+[DEBUG] CalculateSpread MexcFutures_SOL_USD: FROM TICKER | Bid=137,28000000 Ask=137,29000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDC: FROM TICKER | Bid=0,08510000 Ask=0,08540000 Spread%=0,3513
+[DEBUG] CalculateSpread MexcFutures_FUNSOL_USDT: FROM TICKER | Bid=0,00082400 Ask=0,00088200 Spread%=6,5760
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDC: FROM TICKER | Bid=0,80930000 Ask=0,80940000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_SOLOMON_USDT: FROM TICKER | Bid=1,01400000 Ask=1,02100000 Spread%=0,6856
+[DEBUG] CalculateSpread MexcFutures_PLAYSOLANA_USDT: FROM TICKER | Bid=0,00441400 Ask=0,00451900 Spread%=2,3235
+[DEBUG] CalculateSpread MexcFutures_ETH_USD: FROM TICKER | Bid=3032,68000000 Ask=3032,69000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_BTC_USD: FROM TICKER | Bid=90914,90000000 Ask=90915,00000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_WBTC_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_MXSOL_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_STETH_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] GetAllSymbolsMetadata RESULT: Total=829 | Futures in result=829 | Futures in TOP-100=100 | Futures in TOP-500=500
+[DEBUG] TOP-10 symbols:
+  BTC_USDT: Trades3m=0, Vol24h=11834560554
+  ETH_USDT: Trades3m=0, Vol24h=11384981368
+  SOL_USDT: Trades3m=0, Vol24h=3295697333
+  XRP_USDT: Trades3m=0, Vol24h=1584583167
+  DOGE_USDT: Trades3m=0, Vol24h=1471494101
+  ZEC_USDT: Trades3m=0, Vol24h=676505823
+  SUI_USDT: Trades3m=0, Vol24h=619073280
+  ASTER_USDT: Trades3m=0, Vol24h=484272257
+  BNB_USDT: Trades3m=0, Vol24h=387924719
+  INJ_USDT: Trades3m=0, Vol24h=278259612
+[DEBUG] First futures symbol at position 0: BTC_USDT (Trades3m=0, Vol24h=11834560554)
+[DEBUG] GetAllSymbolsMetadata: Total=829 | Mexc=0 | MEXC=0 | MexcFutures=829 (withTrades=0, withoutTrades=829)
+[DEBUG] First 3 spot keys: MexcFutures_RLC_USDT, MexcFutures_MERL_USDT, MexcFutures_BAY_USDT
+[DEBUG] CalculateSpread MexcFutures_BTC_USDT: FROM TICKER | Bid=90894,30000000 Ask=90895,30000000 Spread%=0,0011
+[DEBUG] CalculateSpread MexcFutures_ETH_USDT: FROM TICKER | Bid=3032,71000000 Ask=3032,72000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDT: FROM TICKER | Bid=137,28000000 Ask=137,29000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_BTC_USDC: FROM TICKER | Bid=90922,50000000 Ask=90922,60000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_ETH_USDC: FROM TICKER | Bid=3033,44000000 Ask=3033,45000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDC: FROM TICKER | Bid=137,35000000 Ask=137,36000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_ARCSOL_USDT: FROM TICKER | Bid=0,04485000 Ask=0,04486000 Spread%=0,0223
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDT: FROM TICKER | Bid=0,80930000 Ask=0,80940000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDT: FROM TICKER | Bid=0,08479000 Ask=0,08480000 Spread%=0,0118
+[DEBUG] CalculateSpread MexcFutures_SOLV_USDT: FROM TICKER | Bid=0,01925000 Ask=0,01926000 Spread%=0,0519
+[DEBUG] CalculateSpread MexcFutures_ETHW_USDT: FROM TICKER | Bid=0,61020000 Ask=0,61030000 Spread%=0,0164
+[DEBUG] CalculateSpread MexcFutures_PUMPBTC_USDT: FROM TICKER | Bid=0,02823000 Ask=0,02827000 Spread%=0,1415
+[DEBUG] CalculateSpread MexcFutures_SOL_USD: FROM TICKER | Bid=137,28000000 Ask=137,29000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDC: FROM TICKER | Bid=0,08510000 Ask=0,08540000 Spread%=0,3513
+[DEBUG] CalculateSpread MexcFutures_FUNSOL_USDT: FROM TICKER | Bid=0,00082400 Ask=0,00088200 Spread%=6,5760
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDC: FROM TICKER | Bid=0,80930000 Ask=0,80940000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_SOLOMON_USDT: FROM TICKER | Bid=1,01400000 Ask=1,02100000 Spread%=0,6856
+[DEBUG] CalculateSpread MexcFutures_PLAYSOLANA_USDT: FROM TICKER | Bid=0,00441400 Ask=0,00451900 Spread%=2,3235
+[DEBUG] CalculateSpread MexcFutures_ETH_USD: FROM TICKER | Bid=3032,68000000 Ask=3032,69000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_BTC_USD: FROM TICKER | Bid=90914,90000000 Ask=90915,00000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_WBTC_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_MXSOL_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_STETH_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] GetAllSymbolsMetadata RESULT: Total=829 | Futures in result=829 | Futures in TOP-100=100 | Futures in TOP-500=500
+[DEBUG] TOP-10 symbols:
+  BTC_USDT: Trades3m=0, Vol24h=11834560554
+  ETH_USDT: Trades3m=0, Vol24h=11384981368
+  SOL_USDT: Trades3m=0, Vol24h=3295697333
+  XRP_USDT: Trades3m=0, Vol24h=1584583167
+  DOGE_USDT: Trades3m=0, Vol24h=1471494101
+  ZEC_USDT: Trades3m=0, Vol24h=676505823
+  SUI_USDT: Trades3m=0, Vol24h=619073280
+  ASTER_USDT: Trades3m=0, Vol24h=484272257
+  BNB_USDT: Trades3m=0, Vol24h=387924719
+  INJ_USDT: Trades3m=0, Vol24h=278259612
+[DEBUG] First futures symbol at position 0: BTC_USDT (Trades3m=0, Vol24h=11834560554)
+[DEBUG] GetAllSymbolsMetadata: Total=829 | Mexc=0 | MEXC=0 | MexcFutures=829 (withTrades=0, withoutTrades=829)
+[DEBUG] First 3 spot keys: MexcFutures_RLC_USDT, MexcFutures_MERL_USDT, MexcFutures_BAY_USDT
+[DEBUG] CalculateSpread MexcFutures_BTC_USDT: FROM TICKER | Bid=90894,30000000 Ask=90895,30000000 Spread%=0,0011
+[DEBUG] CalculateSpread MexcFutures_ETH_USDT: FROM TICKER | Bid=3032,71000000 Ask=3032,72000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDT: FROM TICKER | Bid=137,28000000 Ask=137,29000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_BTC_USDC: FROM TICKER | Bid=90922,50000000 Ask=90922,60000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_ETH_USDC: FROM TICKER | Bid=3033,44000000 Ask=3033,45000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDC: FROM TICKER | Bid=137,35000000 Ask=137,36000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_ARCSOL_USDT: FROM TICKER | Bid=0,04485000 Ask=0,04486000 Spread%=0,0223
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDT: FROM TICKER | Bid=0,80930000 Ask=0,80940000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDT: FROM TICKER | Bid=0,08479000 Ask=0,08480000 Spread%=0,0118
+[DEBUG] CalculateSpread MexcFutures_SOLV_USDT: FROM TICKER | Bid=0,01925000 Ask=0,01926000 Spread%=0,0519
+[DEBUG] CalculateSpread MexcFutures_ETHW_USDT: FROM TICKER | Bid=0,61020000 Ask=0,61030000 Spread%=0,0164
+[DEBUG] CalculateSpread MexcFutures_PUMPBTC_USDT: FROM TICKER | Bid=0,02823000 Ask=0,02827000 Spread%=0,1415
+[DEBUG] CalculateSpread MexcFutures_SOL_USD: FROM TICKER | Bid=137,28000000 Ask=137,29000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDC: FROM TICKER | Bid=0,08510000 Ask=0,08540000 Spread%=0,3513
+[DEBUG] CalculateSpread MexcFutures_FUNSOL_USDT: FROM TICKER | Bid=0,00082400 Ask=0,00088200 Spread%=6,5760
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDC: FROM TICKER | Bid=0,80930000 Ask=0,80940000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_SOLOMON_USDT: FROM TICKER | Bid=1,01400000 Ask=1,02100000 Spread%=0,6856
+[DEBUG] CalculateSpread MexcFutures_PLAYSOLANA_USDT: FROM TICKER | Bid=0,00441400 Ask=0,00451900 Spread%=2,3235
+[DEBUG] CalculateSpread MexcFutures_ETH_USD: FROM TICKER | Bid=3032,68000000 Ask=3032,69000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_BTC_USD: FROM TICKER | Bid=90914,90000000 Ask=90915,00000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_WBTC_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_MXSOL_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_STETH_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] GetAllSymbolsMetadata RESULT: Total=829 | Futures in result=829 | Futures in TOP-100=100 | Futures in TOP-500=500
+[DEBUG] TOP-10 symbols:
+  BTC_USDT: Trades3m=0, Vol24h=11834560554
+  ETH_USDT: Trades3m=0, Vol24h=11384981368
+  SOL_USDT: Trades3m=0, Vol24h=3295697333
+  XRP_USDT: Trades3m=0, Vol24h=1584583167
+  DOGE_USDT: Trades3m=0, Vol24h=1471494101
+  ZEC_USDT: Trades3m=0, Vol24h=676505823
+  SUI_USDT: Trades3m=0, Vol24h=619073280
+  ASTER_USDT: Trades3m=0, Vol24h=484272257
+  BNB_USDT: Trades3m=0, Vol24h=387924719
+  INJ_USDT: Trades3m=0, Vol24h=278259612
+[DEBUG] First futures symbol at position 0: BTC_USDT (Trades3m=0, Vol24h=11834560554)
+[MexcFutures] DEBUG Ticker: BTC_USDT | Vol24h=11834659647,60 | Bid=90894,40000000 | Ask=90895,30000000
+[MexcFutures] DEBUG Ticker: ETH_USDT | Vol24h=11386111033,46 | Bid=3032,86000000 | Ask=3032,87000000
+[MexcFutures] DEBUG Ticker: SOL_USDT | Vol24h=3295856623,84 | Bid=137,32000000 | Ask=137,33000000
+[DEBUG] UpdateTickerData key=MexcFutures_BTC_USDT | Vol24h=11834659647,60 | Bid=90894,40000000 | Ask=90895,30000000
+[DEBUG] UpdateTickerData key=MexcFutures_ETH_USDT | Vol24h=11386111033,46 | Bid=3032,86000000 | Ask=3032,87000000
+[DEBUG] UpdateTickerData key=MexcFutures_SOL_USDT | Vol24h=3295856623,84 | Bid=137,32000000 | Ask=137,33000000
+[DEBUG] UpdateTickerData: Added 829 MexcFutures symbols to metadata. Total MexcFutures in metadata: 829
+[MexcFutures] Ticker data refreshed (829 symbols)
+[DEBUG] GetAllSymbolsMetadata: Total=829 | Mexc=0 | MEXC=0 | MexcFutures=829 (withTrades=0, withoutTrades=829)
+[DEBUG] First 3 spot keys: MexcFutures_RLC_USDT, MexcFutures_MERL_USDT, MexcFutures_BAY_USDT
+[DEBUG] CalculateSpread MexcFutures_BTC_USDT: FROM TICKER | Bid=90894,40000000 Ask=90895,30000000 Spread%=0,0010
+[DEBUG] CalculateSpread MexcFutures_ETH_USDT: FROM TICKER | Bid=3032,86000000 Ask=3032,87000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDT: FROM TICKER | Bid=137,32000000 Ask=137,33000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_BTC_USDC: FROM TICKER | Bid=90922,50000000 Ask=90922,60000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_ETH_USDC: FROM TICKER | Bid=3033,62000000 Ask=3033,63000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDC: FROM TICKER | Bid=137,38000000 Ask=137,39000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_ARCSOL_USDT: FROM TICKER | Bid=0,04478000 Ask=0,04480000 Spread%=0,0446
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDT: FROM TICKER | Bid=0,80940000 Ask=0,80950000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDT: FROM TICKER | Bid=0,08475000 Ask=0,08476000 Spread%=0,0118
+[DEBUG] CalculateSpread MexcFutures_SOLV_USDT: FROM TICKER | Bid=0,01925000 Ask=0,01926000 Spread%=0,0519
+[DEBUG] CalculateSpread MexcFutures_ETHW_USDT: FROM TICKER | Bid=0,61010000 Ask=0,61030000 Spread%=0,0328
+[DEBUG] CalculateSpread MexcFutures_PUMPBTC_USDT: FROM TICKER | Bid=0,02825000 Ask=0,02827000 Spread%=0,0707
+[DEBUG] CalculateSpread MexcFutures_SOL_USD: FROM TICKER | Bid=137,35000000 Ask=137,36000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDC: FROM TICKER | Bid=0,08510000 Ask=0,08530000 Spread%=0,2345
+[DEBUG] CalculateSpread MexcFutures_FUNSOL_USDT: FROM TICKER | Bid=0,00082600 Ask=0,00088200 Spread%=6,3492
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDC: FROM TICKER | Bid=0,80940000 Ask=0,80950000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_SOLOMON_USDT: FROM TICKER | Bid=1,01400000 Ask=1,02100000 Spread%=0,6856
+[DEBUG] CalculateSpread MexcFutures_PLAYSOLANA_USDT: FROM TICKER | Bid=0,00441400 Ask=0,00451400 Spread%=2,2153
+[DEBUG] CalculateSpread MexcFutures_ETH_USD: FROM TICKER | Bid=3032,82000000 Ask=3032,83000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_BTC_USD: FROM TICKER | Bid=90914,90000000 Ask=90915,00000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_WBTC_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_MXSOL_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_STETH_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] GetAllSymbolsMetadata RESULT: Total=829 | Futures in result=829 | Futures in TOP-100=100 | Futures in TOP-500=500
+[DEBUG] TOP-10 symbols:
+  BTC_USDT: Trades3m=0, Vol24h=11834659648
+  ETH_USDT: Trades3m=0, Vol24h=11386111033
+  SOL_USDT: Trades3m=0, Vol24h=3295856624
+  XRP_USDT: Trades3m=0, Vol24h=1584591693
+  DOGE_USDT: Trades3m=0, Vol24h=1471567232
+  ZEC_USDT: Trades3m=0, Vol24h=676514319
+  SUI_USDT: Trades3m=0, Vol24h=619128338
+  ASTER_USDT: Trades3m=0, Vol24h=484319902
+  BNB_USDT: Trades3m=0, Vol24h=387931110
+  INJ_USDT: Trades3m=0, Vol24h=278311837
+[DEBUG] First futures symbol at position 0: BTC_USDT (Trades3m=0, Vol24h=11834659648)
+[DEBUG] GetAllSymbolsMetadata: Total=829 | Mexc=0 | MEXC=0 | MexcFutures=829 (withTrades=0, withoutTrades=829)
+[DEBUG] First 3 spot keys: MexcFutures_RLC_USDT, MexcFutures_MERL_USDT, MexcFutures_BAY_USDT
+[DEBUG] CalculateSpread MexcFutures_BTC_USDT: FROM TICKER | Bid=90894,40000000 Ask=90895,30000000 Spread%=0,0010
+[DEBUG] CalculateSpread MexcFutures_ETH_USDT: FROM TICKER | Bid=3032,86000000 Ask=3032,87000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDT: FROM TICKER | Bid=137,32000000 Ask=137,33000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_BTC_USDC: FROM TICKER | Bid=90922,50000000 Ask=90922,60000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_ETH_USDC: FROM TICKER | Bid=3033,62000000 Ask=3033,63000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_SOL_USDC: FROM TICKER | Bid=137,38000000 Ask=137,39000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_ARCSOL_USDT: FROM TICKER | Bid=0,04478000 Ask=0,04480000 Spread%=0,0446
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDT: FROM TICKER | Bid=0,80940000 Ask=0,80950000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDT: FROM TICKER | Bid=0,08475000 Ask=0,08476000 Spread%=0,0118
+[DEBUG] CalculateSpread MexcFutures_SOLV_USDT: FROM TICKER | Bid=0,01925000 Ask=0,01926000 Spread%=0,0519
+[DEBUG] CalculateSpread MexcFutures_ETHW_USDT: FROM TICKER | Bid=0,61010000 Ask=0,61030000 Spread%=0,0328
+[DEBUG] CalculateSpread MexcFutures_PUMPBTC_USDT: FROM TICKER | Bid=0,02825000 Ask=0,02827000 Spread%=0,0707
+[DEBUG] CalculateSpread MexcFutures_SOL_USD: FROM TICKER | Bid=137,35000000 Ask=137,36000000 Spread%=0,0073
+[DEBUG] CalculateSpread MexcFutures_RESOLV_USDC: FROM TICKER | Bid=0,08510000 Ask=0,08530000 Spread%=0,2345
+[DEBUG] CalculateSpread MexcFutures_FUNSOL_USDT: FROM TICKER | Bid=0,00082600 Ask=0,00088200 Spread%=6,3492
+[DEBUG] CalculateSpread MexcFutures_ETHFI_USDC: FROM TICKER | Bid=0,80940000 Ask=0,80950000 Spread%=0,0124
+[DEBUG] CalculateSpread MexcFutures_SOLOMON_USDT: FROM TICKER | Bid=1,01400000 Ask=1,02100000 Spread%=0,6856
+[DEBUG] CalculateSpread MexcFutures_PLAYSOLANA_USDT: FROM TICKER | Bid=0,00441400 Ask=0,00451400 Spread%=2,2153
+[DEBUG] CalculateSpread MexcFutures_ETH_USD: FROM TICKER | Bid=3032,82000000 Ask=3032,83000000 Spread%=0,0003
+[DEBUG] CalculateSpread MexcFutures_BTC_USD: FROM TICKER | Bid=90914,90000000 Ask=90915,00000000 Spread%=0,0001
+[DEBUG] CalculateSpread MexcFutures_WBTC_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_MXSOL_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] CalculateSpread MexcFutures_STETH_USDT: TICKER FOUND but Bid/Ask ZERO | Bid=0 Ask=0
+[DEBUG] GetAllSymbolsMetadata RESULT: Total=829 | Futures in result=829 | Futures in TOP-100=100 | Futures in TOP-500=500
+[DEBUG] TOP-10 symbols:
+  BTC_USDT: Trades3m=0, Vol24h=11834659648
+  ETH_USDT: Trades3m=0, Vol24h=11386111033
+  SOL_USDT: Trades3m=0, Vol24h=3295856624
+  XRP_USDT: Trades3m=0, Vol24h=1584591693
+  DOGE_USDT: Trades3m=0, Vol24h=1471567232
+  ZEC_USDT: Trades3m=0, Vol24h=676514319
+  SUI_USDT: Trades3m=0, Vol24h=619128338
+  ASTER_USDT: Trades3m=0, Vol24h=484319902
+  BNB_USDT: Trades3m=0, Vol24h=387931110
+  INJ_USDT: Trades3m=0, Vol24h=278311837
+[DEBUG] First futures symbol at position 0: BTC_USDT (Trades3m=0, Vol24h=11834659648)

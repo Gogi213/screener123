@@ -20,7 +20,7 @@ public class TradeAggregatorService : IDisposable
 {
     private const int MAX_TRADES_PER_SYMBOL = 5000; // FIXED: Increased from 1000 to allow accurate statistics for active pairs
     private const int MAX_SYMBOLS = 5000; // LRU safety margin
-    private readonly TimeSpan WINDOW_SIZE = TimeSpan.FromMinutes(30);
+    private readonly TimeSpan WINDOW_SIZE = TimeSpan.FromMinutes(5); // 5-minute rolling window
     private const int BATCH_INTERVAL_MS = 200; // SPRINT-8: 200ms batching for reduced CPU (~50% fewer broadcasts)
 
     private readonly ChannelReader<MarketData> _channelReader;
@@ -250,7 +250,6 @@ public class TradeAggregatorService : IDisposable
                                 score = m.Score,
                                 tradesPerMin = m.TradesPerMin,
                                 trades2m = m.Trades2Min,
-                                trades3m = m.Trades3Min,
                                 trades5m = m.Trades5Min,  // SPRINT-10: for table sorting
                                 // SPRINT-2: Advanced benchmarks
                                 acceleration = m.Acceleration,
@@ -310,7 +309,7 @@ public class TradeAggregatorService : IDisposable
 
     /// <summary>
     /// SPRINT-R3: Unified method to calculate trades within a time window (DRY principle)
-    /// Replaces: CalculateTradesPerMinute, CalculateTrades2Min, CalculateTrades3Min
+    /// Replaces: CalculateTradesPerMinute, CalculateTrades2Min, CalculateTrades5Min
     /// </summary>
     private int CalculateTradesInWindow(string symbolKey, TimeSpan window)
     {
@@ -650,19 +649,18 @@ public class TradeAggregatorService : IDisposable
                 // SPRINT-R3: Calculate rolling window metrics using unified method
                 m.TradesPerMin = CalculateTradesInWindow(symbolKey, TimeSpan.FromMinutes(1));
                 m.Trades2Min = CalculateTradesInWindow(symbolKey, TimeSpan.FromMinutes(2));
-                m.Trades3Min = CalculateTradesInWindow(symbolKey, TimeSpan.FromMinutes(3));
                 m.Trades5Min = CalculateTradesInWindow(symbolKey, TimeSpan.FromMinutes(5));  // SPRINT-10: for table sorting
 
                 // Keep pump score for compatibility (but not used for sorting)
                 m.Score = CalculatePumpScore(symbolKey, m.TradesPerMin);
 
                 // SPRINT-2 benchmarks: Calculate for TOP-500 only (optimization)
-                // Note: We calculate AFTER sorting by Trades3Min
+                // Note: We calculate AFTER sorting by Trades5Min
                 return (symbolKey, m);
             })
-            .OrderByDescending(x => x.m.Trades3Min)  // SPRINT-3: Sort by trades/3m - SIMPLE!
+            .OrderByDescending(x => x.m.Trades5Min)  // SPRINT-3: Sort by trades/5m - SIMPLE!
             .ThenByDescending(x => {
-                // FUTURES_FIX: Secondary sort by Volume24h for symbols with NO trades (Trades3Min = 0)
+                // FUTURES_FIX: Secondary sort by Volume24h for symbols with NO trades (Trades5Min = 0)
                 // This ensures futures appear in TOP list even without WebSocket trades
                 if (_tickerData.TryGetValue(x.symbolKey, out var ticker))
                 {
@@ -752,7 +750,7 @@ public class TradeAggregatorService : IDisposable
         Console.WriteLine($"[DEBUG] TOP-10 symbols:");
         foreach (var m in top10)
         {
-            Console.WriteLine($"  {m.Symbol}: Trades3m={m.Trades3Min}, Vol24h={m.Volume24h:F0}");
+            Console.WriteLine($"  {m.Symbol}: Trades5m={m.Trades5Min}, Vol24h={m.Volume24h:F0}");
         }
 
         // DEBUG: Show first futures symbol and its position
@@ -760,7 +758,7 @@ public class TradeAggregatorService : IDisposable
         if (firstFuturesIndex >= 0)
         {
             var firstFutures = result[firstFuturesIndex];
-            Console.WriteLine($"[DEBUG] First futures symbol at position {firstFuturesIndex}: {firstFutures.Symbol} (Trades3m={firstFutures.Trades3Min}, Vol24h={firstFutures.Volume24h:F0})");
+            Console.WriteLine($"[DEBUG] First futures symbol at position {firstFuturesIndex}: {firstFutures.Symbol} (Trades5m={firstFutures.Trades5Min}, Vol24h={firstFutures.Volume24h:F0})");
         }
 
         return result;
@@ -1255,7 +1253,7 @@ public class SymbolMetadata
     public DateTime LastUpdate { get; set; }
     public int TradesPerMin { get; set; }  // Activity metric for sorting (1 minute)
     public int Trades2Min { get; set; }    // Trades in last 2 minutes (for acceleration detection)
-    public int Trades3Min { get; set; }    // Trades in last 3 minutes (for trend analysis)
+    public int Trades5Min { get; set; }    // Trades in last 5 minutes (for trend analysis)
     public double Score { get; set; }  // Pump detection score (for real-time sorting)
     
     // SPRINT-2: Advanced benchmarks
@@ -1269,7 +1267,6 @@ public class SymbolMetadata
     public decimal Volume3Min { get; set; }         // USD volume in last 3 minutes
 
     // SPRINT-10: Table view metrics
-    public int Trades5Min { get; set; }             // Trades in last 5 minutes (for table sorting)
     public decimal Volume24h { get; set; }          // 24h volume from ticker
     public decimal PriceChangePercent4h { get; set; }  // 4h price change % calculated from local trades
 
