@@ -110,11 +110,12 @@ public class OrchestrationService
             {
                 try
                 {
-                    await ProcessExchange(exchangeClient, exchangeName, _cancellationTokenSource.Token);
+                    // FUTURES_FIX: Use exchangeClient.ExchangeName to match keys in TradeData
+                    await ProcessExchange(exchangeClient, exchangeClient.ExchangeName, _cancellationTokenSource.Token);
                 }
                 catch (OperationCanceledException)
                 {
-                    Console.WriteLine($"[{exchangeName}] Exchange stopped gracefully");
+                    Console.WriteLine($"[{exchangeClient.ExchangeName}] Exchange stopped gracefully");
                 }
                 catch (Exception ex)
                 {
@@ -168,15 +169,30 @@ public class OrchestrationService
             .Where(s => tickerLookup.ContainsKey(s.Name) &&
                         _volumeFilter.IsVolumeSufficient(tickerLookup[s.Name], minVolume, maxVolume))
             .ToList();
-        
+
         var filteredSymbolNames = filteredSymbolInfo.Select(s => s.Name).ToList();
-        
+
         Console.WriteLine($"[{exchangeName}] {filteredSymbolNames.Count} symbols passed the volume filter.");
 
         // Apply Binance filter (only for MEXC exchange)
         if (exchangeName.Equals("MEXC", StringComparison.OrdinalIgnoreCase))
         {
             filteredSymbolNames = _binanceSpotFilter.FilterExcludeBinance(filteredSymbolNames);
+        }
+
+        // BLACKLIST: Remove major coins (XRP, DOGE, ETH, BTC, SOL, PEPE) with any quote asset
+        var blacklistBases = new[] { "XRP", "DOGE", "ETH", "BTC", "SOL", "PEPE" };
+        var beforeBlacklist = filteredSymbolNames.Count;
+        filteredSymbolNames = filteredSymbolNames
+            .Where(symbol => !blacklistBases.Any(base_ =>
+                symbol.StartsWith(base_, StringComparison.OrdinalIgnoreCase) ||
+                symbol.StartsWith(base_ + "_", StringComparison.OrdinalIgnoreCase) ||
+                symbol.StartsWith(base_ + "-", StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+
+        if (beforeBlacklist > filteredSymbolNames.Count)
+        {
+            Console.WriteLine($"[{exchangeName}] Blacklist removed {beforeBlacklist - filteredSymbolNames.Count} major coins (XRP/DOGE/ETH/BTC/SOL/PEPE)");
         }
 
         if (!filteredSymbolNames.Any())
@@ -215,7 +231,7 @@ public class OrchestrationService
                 {
                     await tickerTimer.WaitForNextTickAsync(cancellationToken);
                     var freshTickers = await exchangeClient.GetTickersAsync();
-                    _tradeAggregator.UpdateTickerData(freshTickers);
+                    _tradeAggregator.UpdateTickerData(freshTickers, exchangeName);
                     Console.WriteLine($"[{exchangeName}] Ticker data refreshed ({freshTickers.Count()} symbols)");
                 }
                 catch (OperationCanceledException)
@@ -253,7 +269,7 @@ public class OrchestrationService
                             {
                                 var task = (Task<Dictionary<string, (decimal, decimal)>>)method.Invoke(exchangeClient, new object[] { highActivity });
                                 var orderbookData = await task;
-                                _tradeAggregator.UpdateOrderbookData(orderbookData);
+                                _tradeAggregator.UpdateOrderbookData(orderbookData, exchangeName);
                                 Console.WriteLine($"[{exchangeName}] High-activity orderbook refreshed: {orderbookData.Count} symbols (10s interval)");
                             }
                         }
@@ -288,7 +304,7 @@ public class OrchestrationService
                             {
                                 var task = (Task<Dictionary<string, (decimal, decimal)>>)method.Invoke(exchangeClient, new object[] { lowActivity });
                                 var orderbookData = await task;
-                                _tradeAggregator.UpdateOrderbookData(orderbookData);
+                                _tradeAggregator.UpdateOrderbookData(orderbookData, exchangeName);
                                 Console.WriteLine($"[{exchangeName}] Low-activity orderbook refreshed: {orderbookData.Count} symbols (60s interval)");
                             }
                         }

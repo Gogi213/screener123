@@ -92,8 +92,11 @@ class Program
         services.AddSingleton(tradeScreenerChannel);
 
         // Register all exchange clients
-        // MEXC TRADES VIEWER: Only MEXC enabled
+        // MEXC SPOT: Spot market (can be disabled in appsettings.json)
         services.AddSingleton<IExchangeClient, MexcExchangeClient>();
+
+        // MEXC FUTURES: Futures market (can be disabled in appsettings.json)
+        services.AddSingleton<IExchangeClient, MexcFuturesExchangeClient>();
 
         // MEXC TRADES VIEWER: TradeAggregatorService - processes trades
         services.AddSingleton<TradeAggregatorService>(sp =>

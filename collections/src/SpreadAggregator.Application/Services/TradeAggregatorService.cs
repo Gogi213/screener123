@@ -89,6 +89,12 @@ public class TradeAggregatorService : IDisposable
         var key = $"{trade.Exchange}_{trade.Symbol}";
         var now = DateTime.UtcNow;
 
+        // DEBUG: Log first 3 MexcFutures trades
+        if (trade.Exchange == "MexcFutures" && _symbolTrades.Count(kvp => kvp.Key.StartsWith("MexcFutures_")) < 3)
+        {
+            Console.WriteLine($"[DEBUG] ProcessTrade: Exchange={trade.Exchange} Symbol={trade.Symbol} Key={key} Price={trade.Price}");
+        }
+
         // PHASE-1-FIX-4: Pre-check BEFORE adding to prevent symbol explosion
         if (_symbolTrades.Count >= MAX_SYMBOLS && !_symbolTrades.ContainsKey(key))
         {
@@ -328,18 +334,45 @@ public class TradeAggregatorService : IDisposable
 
     /// <summary>
     /// SPRINT-12: Calculate spread from orderbook data
+    /// FUTURES_FIX: Fallback to ticker.BestBid/BestAsk if orderbook not available
     /// </summary>
     private (decimal spreadPercent, decimal spreadAbsolute) CalculateSpread(string symbolKey)
     {
+        // DEBUG: Log for MexcFutures symbols (first 3)
+        bool shouldDebug = symbolKey.StartsWith("MexcFutures_") &&
+                          (symbolKey.Contains("BTC") || symbolKey.Contains("ETH") || symbolKey.Contains("SOL"));
+
+        // Primary source: orderbook data (for MEXC Spot - updated via GetOrderbookForSymbolsAsync)
         if (_orderbookData.TryGetValue(symbolKey, out var orderbook))
         {
             var (bid, ask) = orderbook;
-            if (ask <= 0 || bid <= 0) return (0, 0);
+            if (ask > 0 && bid > 0)
+            {
+                var spreadAbs = ask - bid;
+                var spreadPct = (spreadAbs / ask) * 100;
+                if (shouldDebug) Console.WriteLine($"[DEBUG] CalculateSpread {symbolKey}: FROM ORDERBOOK | Bid={bid:F8} Ask={ask:F8} Spread%={spreadPct:F4}");
+                return (spreadPct, spreadAbs);
+            }
+        }
 
-            var spreadAbs = ask - bid;
-            var spreadPct = (spreadAbs / ask) * 100;
-
-            return (spreadPct, spreadAbs);
+        // Fallback: ticker data (for MEXC Futures - BestBid/BestAsk already in ticker)
+        if (_tickerData.TryGetValue(symbolKey, out var ticker))
+        {
+            if (ticker.BestAsk > 0 && ticker.BestBid > 0)
+            {
+                var spreadAbs = ticker.BestAsk - ticker.BestBid;
+                var spreadPct = (spreadAbs / ticker.BestAsk) * 100;
+                if (shouldDebug) Console.WriteLine($"[DEBUG] CalculateSpread {symbolKey}: FROM TICKER | Bid={ticker.BestBid:F8} Ask={ticker.BestAsk:F8} Spread%={spreadPct:F4}");
+                return (spreadPct, spreadAbs);
+            }
+            else if (shouldDebug)
+            {
+                Console.WriteLine($"[DEBUG] CalculateSpread {symbolKey}: TICKER FOUND but Bid/Ask ZERO | Bid={ticker.BestBid} Ask={ticker.BestAsk}");
+            }
+        }
+        else if (shouldDebug)
+        {
+            Console.WriteLine($"[DEBUG] CalculateSpread {symbolKey}: NO TICKER DATA FOUND");
         }
 
         return (0, 0);
@@ -480,13 +513,45 @@ public class TradeAggregatorService : IDisposable
     /// <summary>
     /// SPRINT-10: Update ticker data (Volume24h, PriceChangePercent24h) from exchange API
     /// Called periodically by OrchestrationService
+    /// FUTURES_FIX: Also ensures symbols exist in metadata (for exchanges without trades)
     /// </summary>
-    public void UpdateTickerData(IEnumerable<TickerData> tickers)
+    public void UpdateTickerData(IEnumerable<TickerData> tickers, string exchangeName)
     {
+        int updateCount = 0;
         foreach (var ticker in tickers)
         {
-            var key = $"MEXC_{ticker.Symbol}"; // Match trade data key format
+            var key = $"{exchangeName}_{ticker.Symbol}"; // FUTURES_FIX: Use actual exchange name
             _tickerData.AddOrUpdate(key, ticker, (_, __) => ticker);
+
+            // FUTURES_FIX: Ensure symbol exists in metadata (important for exchanges without trades yet)
+            // This allows symbols to appear in UI even if no trades have occurred
+            _symbolMetadata.AddOrUpdate(key,
+                new SymbolMetadata
+                {
+                    Symbol = ticker.Symbol,
+                    LastPrice = ticker.LastPrice,
+                    LastUpdate = DateTime.UtcNow
+                },
+                (_, existing) =>
+                {
+                    existing.LastPrice = ticker.LastPrice;
+                    existing.LastUpdate = DateTime.UtcNow;
+                    return existing;
+                });
+
+            // DEBUG: Log first 3 updates for all exchanges to verify keys
+            if ((exchangeName == "MexcFutures" || exchangeName == "Mexc") && updateCount < 3)
+            {
+                Console.WriteLine($"[DEBUG] UpdateTickerData key={key} | Vol24h={ticker.Volume24h:F2} | Bid={ticker.BestBid:F8} | Ask={ticker.BestAsk:F8}");
+                updateCount++;
+            }
+        }
+
+        // DEBUG: Log metadata count after update
+        if (exchangeName == "MexcFutures")
+        {
+            var futuresInMetadata = _symbolMetadata.Keys.Count(k => k.StartsWith("MexcFutures_"));
+            Console.WriteLine($"[DEBUG] UpdateTickerData: Added {tickers.Count()} MexcFutures symbols to metadata. Total MexcFutures in metadata: {futuresInMetadata}");
         }
     }
 
@@ -494,11 +559,11 @@ public class TradeAggregatorService : IDisposable
     /// SPRINT-12: Update orderbook data for spread calculation
     /// Called periodically for active symbols only
     /// </summary>
-    public void UpdateOrderbookData(Dictionary<string, (decimal bid, decimal ask)> orderbookData)
+    public void UpdateOrderbookData(Dictionary<string, (decimal bid, decimal ask)> orderbookData, string exchangeName)
     {
         foreach (var kvp in orderbookData)
         {
-            var key = $"MEXC_{kvp.Key}"; // Match trade data key format
+            var key = $"{exchangeName}_{kvp.Key}"; // FUTURES_FIX: Use actual exchange name
             _orderbookData.AddOrUpdate(key, kvp.Value, (_, __) => kvp.Value);
         }
     }
@@ -556,11 +621,31 @@ public class TradeAggregatorService : IDisposable
     /// </summary>
     public IEnumerable<SymbolMetadata> GetAllSymbolsMetadata()
     {
-        // Calculate metrics for ALL symbols and sort by Trades3Min (simplest, clearest metric)
-        return _symbolMetadata.Values
-            .Select(m =>
+        // DEBUG: Count symbols by exchange
+        var totalSymbols = _symbolMetadata.Count;
+        var futuresCount = _symbolMetadata.Keys.Count(k => k.StartsWith("MexcFutures_"));
+        var spotCount = _symbolMetadata.Keys.Count(k => k.StartsWith("Mexc_"));
+        var spotCountUppercase = _symbolMetadata.Keys.Count(k => k.StartsWith("MEXC_"));
+
+        // DEBUG: Count futures with and without trades
+        var futuresWithTrades = _symbolTrades.Keys.Count(k => k.StartsWith("MexcFutures_"));
+        var futuresWithoutTrades = futuresCount - futuresWithTrades;
+
+        if (futuresCount > 0 || spotCount > 0 || spotCountUppercase > 0)
+        {
+            Console.WriteLine($"[DEBUG] GetAllSymbolsMetadata: Total={totalSymbols} | Mexc={spotCount} | MEXC={spotCountUppercase} | MexcFutures={futuresCount} (withTrades={futuresWithTrades}, withoutTrades={futuresWithoutTrades})");
+            // DEBUG: Show first 3 Spot keys to verify case
+            var first3SpotKeys = _symbolMetadata.Keys.Where(k => k.Contains("USDT") && k.Length < 25).Take(3);
+            Console.WriteLine($"[DEBUG] First 3 spot keys: {string.Join(", ", first3SpotKeys)}");
+        }
+
+        // FUTURES_FIX: Use original keys from dictionary instead of reconstructing them
+        // This fixes issue where MexcFutures_* symbols were not appearing (key mismatch)
+        var result = _symbolMetadata
+            .Select(kvp =>
             {
-                var symbolKey = $"{(m.Symbol.StartsWith("MEXC_") ? "" : "MEXC_")}{m.Symbol}";
+                var symbolKey = kvp.Key;  // Use original key: MEXC_BTC_USDT or MexcFutures_BTC_USDT
+                var m = kvp.Value;
 
                 // SPRINT-R3: Calculate rolling window metrics using unified method
                 m.TradesPerMin = CalculateTradesInWindow(symbolKey, TimeSpan.FromMinutes(1));
@@ -570,15 +655,25 @@ public class TradeAggregatorService : IDisposable
 
                 // Keep pump score for compatibility (but not used for sorting)
                 m.Score = CalculatePumpScore(symbolKey, m.TradesPerMin);
-                
+
                 // SPRINT-2 benchmarks: Calculate for TOP-500 only (optimization)
                 // Note: We calculate AFTER sorting by Trades3Min
-                return m;
+                return (symbolKey, m);
             })
-            .OrderByDescending(m => m.Trades3Min)  // SPRINT-3: Sort by trades/3m - SIMPLE!
-            .Select((m, index) =>
+            .OrderByDescending(x => x.m.Trades3Min)  // SPRINT-3: Sort by trades/3m - SIMPLE!
+            .ThenByDescending(x => {
+                // FUTURES_FIX: Secondary sort by Volume24h for symbols with NO trades (Trades3Min = 0)
+                // This ensures futures appear in TOP list even without WebSocket trades
+                if (_tickerData.TryGetValue(x.symbolKey, out var ticker))
+                {
+                    return ticker.Volume24h;
+                }
+                return 0m;
+            })
+            .Select((x, index) =>
             {
-                var symbolKey = $"{(m.Symbol.StartsWith("MEXC_") ? "" : "MEXC_")}{m.Symbol}";
+                var symbolKey = x.symbolKey;  // Use original key
+                var m = x.m;
 
                 // SPRINT-12: Calculate spread for ALL symbols that have ticker data
                 if (_tickerData.TryGetValue(symbolKey, out var ticker))
@@ -588,6 +683,10 @@ public class TradeAggregatorService : IDisposable
                     m.SpreadPercent = spreadPct;
                     m.SpreadAbsolute = spreadAbs;
                     m.Volume24h = ticker.Volume24h;  // Also populate volume for all symbols
+                }
+                else if (index < 20)  // DEBUG: Log first 20 symbols that don't have ticker data
+                {
+                    Console.WriteLine($"[DEBUG] GetAllSymbolsMetadata: symbolKey={symbolKey} NOT FOUND in _tickerData!");
                 }
 
                 // SPRINT-11: Calculate NATR for symbols with sufficient trade data
@@ -641,6 +740,30 @@ public class TradeAggregatorService : IDisposable
                 return m;
             })
             .ToList();
+
+        // DEBUG: Count futures in result after sorting
+        var resultFuturesCount = result.Count(m => m.Symbol.Contains("_"));
+        var resultFuturesInTop100 = result.Take(100).Count(m => m.Symbol.Contains("_"));
+        var resultFuturesInTop500 = result.Take(500).Count(m => m.Symbol.Contains("_"));
+        Console.WriteLine($"[DEBUG] GetAllSymbolsMetadata RESULT: Total={result.Count} | Futures in result={resultFuturesCount} | Futures in TOP-100={resultFuturesInTop100} | Futures in TOP-500={resultFuturesInTop500}");
+
+        // DEBUG: Show top 10 symbols with their metrics
+        var top10 = result.Take(10);
+        Console.WriteLine($"[DEBUG] TOP-10 symbols:");
+        foreach (var m in top10)
+        {
+            Console.WriteLine($"  {m.Symbol}: Trades3m={m.Trades3Min}, Vol24h={m.Volume24h:F0}");
+        }
+
+        // DEBUG: Show first futures symbol and its position
+        var firstFuturesIndex = result.FindIndex(m => m.Symbol.Contains("_"));
+        if (firstFuturesIndex >= 0)
+        {
+            var firstFutures = result[firstFuturesIndex];
+            Console.WriteLine($"[DEBUG] First futures symbol at position {firstFuturesIndex}: {firstFutures.Symbol} (Trades3m={firstFutures.Trades3Min}, Vol24h={firstFutures.Volume24h:F0})");
+        }
+
+        return result;
     }
 
     /// <summary>
