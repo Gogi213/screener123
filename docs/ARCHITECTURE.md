@@ -581,5 +581,63 @@ function batchingLoop() {
 
 ---
 
+---
+
+
+## 🎯 Planned Features - WhiplashBreakthrough Detection
+
+### **Problem Statement**
+Current PriceBreakthrough detects only directional moves (>1% net change). Doesn't capture "whiplash" breakouts:
+- Price spikes sharply up/down then immediately returns ("bounce")
+- Market makers dumping liquidity with reversal
+- Oscillatory movements not directional
+
+**Example:** Price goes +1.2% down, then back up -0.8% (net -0.4%) - current formula misses, but whiplash detected.
+
+### **Proposed Solution: WhiplashBreakthrough Metric**
+
+#### **Formula**
+```csharp
+// Intrabar volatility detection
+decimal minPrice = recentTrades.Min(t => t.Price);
+decimal maxPrice = recentTrades.Max(t => t.Price);
+decimal avgPrice = recentTrades.Average(t => t.Price);
+decimal volatility = ((maxPrice - minPrice) / avgPrice) * 100;
+
+// Whiplash conditions
+if (volatility >= 1.5m && volumeInBreakthrough >= volumeThreshold)
+{
+    // Whiplash detected!
+}
+```
+
+#### **Key Differences from PriceBreakthrough**
+- **Volatility instead of direction:** `(max-min)/avg` vs `end-start`
+- **Captures bounces:** Even if net delta small
+- **Lower volume threshold:** 2x vs 3x avg (whiplash often smaller dumps)
+
+#### **Implementation Plan**
+1. **Extend DetectPriceBreakthrough method** in TradeAggregatorService
+2. **Add whiplash flag/metric** to SymbolMetadata
+3. **Broadcast separate message:** `type: "whiplash_breakthrough"`
+4. **Frontend alert/sound** for whiplash events
+
+#### **Use Cases**
+- **Liquidity traps:** Market makers create visual liquidity then pull it
+- **Contrarian signals:** Bounce after dump = buy opportunity
+- **High-frequency patterns:** Faster reaction needed
+
+#### **Performance Considerations**
+- Same window (5s extended)
+- O(N) where N=trades in window
+- Separate from PriceBreakthrough (less computation per trade)
+
+### **Activation Timeline**
+- Phase 1: Backend implementation + logging
+- Phase 2: Frontend alerts + testing
+- Phase 3: Integration with trading bot
+
+---
+
 **Last Updated:** 2025-11-25 07:07 UTC+4  
 **Author:** Antigravity AI + User collaboration

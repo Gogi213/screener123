@@ -34,9 +34,8 @@ public class MexcFuturesNativeWebSocketClient : IDisposable
         _webSocket = new ClientWebSocket();
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        Console.WriteLine($"[MexcFuturesNative] Connecting to {WEBSOCKET_ENDPOINT}...");
+        // Connect to WebSocket endpoint
         await _webSocket.ConnectAsync(new Uri(WEBSOCKET_ENDPOINT), _cts.Token);
-        Console.WriteLine($"[MexcFuturesNative] ✅ Connected successfully!");
 
         // Start receive loop
         _receiveTask = Task.Run(() => ReceiveLoop(_cts.Token), _cts.Token);
@@ -131,11 +130,7 @@ public class MexcFuturesNativeWebSocketClient : IDisposable
     {
         try
         {
-            // DEBUG: Log first 5 messages
-            if (_symbolCallbacks.Count > 0 && _symbolCallbacks.Count < 5)
-            {
-                Console.WriteLine($"[DEBUG] MexcFuturesNative received: {message.Substring(0, Math.Min(200, message.Length))}...");
-            }
+            // Process message without debug logging
 
             using var doc = JsonDocument.Parse(message);
             var root = doc.RootElement;
