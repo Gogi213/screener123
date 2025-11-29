@@ -18,7 +18,7 @@ namespace SpreadAggregator.Infrastructure.Services.Exchanges;
 /// </summary>
 public class MexcFuturesNativeWebSocketClient : IDisposable
 {
-    private const string WEBSOCKET_ENDPOINT = "wss://wbs.mexc.com/ws";
+    private const string WEBSOCKET_ENDPOINT = "wss://contract.mexc.com/edge";
     private const int PING_INTERVAL_MS = 30000; // 30 seconds (MEXC requires ping every 60s)
     private const int BUFFER_SIZE = 8192;
 
@@ -152,33 +152,37 @@ public class MexcFuturesNativeWebSocketClient : IDisposable
             if (root.TryGetProperty("channel", out var dataChannel) && dataChannel.GetString() == "push.deal")
             {
                 if (root.TryGetProperty("symbol", out var symbolProp) &&
-                    root.TryGetProperty("data", out var data))
+                    root.TryGetProperty("data", out var data) &&
+                    data.ValueKind == JsonValueKind.Array)
                 {
                     var symbol = symbolProp.GetString();
                     if (string.IsNullOrEmpty(symbol))
                         return;
 
-                    // Parse trade data
-                    // Format: {p: price, v: volume, T: trade_type (1=buy, 2=sell), t: timestamp}
-                    if (data.TryGetProperty("p", out var priceProp) &&
-                        data.TryGetProperty("v", out var volumeProp) &&
-                        data.TryGetProperty("T", out var tradeProp) &&
-                        data.TryGetProperty("t", out var timestampProp))
+                    // Parse trade data array
+                    foreach (var tradeElem in data.EnumerateArray())
                     {
-                        var tradeData = new TradeData
+                        // Format: {p: price, v: volume, T: trade_type (1=buy, 2=sell), t: timestamp}
+                        if (tradeElem.TryGetProperty("p", out var priceProp) &&
+                            tradeElem.TryGetProperty("v", out var volumeProp) &&
+                            tradeElem.TryGetProperty("T", out var tradeProp) &&
+                            tradeElem.TryGetProperty("t", out var timestampProp))
                         {
-                            Exchange = "MexcFutures",
-                            Symbol = symbol,
-                            Price = priceProp.GetDecimal(),
-                            Quantity = volumeProp.GetDecimal(),
-                            Side = tradeProp.GetInt32() == 1 ? "Buy" : "Sell",
-                            Timestamp = DateTimeOffset.FromUnixTimeMilliseconds(timestampProp.GetInt64()).DateTime
-                        };
+                            var tradeData = new TradeData
+                            {
+                                Exchange = "MexcFutures",
+                                Symbol = symbol,
+                                Price = priceProp.GetDecimal(),
+                                Quantity = volumeProp.GetDecimal(),
+                                Side = tradeProp.GetInt32() == 1 ? "Buy" : "Sell",
+                                Timestamp = DateTimeOffset.FromUnixTimeMilliseconds(timestampProp.GetInt64()).DateTime
+                            };
 
-                        // Call callback if registered
-                        if (_symbolCallbacks.TryGetValue(symbol, out var callback))
-                        {
-                            await callback(tradeData);
+                            // Call callback if registered
+                            if (_symbolCallbacks.TryGetValue(symbol, out var callback))
+                            {
+                                await callback(tradeData);
+                            }
                         }
                     }
                 }

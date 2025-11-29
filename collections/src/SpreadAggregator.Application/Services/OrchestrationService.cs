@@ -168,8 +168,8 @@ public class OrchestrationService
 
         Console.WriteLine($"[{exchangeName}] {filteredSymbolNames.Count} symbols passed the volume filter.");
 
-        // BLACKLIST: Remove major coins (XRP, DOGE, ETH, BTC, SOL, PEPE) with any quote asset
-        var blacklistBases = new[] { "XRP", "DOGE", "ETH", "BTC", "SOL", "PEPE" };
+        // BLACKLIST: Remove major coins (XRP, DOGE, ETH, BTC, SOL, PEPE, BNB, SUI, LINK, TAO, SHIB, LTC, AVAX, DOT) with any quote asset
+        var blacklistBases = new[] { "XRP", "DOGE", "ETH", "BTC", "SOL", "PEPE", "BNB", "SUI", "LINK", "TAO", "SHIB", "LTC", "AVAX", "DOT" };
         var beforeBlacklist = filteredSymbolNames.Count;
         filteredSymbolNames = filteredSymbolNames
             .Where(symbol => !blacklistBases.Any(base_ =>
