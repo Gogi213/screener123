@@ -79,15 +79,7 @@ public class MexcFuturesExchangeClient : IExchangeClient
                 return ticker;
             }).ToList();
 
-            // DEBUG: Log first 3 tickers to verify data format
-            if (tickersList.Any())
-            {
-                var sample = tickersList.Take(3);
-                foreach (var t in sample)
-                {
-                    Console.WriteLine($"[MexcFutures] DEBUG Ticker: {t.Symbol} | Vol24h={t.Volume24h:F2} | Bid={t.BestBid:F8} | Ask={t.BestAsk:F8}");
-                }
-            }
+
 
             return tickersList;
         }

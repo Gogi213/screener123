@@ -195,16 +195,8 @@ public class OrchestrationService
         if (enableTrades)
         {
             Console.WriteLine($"[{exchangeName}] Adding trade subscription task...");
-            var tradeCount = 0;
             tasks.Add(exchangeClient.SubscribeToTradesAsync(filteredSymbolNames, tradeData =>
             {
-                // DEBUG: Log first 5 trades to verify data flow
-                if (tradeCount < 5)
-                {
-                    Console.WriteLine($"[DEBUG] Trade received: Exchange={tradeData.Exchange} Symbol={tradeData.Symbol} Price={tradeData.Price} Qty={tradeData.Quantity}");
-                    tradeCount++;
-                }
-
                 // MEXC TRADES VIEWER: Write trades to TradeScreenerChannel for TradeAggregatorService
                 if (!_tradeScreenerChannel.Writer.TryWrite(tradeData))
                 {
@@ -228,7 +220,6 @@ public class OrchestrationService
                     await tickerTimer.WaitForNextTickAsync(cancellationToken);
                     var freshTickers = await exchangeClient.GetTickersAsync();
                     _tradeAggregator.UpdateTickerData(freshTickers, exchangeName);
-                    Console.WriteLine($"[{exchangeName}] Ticker data refreshed ({freshTickers.Count()} symbols)");
                 }
                 catch (OperationCanceledException)
                 {

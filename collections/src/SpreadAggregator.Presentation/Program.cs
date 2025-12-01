@@ -92,6 +92,9 @@ class Program
         // MEXC FUTURES: Futures market (can be disabled in appsettings.json)
         services.AddSingleton<IExchangeClient, MexcFuturesExchangeClient>();
 
+        // BINANCE FUTURES: Whitelisted 9 symbols for multi-exchange testing
+        services.AddSingleton<IExchangeClient, BinanceFuturesExchangeClient>();
+
         // MEXC TRADES VIEWER: TradeAggregatorService - processes trades
         services.AddSingleton<TradeAggregatorService>(sp =>
         {

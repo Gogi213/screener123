@@ -1,0 +1,41 @@
+graph TD
+    subgraph "Шаг 1: Инициализация"
+        A[Start] --> B{Парсинг аргументов CLI};
+        B --> C[run_ultra_fast_analysis];
+    end
+
+    subgraph "Шаг 2: Оркестрация"
+        C --> D{discover_data};
+        D --> E{Фильтрация символов};
+        E --> F[Формирование задач (1 задача/символ)];
+        F --> G[multiprocessing.Pool];
+    end
+
+    subgraph "Шаг 3: Параллельная обработка (внутри Pool)"
+        G --> H(analyze_symbol_batch);
+        H --> I{ThreadPoolExecutor};
+        I --> J[load_exchange_symbol_data];
+        J --> K[scan_parquet];
+        K --> L[DataFrame в памяти];
+        L --> M{Анализ всех пар};
+        M --> N(analyze_pair_fast);
+    end
+
+    subgraph "Шаг 4: Анализ пары (analyze_pair_fast)"
+        N --> O[join_asof];
+        O --> P[Расчет ratio/deviation];
+        P --> Q[Расчет zero_crossings];
+        Q --> R[count_complete_cycles];
+        R --> S[Сбор всех метрик];
+    end
+
+    subgraph "Шаг 5: Завершение"
+        S --> T{Сбор результатов из Pool};
+        T --> U[Формирование итогового DataFrame];
+        U --> V[Сортировка и вывод в консоль];
+        V --> W[Сохранение в CSV];
+        W --> X[End];
+    end
+
+    style H fill:#f9f,stroke:#333,stroke-width:2px
+    style N fill:#ccf,stroke:#333,stroke-width:2px
