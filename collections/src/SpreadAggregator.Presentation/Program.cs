@@ -116,9 +116,31 @@ class Program
             );
         });
 
+        // DEVIATION ANALYSIS: Price alignment and deviation tracking
+        services.AddSingleton<PriceAlignmentService>(sp =>
+        {
+            var aggregator = sp.GetRequiredService<TradeAggregatorService>();
+            // Access _symbolTrades via reflection (temporary until we expose it properly)
+            var field = typeof(TradeAggregatorService).GetField("_symbolTrades", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var symbolTrades = (System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.Queue<SpreadAggregator.Domain.Entities.TradeData>>)
+                field!.GetValue(aggregator)!;
+            return new PriceAlignmentService(symbolTrades);
+        });
+
+        services.AddSingleton<DeviationAnalysisService>(sp =>
+        {
+            var alignmentService = sp.GetRequiredService<PriceAlignmentService>();
+            var webSocketServer = sp.GetRequiredService<IWebSocketServer>();
+            var logger = sp.GetRequiredService<ILogger<DeviationAnalysisService>>();
+            return new DeviationAnalysisService(alignmentService, webSocketServer, logger);
+        });
+
         services.AddHostedService<OrchestrationServiceHost>();
         // MEXC TRADES VIEWER: TradeAggregatorServiceHost - processes trades
         services.AddHostedService<TradeAggregatorServiceHost>();
+        // DEVIATION ANALYSIS: DeviationAnalysisServiceHost - calculates deviations
+        services.AddHostedService<DeviationAnalysisServiceHost>();
     }
 }
 

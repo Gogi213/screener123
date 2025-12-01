@@ -254,7 +254,11 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
-        .natr.high { color: var(--accent); }  /* NATR > 5% */
+        .natr.high {
+            color: var(--accent);
+        }
+
+        /* NATR > 5% */
 
         .large-prints.active {
             color: var(--accent);
@@ -342,7 +346,8 @@
                     <button class="tab active" onclick="switchTab('table')">📊 Table</button>
                     <button class="tab" onclick="switchTab('charts')">📈 Charts</button>
                 </div>
-                <button id="btnSortToggle" class="tab sort-toggle-btn" onclick="toggleSmartSort()" style="display: none;">
+                <button id="btnSortToggle" class="tab sort-toggle-btn" onclick="toggleSmartSort()"
+                    style="display: none;">
                     <span id="sortIcon">🔥</span> Live Sort
                 </button>
             </div>
