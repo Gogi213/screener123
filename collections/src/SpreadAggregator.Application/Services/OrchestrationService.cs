@@ -168,8 +168,8 @@ public class OrchestrationService
 
         Console.WriteLine($"[{exchangeName}] {filteredSymbolNames.Count} symbols passed the volume filter.");
 
-        // BLACKLIST: Remove major coins (XRP, DOGE, ETH, BTC, SOL, PEPE, BNB, SUI, LINK, TAO, SHIB, LTC, AVAX, DOT) with any quote asset
-        var blacklistBases = new[] { "XRP", "DOGE", "ETH", "BTC", "SOL", "PEPE", "BNB", "SUI", "LINK", "TAO", "SHIB", "LTC", "AVAX", "DOT" };
+        // BLACKLIST: Remove major coins (except deviation analysis symbols: BTC, ETH, SOL, DOGE, SUI, LINK)
+        var blacklistBases = new[] { "XRP", "PEPE", "BNB", "TAO", "SHIB", "LTC", "AVAX", "DOT" };
         var beforeBlacklist = filteredSymbolNames.Count;
         filteredSymbolNames = filteredSymbolNames
             .Where(symbol => !blacklistBases.Any(base_ =>
@@ -220,6 +220,20 @@ public class OrchestrationService
                     await tickerTimer.WaitForNextTickAsync(cancellationToken);
                     var freshTickers = await exchangeClient.GetTickersAsync();
                     _tradeAggregator.UpdateTickerData(freshTickers, exchangeName);
+                    
+                    // BID/BID DEVIATION FIX: For Binance, also fetch book tickers (BestBid/BestAsk)
+                    if (exchangeName.Equals("Binance", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var method = exchangeClient.GetType().GetMethod("GetBookTickersAsync");
+                        if (method != null)
+                        {
+                            var task = (Task<IEnumerable<TickerData>>)method.Invoke(exchangeClient, null);
+                            var bookTickers = await task;
+                            // Update ticker data again with book ticker info (BestBid/BestAsk will be merged)
+                            _tradeAggregator.UpdateTickerData(bookTickers, exchangeName);
+                            Console.WriteLine($"[{exchangeName}] Book tickers refreshed: BestBid/BestAsk for bid/bid deviation");
+                        }
+                    }
                 }
                 catch (OperationCanceledException)
                 {

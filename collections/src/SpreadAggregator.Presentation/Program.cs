@@ -120,12 +120,20 @@ class Program
         services.AddSingleton<PriceAlignmentService>(sp =>
         {
             var aggregator = sp.GetRequiredService<TradeAggregatorService>();
-            // Access _symbolTrades via reflection (temporary until we expose it properly)
-            var field = typeof(TradeAggregatorService).GetField("_symbolTrades", 
+            
+            // Access _symbolTrades via reflection
+            var symbolTradesField = typeof(TradeAggregatorService).GetField("_symbolTrades", 
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var symbolTrades = (System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.Queue<SpreadAggregator.Domain.Entities.TradeData>>)
-                field!.GetValue(aggregator)!;
-            return new PriceAlignmentService(symbolTrades);
+                symbolTradesField!.GetValue(aggregator)!;
+            
+            // Access _tickerData via reflection
+            var tickerDataField = typeof(TradeAggregatorService).GetField("_tickerData", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var tickerData = (System.Collections.Concurrent.ConcurrentDictionary<string, TickerData>)
+                tickerDataField!.GetValue(aggregator)!;
+            
+            return new PriceAlignmentService(symbolTrades, tickerData);
         });
 
         services.AddSingleton<DeviationAnalysisService>(sp =>
@@ -239,6 +247,6 @@ public class TradeAggregatorServiceHost : IHostedService
             }
         }
 
-        _cts?.Dispose();
+    _cts?.Dispose();
     }
 }

@@ -22,8 +22,10 @@ public class DeviationAnalysisServiceHost : IHostedService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
+        Console.WriteLine("[DeviationHost] Starting deviation analysis service host...");
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _runningTask = _deviationService.StartAsync(_cts.Token);
+        Console.WriteLine("[DeviationHost] Deviation service task started");
         return Task.CompletedTask;
     }
 

@@ -493,6 +493,8 @@
                         }
                     } else if (msg.type === 'trade_aggregate' && chartsInitialized && window.handleTradeAggregate) {
                         window.handleTradeAggregate(msg);
+                    } else if (msg.type === 'deviation_update' && chartsInitialized && window.handleDeviationUpdate) {
+                        window.handleDeviationUpdate(msg);
                     }
                 } catch (err) {
                     console.error('Parse error:', err);
@@ -706,7 +708,7 @@
 
             // Load the screener.js logic
             const script = document.createElement('script');
-            script.src = '/js/screener.js';
+            script.src = '/js/screener.js?v=' + Date.now();
             script.onload = () => {
                 console.log('[Screener] Charts view initialized');
             };

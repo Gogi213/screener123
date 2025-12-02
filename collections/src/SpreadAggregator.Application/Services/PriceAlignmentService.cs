@@ -1,20 +1,21 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using SpreadAggregator.Application.Abstractions;
 using SpreadAggregator.Domain.Entities;
 
 namespace SpreadAggregator.Application.Services;
 
 /// <summary>
 /// Price alignment service for synchronizing bid/ask between exchange pairs.
-/// 
+///
 /// Implements join_asof logic from analyzer (backward strategy - no look-ahead bias).
 /// For any timestamp, finds the last known price from each exchange.
-/// 
+///
 /// Example:
 ///   Ex1: [10:00:00, 10:00:05, 10:00:10]
 ///   Ex2: [10:00:02, 10:00:07, 10:00:12]
-///   
+///
 ///   AlignPrices(targetTime=10:00:08)
 ///   → Ex1: price at 10:00:05 (last known before 10:00:08)
 ///   → Ex2: price at 10:00:07 (last known before 10:00:08)
@@ -22,11 +23,16 @@ namespace SpreadAggregator.Application.Services;
 public class PriceAlignmentService
 {
     private readonly ConcurrentDictionary<string, Queue<TradeData>> _symbolTrades;
+    private readonly ConcurrentDictionary<string, TickerData> _tickerData;
+    private readonly object _queueLock = new();
+    internal static readonly object ConcurrentAccessLock = new object();
 
     public PriceAlignmentService(
-        ConcurrentDictionary<string, Queue<TradeData>> symbolTrades)
+        ConcurrentDictionary<string, Queue<TradeData>> symbolTrades,
+        ConcurrentDictionary<string, TickerData> tickerData)
     {
         _symbolTrades = symbolTrades;
+        _tickerData = tickerData;
     }
 
     /// <summary>
@@ -71,17 +77,49 @@ public class PriceAlignmentService
     private decimal? GetLastPriceBeforeTime(
         string symbolKey, DateTime targetTime)
     {
-        if (!_symbolTrades.TryGetValue(symbolKey, out var queue))
-            return null;
-        
-        // Find last trade with timestamp ≤ targetTime
-        // OrderByDescending ensures we get the most recent one
-        var trade = queue
-            .Where(t => t.Timestamp <= targetTime)
-            .OrderByDescending(t => t.Timestamp)
-            .FirstOrDefault();
-        
+        TradeData? trade = null;
+
+        // Thread-safe access to queues - shared with write operations
+        lock (ConcurrentAccessLock)
+        {
+            if (!_symbolTrades.TryGetValue(symbolKey, out var queue))
+                return null;
+
+            // Create snapshot under lock to prevent collection modification
+            // during enumeration
+            trade = queue
+                .ToList()
+                .Where(t => t.Timestamp <= targetTime)
+                .OrderByDescending(t => t.Timestamp)
+                .FirstOrDefault();
+        }
+
         return trade?.Price;
+    }
+
+    /// <summary>
+    /// Get aligned bid prices between two exchanges for bid/bid deviation analysis.
+    /// Uses TickerData.BestBid instead of TradeData.Price for accurate bid-side deviation.
+    /// </summary>
+    /// <param name="symbol">Symbol (e.g., "BTC_USDT")</param>
+    /// <param name="ex1">First exchange name (e.g., "Binance")</param>
+    /// <param name="ex2">Second exchange name (e.g., "MexcFutures")</param>
+    /// <returns>Aligned bid prices or null if data missing</returns>
+    public (decimal bid1, decimal bid2, DateTime timestamp)?
+        GetAlignedBidPrices(string symbol, string ex1, string ex2)
+    {
+        // Get BestBid from ticker data for ex1
+        var key1 = $"{ex1}_{symbol}";
+        if (!_tickerData.TryGetValue(key1, out var ticker1) || ticker1.BestBid == 0)
+            return null;
+
+        // Get BestBid from ticker data for ex2
+        var key2 = $"{ex2}_{symbol}";
+        if (!_tickerData.TryGetValue(key2, out var ticker2) || ticker2.BestBid == 0)
+            return null;
+
+        // Both bid prices exist and are non-zero
+        return (ticker1.BestBid, ticker2.BestBid, DateTime.UtcNow);
     }
 
     /// <summary>

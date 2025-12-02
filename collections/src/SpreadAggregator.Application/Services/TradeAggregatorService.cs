@@ -111,7 +111,7 @@ public class TradeAggregatorService : IDisposable
         // 1. Get or create trade queue for this symbol
         var queue = _symbolTrades.GetOrAdd(key, _ => new Queue<TradeData>());
 
-        lock (queue)
+        lock (PriceAlignmentService.ConcurrentAccessLock)
         {
             // 2. INCREMENTAL EXPIRY: Remove trades older than 30 min
             while (queue.Count > 0 && (now - queue.Peek().Timestamp) > WINDOW_SIZE)
@@ -315,9 +315,10 @@ public class TradeAggregatorService : IDisposable
         var cutoff = DateTime.UtcNow - window;
         int count = 0;
 
-        lock (queue)
+        lock (PriceAlignmentService.ConcurrentAccessLock)
         {
-            foreach (var trade in queue)
+            var trades = queue.ToList();
+            foreach (var trade in trades)
             {
                 if (trade.Timestamp >= cutoff)
                     count++;
@@ -371,10 +372,11 @@ public class TradeAggregatorService : IDisposable
         var oneMinuteAgo = DateTime.UtcNow.AddMinutes(-1);
         decimal volumePerMin = 0;
 
-        lock (queue)
+        lock (PriceAlignmentService.ConcurrentAccessLock)
         {
             // Calculate USD volume in the last minute
-            foreach (var trade in queue)
+            var trades = queue.ToList();
+            foreach (var trade in trades)
             {
                 if (trade.Timestamp >= oneMinuteAgo)
                 {
@@ -414,13 +416,10 @@ public class TradeAggregatorService : IDisposable
         var oneMinuteAgo = DateTime.UtcNow.AddMinutes(-1);
         var recentTrades = new List<TradeData>();
 
-        lock (queue)
+        lock (PriceAlignmentService.ConcurrentAccessLock)
         {
-            foreach (var trade in queue)
-            {
-                if (trade.Timestamp >= oneMinuteAgo)
-                    recentTrades.Add(trade);
-            }
+            var trades = queue.ToList();
+            recentTrades.AddRange(trades.Where(t => t.Timestamp >= oneMinuteAgo));
         }
 
         // Group by volume and side, check for patterns
@@ -445,9 +444,10 @@ public class TradeAggregatorService : IDisposable
         decimal buyVolume = 0;
         decimal sellVolume = 0;
 
-        lock (queue)
+        lock (PriceAlignmentService.ConcurrentAccessLock)
         {
-            foreach (var trade in queue)
+            var trades = queue.ToList();
+            foreach (var trade in trades)
             {
                 if (trade.Timestamp >= oneMinuteAgo)
                 {
@@ -554,10 +554,11 @@ public class TradeAggregatorService : IDisposable
             {
                 if (_symbolTrades.TryGetValue(key, out var queue))
                 {
-                    lock (queue)
+                    lock (PriceAlignmentService.ConcurrentAccessLock)
                     {
-                        var recentTrades = queue.Where(t => t.Timestamp >= cutoff).ToList();
-                        var lastMinuteTrades = queue.Count(t => t.Timestamp >= oneMinuteAgo);
+                        var trades = queue.ToList();
+                        var recentTrades = trades.Where(t => t.Timestamp >= cutoff).ToList();
+                        var lastMinuteTrades = trades.Count(t => t.Timestamp >= oneMinuteAgo);
                         return new
                         {
                             Symbol = key.Replace("MEXC_", ""),
@@ -725,19 +726,21 @@ public class TradeAggregatorService : IDisposable
         TradeData currentTrade = null;
         TradeData oldTrade = null;
 
-        lock (queue)
+        lock (PriceAlignmentService.ConcurrentAccessLock)
         {
+            var trades = queue.ToList();  // Snapshot under lock
+            
             // Get current (last) trade
-            currentTrade = queue.LastOrDefault();
+            currentTrade = trades.LastOrDefault();
             if (currentTrade == null)
                 return 0;
 
             // Find trade closest to 4 hours ago
-            oldTrade = queue.FirstOrDefault(t => t.Timestamp >= fourHoursAgo);
+            oldTrade = trades.FirstOrDefault(t => t.Timestamp >= fourHoursAgo);
 
             // If no trade found within 4h window, use oldest available
             if (oldTrade == null)
-                oldTrade = queue.FirstOrDefault();
+                oldTrade = trades.FirstOrDefault();
 
             if (oldTrade == null || oldTrade.Price == 0)
                 return 0;
@@ -768,8 +771,11 @@ public class TradeAggregatorService : IDisposable
 
         lock (queue)
         {
+            // Create snapshot to prevent "collection was modified" exception
+            var snapshot = queue.ToArray();
+            
             // Get trades from last 10 minutes
-            var recentTrades = queue.Where(t => t.Timestamp >= tenMinutesAgo).ToList();
+            var recentTrades = snapshot.Where(t => t.Timestamp >= tenMinutesAgo).ToList();
 
             // Filter: Only calculate for symbols with >30 trades in last 10 minutes
             if (recentTrades.Count <= 30)

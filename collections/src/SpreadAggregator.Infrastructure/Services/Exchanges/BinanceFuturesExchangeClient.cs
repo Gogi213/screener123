@@ -222,6 +222,67 @@ public class BinanceFuturesExchangeClient : IExchangeClient
     }
 
     /// <summary>
+    /// Get book tickers (BestBid/BestAsk) for whitelisted symbols
+    /// GET /fapi/v1/ticker/bookTicker
+    /// Returns real-time bid/ask prices for bid/bid deviation analysis
+    /// </summary>
+    public async Task<IEnumerable<TickerData>> GetBookTickersAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("/fapi/v1/ticker/bookTicker");
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(json);
+
+            var tickers = new List<TickerData>();
+
+            foreach (var bookTicker in doc.RootElement.EnumerateArray())
+            {
+                if (!bookTicker.TryGetProperty("symbol", out var symbolProp))
+                    continue;
+
+                var binanceSymbol = symbolProp.GetString()!;
+                var normalized = NormalizeSymbol(binanceSymbol);
+
+                if (!WHITELISTED_SYMBOLS.Contains(normalized))
+                    continue;
+
+                // Parse book ticker data
+                decimal bestBid = 0m;
+                decimal bestAsk = 0m;
+
+                if (bookTicker.TryGetProperty("bidPrice", out var bp))
+                    bestBid = decimal.Parse(bp.GetString()!, CultureInfo.InvariantCulture);
+
+                if (bookTicker.TryGetProperty("askPrice", out var ap))
+                    bestAsk = decimal.Parse(ap.GetString()!, CultureInfo.InvariantCulture);
+
+                tickers.Add(new TickerData
+                {
+                    Symbol = normalized,
+                    BestBid = bestBid,
+                    BestAsk = bestAsk,
+                    QuoteVolume = 0,      // Not provided by book ticker
+                    Volume24h = 0,        // Not provided by book ticker
+                    PriceChangePercent24h = 0,  // Not provided by book ticker
+                    LastPrice = (bestBid + bestAsk) / 2,  // Mid price approximation
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+
+            Console.WriteLine($"[{ExchangeName}] GetBookTickersAsync: {tickers.Count} symbols with BestBid/BestAsk");
+            return tickers;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[{ExchangeName}] GetBookTickersAsync error: {ex.Message}");
+            return Enumerable.Empty<TickerData>();
+        }
+    }
+
+    /// <summary>
     /// Subscribe to trade updates using native WebSocket
     /// </summary>
     public async Task SubscribeToTradesAsync(IEnumerable<string> symbols, Func<TradeData, Task> onData)

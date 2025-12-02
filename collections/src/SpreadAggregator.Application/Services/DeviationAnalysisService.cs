@@ -29,7 +29,7 @@ public class DeviationAnalysisService : IDisposable
     private readonly System.Threading.PeriodicTimer _deviationTimer;
     private bool _disposed;
     
-    private const int DEVIATION_UPDATE_INTERVAL_MS = 500; // 500ms updates
+    private const int DEVIATION_UPDATE_INTERVAL_MS = 100; // 100ms updates (only 9 charts)
     
     public DeviationAnalysisService(
         PriceAlignmentService alignmentService,
@@ -44,10 +44,12 @@ public class DeviationAnalysisService : IDisposable
     
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        Console.WriteLine("[DeviationAnalysis] Starting deviation analysis service...");
         _logger.LogInformation("[DeviationAnalysis] Starting...");
         
         await DeviationCalculationLoop(cancellationToken);
         
+        Console.WriteLine("[DeviationAnalysis] Stopped");
         _logger.LogInformation("[DeviationAnalysis] Stopped");
     }
     

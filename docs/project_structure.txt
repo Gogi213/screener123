@@ -1,4 +1,44 @@
 .
+|- analyzer
+| |- docs
+| | |- 1_architecture
+| | | `- architecture.md
+| | |- 2_backlog
+| | | `- backlog.md
+| | |- 3_main_process_flow
+| | | `- process_flow.md
+| | |- 4_metrics
+| | | `- metrics.md
+| | |- 5_mermaid
+| | | `- process_flow.mmd
+| | |- issues
+| | | `- issue.md
+| | |- proposals
+| | | |- PROPOSAL-2025-0076-FixAnalyzerSavePath.md
+| | | |- PROPOSAL-2025-0085-FixAnalyzerDefaultPath.md
+| | | `- PROPOSAL-2025-0090-ModularRefactoring.md
+| | |- roadmap.md
+| | `- role_definition.md
+| |- lib
+| | |- __init__.py
+| | |- analysis.py
+| | |- config.py
+| | |- data_loader.py
+| | `- discovery.py
+| |- summary_stats
+| | |- summary_stats_20251118_170538.csv
+| | `- summary_stats_20251119_125553.csv
+| |- tests
+| | |- __init__.py
+| | |- test_analysis.py
+| | |- test_config.py
+| | `- test_data_loader.py
+| |- README.md
+| |- config.yaml
+| |- requirements.txt
+| |- run_all_ultra.py
+| |- test_date_filter.py
+| `- test_normalization.py
 |- collections
 | |- TestBuild
 | |- docs
@@ -19,7 +59,10 @@
 | | | | `- LruCache.cs
 | | | |- Services
 | | | | |- BinanceSpotFilter.cs
+| | | | |- DeviationAnalysisService.cs
+| | | | |- DeviationCalculator.cs
 | | | | |- OrchestrationService.cs
+| | | | |- PriceAlignmentService.cs
 | | | | `- TradeAggregatorService.cs
 | | | |- SpreadAggregator.Application.csproj
 | | | `- build.binlog
@@ -28,19 +71,20 @@
 | | | | |- MarketData.cs
 | | | | |- SymbolInfo.cs
 | | | | `- TradeData.cs
-| | | |- Models
 | | | |- Services
 | | | | `- VolumeFilter.cs
 | | | `- SpreadAggregator.Domain.csproj
 | | |- SpreadAggregator.Infrastructure
-| | | |- Helpers
 | | | |- Services
-| | | | |- Charts
 | | | | |- Exchanges
 | | | | | |- Base
 | | | | | | |- ExchangeClientBase.cs
 | | | | | | `- IExchangeSocketApi.cs
-| | | | | `- MexcExchangeClient.cs
+| | | | | |- BinanceFuturesExchangeClient.cs
+| | | | | |- BinanceFuturesNativeWebSocketClient.cs
+| | | | | |- MexcExchangeClient.cs
+| | | | | |- MexcFuturesExchangeClient.cs
+| | | | | `- MexcFuturesNativeWebSocketClient.cs
 | | | | |- FleckWebSocketServer.cs
 | | | | `- WebSocketLogger.cs
 | | | `- SpreadAggregator.Infrastructure.csproj
@@ -50,11 +94,8 @@
 | |   | `- TradeController.cs
 | |   |- Diagnostics
 | |   | `- MexcHealthCheck.cs
-| |   |- Models
 | |   |- Protos
 | |   | `- trades.proto
-| |   |- Services
-| |   |- docs
 | |   |- wwwroot
 | |   | |- css
 | |   | | |- screener.css
@@ -63,11 +104,12 @@
 | |   | | |- screener.js
 | |   | | `- websocket-worker.js
 | |   | |- index.html
-| |   | |- package.json
-| |   | `- table.html
+| |   | `- package.json
+| |   |- DeviationAnalysisServiceHost.cs
 | |   |- Program.cs
 | |   |- SpreadAggregator.Presentation.csproj
-| |   `- appsettings.json
+| |   |- appsettings.json
+| |   `- output.log
 | |- tests
 | | `- SpreadAggregator.Tests
 | |   |- Application
@@ -76,11 +118,6 @@
 | |   |- Domain
 | |   | `- Services
 | |   |   `- VolumeFilterTests.cs
-| |   |- Helpers
-| |   |- Infrastructure
-| |   |- Integration
-| |   |- Presentation
-| |   | `- Controllers
 | |   `- SpreadAggregator.Tests.csproj
 | |- tools
 | | `- PerformanceMonitor
@@ -90,11 +127,1924 @@
 | |- monitor.ps1
 | `- test_client.py
 |- docs
-| |- gemini3
-| |- performance
-| |- ARCHITECTURE.md
+| |- Binance.Net-master
+| | |- Binance.Net
+| | | |- Clients
+| | | | |- CoinFuturesApi
+| | | | | |- BinanceRestClientCoinFuturesApi.cs
+| | | | | |- BinanceRestClientCoinFuturesApiAccount.cs
+| | | | | |- BinanceRestClientCoinFuturesApiAgent.cs
+| | | | | |- BinanceRestClientCoinFuturesApiExchangeData.cs
+| | | | | |- BinanceRestClientCoinFuturesApiShared.cs
+| | | | | |- BinanceRestClientCoinFuturesApiTrading.cs
+| | | | | |- BinanceSocketClientCoinFuturesApi.cs
+| | | | | |- BinanceSocketClientCoinFuturesApiAccount.cs
+| | | | | |- BinanceSocketClientCoinFuturesApiExchangeData.cs
+| | | | | |- BinanceSocketClientCoinFuturesApiShared.cs
+| | | | | `- BinanceSocketClientCoinFuturesApiTrading.cs
+| | | | |- GeneralApi
+| | | | | |- BinanceRestClientGeneralApi.cs
+| | | | | |- BinanceRestClientGeneralApiAutoInvest.cs
+| | | | | |- BinanceRestClientGeneralApiBrokerage.cs
+| | | | | |- BinanceRestClientGeneralApiCopyTrading.cs
+| | | | | |- BinanceRestClientGeneralApiFutures.cs
+| | | | | |- BinanceRestClientGeneralApiGiftCard.cs
+| | | | | |- BinanceRestClientGeneralApiLoans.cs
+| | | | | |- BinanceRestClientGeneralApiMining.cs
+| | | | | |- BinanceRestClientGeneralApiNft.cs
+| | | | | |- BinanceRestClientGeneralApiSimpleEarn.cs
+| | | | | |- BinanceRestClientGeneralApiStaking.cs
+| | | | | |- BinanceRestClientGeneralApiSubAccount.cs
+| | | | | `- BinanceRestClientGeneralApiVipLoans.cs
+| | | | |- SpotApi
+| | | | | |- BinanceRestClientSpotApi.cs
+| | | | | |- BinanceRestClientSpotApiAccount.cs
+| | | | | |- BinanceRestClientSpotApiAgent.cs
+| | | | | |- BinanceRestClientSpotApiExchangeData.cs
+| | | | | |- BinanceRestClientSpotApiShared.cs
+| | | | | |- BinanceRestClientSpotApiTrading.cs
+| | | | | |- BinanceSocketClientSpotApi.cs
+| | | | | |- BinanceSocketClientSpotApiAccount.cs
+| | | | | |- BinanceSocketClientSpotApiExchangeData.cs
+| | | | | |- BinanceSocketClientSpotApiShared.cs
+| | | | | `- BinanceSocketClientSpotApiTrading.cs
+| | | | |- UsdFuturesApi
+| | | | | |- BinanceRestClientUsdFuturesApi.cs
+| | | | | |- BinanceRestClientUsdFuturesApiAccount.cs
+| | | | | |- BinanceRestClientUsdFuturesApiAgent.cs
+| | | | | |- BinanceRestClientUsdFuturesApiExchangeData.cs
+| | | | | |- BinanceRestClientUsdFuturesApiShared.cs
+| | | | | |- BinanceRestClientUsdFuturesApiTrading.cs
+| | | | | |- BinanceSocketClientUsdFuturesApi.cs
+| | | | | |- BinanceSocketClientUsdFuturesApiAccount.cs
+| | | | | |- BinanceSocketClientUsdFuturesApiExchangeData.cs
+| | | | | |- BinanceSocketClientUsdFuturesApiShared.cs
+| | | | | `- BinanceSocketClientUsdFuturesApiTrading.cs
+| | | | |- BinanceRestClient.cs
+| | | | |- BinanceSocketClient.cs
+| | | | `- BinanceUserClientProvider.cs
+| | | |- Converters
+| | | | |- BinanceSourceGenerationContext.cs
+| | | | |- ClientOrderIdReplaceConverter.cs
+| | | | |- InterfaceConverter.cs
+| | | | |- PermissionTypeConverter.cs
+| | | | `- SymbolFilterConverter.cs
+| | | |- Enums
+| | | | |- AccountSource.cs
+| | | | |- AccountType.cs
+| | | | |- AccountUpdateReason.cs
+| | | | |- AdjustRateDirection.cs
+| | | | |- AlgoOrderStatus.cs
+| | | | |- AprPeriod.cs
+| | | | |- AutoCloseType.cs
+| | | | |- AutoInvestExecutionType.cs
+| | | | |- AutoInvestIndexStatus.cs
+| | | | |- AutoInvestOneTimeTransactionStatus.cs
+| | | | |- AutoInvestPlanStatus.cs
+| | | | |- AutoInvestPlanType.cs
+| | | | |- AutoInvestRedemptionStatus.cs
+| | | | |- AutoInvestRoiType.cs
+| | | | |- AutoInvestSubscriptionCycle.cs
+| | | | |- AutoInvestTransactionStatus.cs
+| | | | |- BlvtStatus.cs
+| | | | |- BorrowStatus.cs
+| | | | |- BrokerageAccountType.cs
+| | | | |- BrokerageTransferTransactionStatus.cs
+| | | | |- BusdConvertType.cs
+| | | | |- C2COrderStatus.cs
+| | | | |- CancelReplaceMode.cs
+| | | | |- CancelRestriction.cs
+| | | | |- CloudMiningPaymentStatus.cs
+| | | | |- ConditionalOrderType.cs
+| | | | |- ContractType.cs
+| | | | |- ConvertOrderStatus.cs
+| | | | |- DepositStatus.cs
+| | | | |- DownloadStatus.cs
+| | | | |- EarningType.cs
+| | | | |- ExecutionType.cs
+| | | | |- FiatPaymentStatus.cs
+| | | | |- FiatWithdrawDepositStatus.cs
+| | | | |- FlexibleBorrowRecordStatus.cs
+| | | | |- FlexibleBorrowStatus.cs
+| | | | |- FutureTransferType.cs
+| | | | |- FuturesAccountType.cs
+| | | | |- FuturesMarginChangeDirectionType.cs
+| | | | |- FuturesMarginType.cs
+| | | | |- FuturesTransferStatus.cs
+| | | | |- HashrateResaleStatus.cs
+| | | | |- IfNewUserMarginedFuturesType.cs
+| | | | |- IncomeType.cs
+| | | | |- IndicatorType.cs
+| | | | |- IsolatedMarginTransferDirection.cs
+| | | | |- KlineInterval.cs
+| | | | |- ListOrderStatus.cs
+| | | | |- ListStatusType.cs
+| | | | |- LoanIncomeType.cs
+| | | | |- LoanLiquidationStatus.cs
+| | | | |- MarginInventoryType.cs
+| | | | |- MarginLevelStatus.cs
+| | | | |- MarginStatus.cs
+| | | | |- MinerStatus.cs
+| | | | |- NftOrderType.cs
+| | | | |- OrderOperationResult.cs
+| | | | |- OrderRejectReason.cs
+| | | | |- OrderResponseType.cs
+| | | | |- OrderSide.cs
+| | | | |- OrderStatus.cs
+| | | | |- OrderUrgency.cs
+| | | | |- PayOrderType.cs
+| | | | |- PayWalletType.cs
+| | | | |- PegOffsetType.cs
+| | | | |- PegPriceType.cs
+| | | | |- PeriodInterval.cs
+| | | | |- PermissionType.cs
+| | | | |- PortfolioMarginAccountStatus.cs
+| | | | |- PositionSide.cs
+| | | | |- PriceMatch.cs
+| | | | |- ProductStatus.cs
+| | | | |- RateLimitInterval.cs
+| | | | |- RateLimitType.cs
+| | | | |- RebateType.cs
+| | | | |- RedeemDestination.cs
+| | | | |- RedemptionType.cs
+| | | | |- RepayStatus.cs
+| | | | |- RewardType.cs
+| | | | |- SelfTradePreventionMode.cs
+| | | | |- SideEffectType.cs
+| | | | |- SolRewardType.cs
+| | | | |- SpotOrderType.cs
+| | | | |- SubAccountDepositStatus.cs
+| | | | |- SubAccountMarginTransferType.cs
+| | | | |- SubAccountTransferSubAccountType.cs
+| | | | |- SubscriptionStatus.cs
+| | | | |- SubscriptionType.cs
+| | | | |- SymbolFilterType.cs
+| | | | |- SymbolStatus.cs
+| | | | |- SymbolStatusFilter.cs
+| | | | |- SystemStatus.cs
+| | | | |- TimeInForce.cs
+| | | | |- TradeRulesBehaviour.cs
+| | | | |- TransactionType.cs
+| | | | |- TransferAccountType.cs
+| | | | |- TransferDirection.cs
+| | | | |- TravelRuleStatus.cs
+| | | | |- UnderlyingType.cs
+| | | | |- UniversalTransferType.cs
+| | | | |- ValidTime.cs
+| | | | |- VipLoanApplicationStatus.cs
+| | | | |- VipLoanRepayStatus.cs
+| | | | |- WalletType.cs
+| | | | |- WithdrawDepositTransferType.cs
+| | | | |- WithdrawalStatus.cs
+| | | | `- WorkingType.cs
+| | | |- ExtensionMethods
+| | | | |- BinanceExtensionMethods.cs
+| | | | |- CryptoClientExtensions.cs
+| | | | `- ServiceCollectionExtensions.cs
+| | | |- Icon
+| | | | `- icon.png
+| | | |- Interfaces
+| | | | |- Clients
+| | | | | |- CoinFuturesApi
+| | | | | | |- IBinanceRestClientCoinFuturesApi.cs
+| | | | | | |- IBinanceRestClientCoinFuturesApiAccount.cs
+| | | | | | |- IBinanceRestClientCoinFuturesApiAgent.cs
+| | | | | | |- IBinanceRestClientCoinFuturesApiExchangeData.cs
+| | | | | | |- IBinanceRestClientCoinFuturesApiShared.cs
+| | | | | | |- IBinanceRestClientCoinFuturesApiTrading.cs
+| | | | | | |- IBinanceSocketClientCoinFuturesApi.cs
+| | | | | | |- IBinanceSocketClientCoinFuturesApiAccount.cs
+| | | | | | |- IBinanceSocketClientCoinFuturesApiExchangeData.cs
+| | | | | | |- IBinanceSocketClientCoinFuturesApiShared.cs
+| | | | | | `- IBinanceSocketClientCoinFuturesApiTrading.cs
+| | | | | |- GeneralApi
+| | | | | | |- IBinanceRestClientGeneralApi.cs
+| | | | | | |- IBinanceRestClientGeneralApiAutoInvest.cs
+| | | | | | |- IBinanceRestClientGeneralApiBrokerage.cs
+| | | | | | |- IBinanceRestClientGeneralApiCopyTrading.cs
+| | | | | | |- IBinanceRestClientGeneralApiFutures.cs
+| | | | | | |- IBinanceRestClientGeneralApiGiftCard.cs
+| | | | | | |- IBinanceRestClientGeneralApiLoans.cs
+| | | | | | |- IBinanceRestClientGeneralApiMining.cs
+| | | | | | |- IBinanceRestClientGeneralApiNft.cs
+| | | | | | |- IBinanceRestClientGeneralApiSimpleEarn.cs
+| | | | | | |- IBinanceRestClientGeneralApiStaking.cs
+| | | | | | |- IBinanceRestClientGeneralApiSubAccount.cs
+| | | | | | `- IBinanceRestClientGeneralApiVipLoans.cs
+| | | | | |- SpotApi
+| | | | | | |- IBinanceRestClientSpotApi.cs
+| | | | | | |- IBinanceRestClientSpotApiAccount.cs
+| | | | | | |- IBinanceRestClientSpotApiAgent.cs
+| | | | | | |- IBinanceRestClientSpotApiExchangeData.cs
+| | | | | | |- IBinanceRestClientSpotApiShared.cs
+| | | | | | |- IBinanceRestClientSpotApiTrading.cs
+| | | | | | |- IBinanceSocketClientSpotApi.cs
+| | | | | | |- IBinanceSocketClientSpotApiAccount.cs
+| | | | | | |- IBinanceSocketClientSpotApiExchangeData.cs
+| | | | | | |- IBinanceSocketClientSpotApiShared.cs
+| | | | | | `- IBinanceSocketClientSpotApiTrading.cs
+| | | | | |- UsdFuturesApi
+| | | | | | |- IBinanceRestClientUsdFuturesApi.cs
+| | | | | | |- IBinanceRestClientUsdFuturesApiAccount.cs
+| | | | | | |- IBinanceRestClientUsdFuturesApiAgent.cs
+| | | | | | |- IBinanceRestClientUsdFuturesApiExchangeData.cs
+| | | | | | |- IBinanceRestClientUsdFuturesApiShared.cs
+| | | | | | |- IBinanceRestClientUsdFuturesApiTrading.cs
+| | | | | | |- IBinanceSocketClientUsdFuturesApi.cs
+| | | | | | |- IBinanceSocketClientUsdFuturesApiAccount.cs
+| | | | | | |- IBinanceSocketClientUsdFuturesApiExchangeData.cs
+| | | | | | |- IBinanceSocketClientUsdFuturesApiShared.cs
+| | | | | | `- IBinanceSocketClientUsdFuturesApiTrading.cs
+| | | | | |- IBinanceRestClient.cs
+| | | | | |- IBinanceSocketClient.cs
+| | | | | `- IBinanceUserClientProvider.cs
+| | | | |- IBinance24HPriceBase.cs
+| | | | |- IBinanceAggregatedTrade.cs
+| | | | |- IBinanceBalance.cs
+| | | | |- IBinanceBookPrice.cs
+| | | | |- IBinanceFuturesLiquidation.cs
+| | | | |- IBinanceFuturesMarkPrice.cs
+| | | | |- IBinanceKline.cs
+| | | | |- IBinanceMiniTick.cs
+| | | | |- IBinanceOrderBook.cs
+| | | | |- IBinanceOrderBookFactory.cs
+| | | | |- IBinanceRecentTrade.cs
+| | | | |- IBinanceStreamKlineData.cs
+| | | | |- IBinanceTick.cs
+| | | | |- IBinanceTrackerFactory.cs
+| | | | `- IBinanceTrade.cs
+| | | |- Objects
+| | | | |- Internal
+| | | | | |- BinanceExchangeApiWrapper.cs
+| | | | | |- BinanceSnapshotWrapper.cs
+| | | | | |- BinanceSocketRequest.cs
+| | | | | `- BinanceTradeRuleResult.cs
+| | | | |- Models
+| | | | | |- Futures
+| | | | | | |- AlgoOrders
+| | | | | | | |- BinanceAlgoOrder.cs
+| | | | | | | |- BinanceAlgoOrderResult.cs
+| | | | | | | |- BinanceAlgoResult.cs
+| | | | | | | `- BinanceAlgoSubOrder.cs
+| | | | | | |- Socket
+| | | | | | | |- BinanceAlgoOrderUpdate.cs
+| | | | | | | |- BinanceConditionOrderTriggerRejectUpdate.cs
+| | | | | | | |- BinanceFuturesStreamAccountInfo.cs
+| | | | | | | |- BinanceFuturesStreamAssetIndexUpdate.cs
+| | | | | | | |- BinanceFuturesStreamBookPrice.cs
+| | | | | | | |- BinanceFuturesStreamCoinKline.cs
+| | | | | | | |- BinanceFuturesStreamCompositeIndex.cs
+| | | | | | | |- BinanceFuturesStreamConfigUpdate.cs
+| | | | | | | |- BinanceFuturesStreamContinuousKline.cs
+| | | | | | | |- BinanceFuturesStreamIndexKline.cs
+| | | | | | | |- BinanceFuturesStreamIndexPrice.cs
+| | | | | | | |- BinanceFuturesStreamLiquidation.cs
+| | | | | | | |- BinanceFuturesStreamMarginUpdate.cs
+| | | | | | | |- BinanceFuturesStreamMarkPrice.cs
+| | | | | | | |- BinanceFuturesStreamOrderBookDepth.cs
+| | | | | | | |- BinanceFuturesStreamOrderUpdate.cs
+| | | | | | | |- BinanceFuturesStreamSymbolUpdate.cs
+| | | | | | | |- BinanceFuturesStreamTradeUpdate.cs
+| | | | | | | |- BinanceGridUpdate.cs
+| | | | | | | `- BinanceStrategyUpdate.cs
+| | | | | | |- BinanceConstituents.cs
+| | | | | | |- BinanceFuturesAccountAsset.cs
+| | | | | | |- BinanceFuturesAccountBalance.cs
+| | | | | | |- BinanceFuturesAccountConfiguration.cs
+| | | | | | |- BinanceFuturesAccountInfo.cs
+| | | | | | |- BinanceFuturesAccountInfoV3.cs
+| | | | | | |- BinanceFuturesAccountUserCommissionRate.cs
+| | | | | | |- BinanceFuturesAssetIndex.cs
+| | | | | | |- BinanceFuturesBasis.cs
+| | | | | | |- BinanceFuturesBatchEditOrder.cs
+| | | | | | |- BinanceFuturesBatchOrder.cs
+| | | | | | |- BinanceFuturesBnbBurnStatus.cs
+| | | | | | |- BinanceFuturesBookPrice.cs
+| | | | | | |- BinanceFuturesBuySellVolumeRatio.cs
+| | | | | | |- BinanceFuturesCancelAllOrders.cs
+| | | | | | |- BinanceFuturesChangeMarginType.cs
+| | | | | | |- BinanceFuturesCoin24HPrice.cs
+| | | | | | |- BinanceFuturesCoinAccountInfo.cs
+| | | | | | |- BinanceFuturesCoinBuySellVolumeRatio.cs
+| | | | | | |- BinanceFuturesCoinKline.cs
+| | | | | | |- BinanceFuturesCoinOpenInterestHistory.cs
+| | | | | | |- BinanceFuturesCompositeIndexInfo.cs
+| | | | | | |- BinanceFuturesConditionalOrder.cs
+| | | | | | |- BinanceFuturesConvertQuote.cs
+| | | | | | |- BinanceFuturesConvertStatus.cs
+| | | | | | |- BinanceFuturesConvertSymbol.cs
+| | | | | | |- BinanceFuturesCountDownResult.cs
+| | | | | | |- BinanceFuturesDownloadIdInfo.cs
+| | | | | | |- BinanceFuturesDownloadLink.cs
+| | | | | | |- BinanceFuturesExchangeInfo.cs
+| | | | | | |- BinanceFuturesFundingInfo.cs
+| | | | | | |- BinanceFuturesFundingRateHistory.cs
+| | | | | | |- BinanceFuturesIfNewUser.cs
+| | | | | | |- BinanceFuturesIncomeHistory.cs
+| | | | | | |- BinanceFuturesInitialLeverageChangeResult.cs
+| | | | | | |- BinanceFuturesLongShortRatio.cs
+| | | | | | |- BinanceFuturesMarginChangeHistoryResult.cs
+| | | | | | |- BinanceFuturesMarkPrice.cs
+| | | | | | |- BinanceFuturesMultiAssetMode.cs
+| | | | | | |- BinanceFuturesMultipleOrderCancelResult.cs
+| | | | | | |- BinanceFuturesMultipleOrderPlaceResult.cs
+| | | | | | |- BinanceFuturesOpenInterest.cs
+| | | | | | |- BinanceFuturesOpenInterestHistory.cs
+| | | | | | |- BinanceFuturesOrder.cs
+| | | | | | |- BinanceFuturesOrderBook.cs
+| | | | | | |- BinanceFuturesOrderEditHistory.cs
+| | | | | | |- BinanceFuturesPositionMarginResult.cs
+| | | | | | |- BinanceFuturesPositionMode.cs
+| | | | | | |- BinanceFuturesQuantileEstimation.cs
+| | | | | | |- BinanceFuturesQuoteResult.cs
+| | | | | | |- BinanceFuturesSymbol.cs
+| | | | | | |- BinanceFuturesSymbolBracket.cs
+| | | | | | |- BinanceFuturesTrade.cs
+| | | | | | |- BinanceFuturesTradingStatus.cs
+| | | | | | |- BinanceFuturesUsdtAsset.cs
+| | | | | | |- BinanceFuturesUsdtKline.cs
+| | | | | | |- BinanceInsuranceFundBalance.cs
+| | | | | | |- BinancePosition.cs
+| | | | | | |- BinancePositionV3.cs
+| | | | | | `- BinanceSymbolConfiguration.cs
+| | | | | |- Spot
+| | | | | | |- AutoInvest
+| | | | | | | |- BinanceAutoInvestAssets.cs
+| | | | | | | |- BinanceAutoInvestEditResult.cs
+| | | | | | | |- BinanceAutoInvestEditStatusResult.cs
+| | | | | | | |- BinanceAutoInvestIndex.cs
+| | | | | | | |- BinanceAutoInvestIndexPlanPosition.cs
+| | | | | | | |- BinanceAutoInvestOneTimeTransactionStatus.cs
+| | | | | | | |- BinanceAutoInvestPlan.cs
+| | | | | | | |- BinanceAutoInvestPlanHoldings.cs
+| | | | | | | |- BinanceAutoInvestPlanTransaction.cs
+| | | | | | | |- BinanceAutoInvestRebalanceInfo.cs
+| | | | | | | |- BinanceAutoInvestRedemption.cs
+| | | | | | | |- BinanceAutoInvestRedemptionResult.cs
+| | | | | | | |- BinanceAutoInvestRoi.cs
+| | | | | | | |- BinanceAutoInvestSourceAssets.cs
+| | | | | | | |- BinanceAutoInvestTargetAssets.cs
+| | | | | | | `- BinanceAutoInvestTradeResult.cs
+| | | | | | |- Blvt
+| | | | | | | |- BinanceBlvtInfoUpdate.cs
+| | | | | | | `- BinanceBlvtKline.cs
+| | | | | | |- Brokerage
+| | | | | | | `- SubAccountData
+| | | | | | |   |- BinanceBrokerageAccountInfo.cs
+| | | | | | |   |- BinanceBrokerageAddIpRestrictionResult.cs
+| | | | | | |   |- BinanceBrokerageApiKeyCreateResult.cs
+| | | | | | |   |- BinanceBrokerageBnbBurnStatus.cs
+| | | | | | |   |- BinanceBrokerageChangeBnbBurnMarginInterestResult.cs
+| | | | | | |   |- BinanceBrokerageChangeBnbBurnSpotAndMarginResult.cs
+| | | | | | |   |- BinanceBrokerageEnableFuturesResult.cs
+| | | | | | |   |- BinanceBrokerageEnableLeverageTokenResult.cs
+| | | | | | |   |- BinanceBrokerageEnableMarginResult.cs
+| | | | | | |   |- BinanceBrokerageFuturesAssetInfo.cs
+| | | | | | |   |- BinanceBrokerageFuturesRebate.cs
+| | | | | | |   |- BinanceBrokerageIpRestriction.cs
+| | | | | | |   |- BinanceBrokerageMarginAssetInfo.cs
+| | | | | | |   |- BinanceBrokerageRebate.cs
+| | | | | | |   |- BinanceBrokerageSpotAssetInfo.cs
+| | | | | | |   |- BinanceBrokerageSubAccount.cs
+| | | | | | |   |- BinanceBrokerageSubAccountApiKey.cs
+| | | | | | |   |- BinanceBrokerageSubAccountCoinFuturesCommission.cs
+| | | | | | |   |- BinanceBrokerageSubAccountCommission.cs
+| | | | | | |   |- BinanceBrokerageSubAccountCreateResult.cs
+| | | | | | |   |- BinanceBrokerageSubAccountDepositTransaction.cs
+| | | | | | |   |- BinanceBrokerageSubAccountFuturesCommission.cs
+| | | | | | |   |- BinanceBrokerageTransferFuturesResult.cs
+| | | | | | |   |- BinanceBrokerageTransferFuturesTransaction.cs
+| | | | | | |   |- BinanceBrokerageTransferResult.cs
+| | | | | | |   |- BinanceBrokerageTransferTransaction.cs
+| | | | | | |   `- BinanceBrokerageTransferTransactionUniversal.cs
+| | | | | | |- Convert
+| | | | | | | |- BinanceConvertAssetPair.cs
+| | | | | | | |- BinanceConvertOrderStatus.cs
+| | | | | | | |- BinanceConvertQuantityPrecisionAsset.cs
+| | | | | | | |- BinanceConvertQuote.cs
+| | | | | | | |- BinanceConvertResult.cs
+| | | | | | | `- BinanceConvertTrade.cs
+| | | | | | |- CopyTrading
+| | | | | | | |- BinanceCopyTradingLeadSymbol.cs
+| | | | | | | `- BinanceCopyTradingUserStatus.cs
+| | | | | | |- GiftCard
+| | | | | | | |- BinanceGiftCardData.cs
+| | | | | | | |- BinanceGiftCardRedeemData.cs
+| | | | | | | |- BinanceGiftCardResponse.cs
+| | | | | | | |- BinanceGiftCardTokenLimit.cs
+| | | | | | | `- BinanceGiftCardValidity.cs
+| | | | | | |- IsolatedMargin
+| | | | | | | |- BinanceIsolatedMarginSymbol.cs
+| | | | | | | |- CreateIsolatedMarginAccountResult.cs
+| | | | | | | |- IsolatedMarginAccount.cs
+| | | | | | | `- IsolatedMarginAccountLimit.cs
+| | | | | | |- Loans
+| | | | | | | |- BinanceCryptoLoanAsset.cs
+| | | | | | | |- BinanceCryptoLoanBorrow.cs
+| | | | | | | |- BinanceCryptoLoanBorrowRecord.cs
+| | | | | | | |- BinanceCryptoLoanCollateralAsset.cs
+| | | | | | | |- BinanceCryptoLoanFlexibleBorrowRecord.cs
+| | | | | | | |- BinanceCryptoLoanFlexibleLtvAdjastRecord.cs
+| | | | | | | |- BinanceCryptoLoanFlexibleRepayRecord.cs
+| | | | | | | |- BinanceCryptoLoanIncome.cs
+| | | | | | | |- BinanceCryptoLoanLiquidationRecord.cs
+| | | | | | | |- BinanceCryptoLoanLtvAdjust.cs
+| | | | | | | |- BinanceCryptoLoanLtvAdjustRecord.cs
+| | | | | | | |- BinanceCryptoLoanMarginCallResult.cs
+| | | | | | | |- BinanceCryptoLoanOpenBorrowOrder.cs
+| | | | | | | |- BinanceCryptoLoanRepay.cs
+| | | | | | | |- BinanceCryptoLoanRepayRate.cs
+| | | | | | | `- BinanceCryptoLoanRepayRecord.cs
+| | | | | | |- Margin
+| | | | | | | |- BinanceCrossMarginCollateralRatio.cs
+| | | | | | | |- BinanceCrossMarginLeverageResult.cs
+| | | | | | | |- BinanceCrossMarginProLiabilityCoinLeverageBracket.cs
+| | | | | | | |- BinanceForcedLiquidation.cs
+| | | | | | | |- BinanceFuturesInterestRate.cs
+| | | | | | | |- BinanceInterestHistoryResult.cs
+| | | | | | | |- BinanceInterestMarginData.cs
+| | | | | | | |- BinanceInterestRateHistory.cs
+| | | | | | | |- BinanceIsolatedMarginFeeData.cs
+| | | | | | | |- BinanceIsolatedMarginTier.cs
+| | | | | | | |- BinanceIsolatedMarginTierData.cs
+| | | | | | | |- BinanceLiabilityUpdate.cs
+| | | | | | | |- BinanceMarginAccount.cs
+| | | | | | | |- BinanceMarginAccountSnapshot.cs
+| | | | | | | |- BinanceMarginAmount.cs
+| | | | | | | |- BinanceMarginAsset.cs
+| | | | | | | |- BinanceMarginAvailableInventory.cs
+| | | | | | | |- BinanceMarginCallUpdate.cs
+| | | | | | | |- BinanceMarginDelistSchedule.cs
+| | | | | | | |- BinanceMarginDustAsset.cs
+| | | | | | | |- BinanceMarginDustTransfer.cs
+| | | | | | | |- BinanceMarginLevel.cs
+| | | | | | | |- BinanceMarginOrderOcoList.cs
+| | | | | | | |- BinanceMarginPair.cs
+| | | | | | | |- BinanceMarginPriceIndex.cs
+| | | | | | | |- BinanceMarginTransaction.cs
+| | | | | | | |- BinanceQueryLoan.cs
+| | | | | | | |- BinanceQueryRepay.cs
+| | | | | | | |- BinanceSmallLiabilityAsset.cs
+| | | | | | | |- BinanceSmallLiabilityHistory.cs
+| | | | | | | `- BinanceTransferHistory.cs
+| | | | | | |- Mining
+| | | | | | | |- BinanceHashrateResaleDetails.cs
+| | | | | | | |- BinanceHashrateResaleList.cs
+| | | | | | | |- BinanceMiner.cs
+| | | | | | | |- BinanceMinerDetails.cs
+| | | | | | | |- BinanceMiningAccount.cs
+| | | | | | | |- BinanceMiningAlgorithm.cs
+| | | | | | | |- BinanceMiningCoin.cs
+| | | | | | | |- BinanceMiningEarning.cs
+| | | | | | | |- BinanceMiningStatistic.cs
+| | | | | | | |- BinanceOtherRevenueList.cs
+| | | | | | | `- BinanceRevenueList.cs
+| | | | | | |- Nft
+| | | | | | | |- BinanceNftAsset.cs
+| | | | | | | |- BinanceNftDeposit.cs
+| | | | | | | |- BinanceNftTransaction.cs
+| | | | | | | `- BinanceNftWithdraw.cs
+| | | | | | |- PortfolioMargin
+| | | | | | | |- BinancePortfolioMarginCollateralRate.cs
+| | | | | | | |- BinancePortfolioMarginInfo.cs
+| | | | | | | `- BinancePortfolioMarginLoan.cs
+| | | | | | |- SimpleEarn
+| | | | | | | |- BinanceSimpleEarnAccount.cs
+| | | | | | | |- BinanceSimpleEarnCollateralRecord.cs
+| | | | | | | |- BinanceSimpleEarnFlexiblePosition.cs
+| | | | | | | |- BinanceSimpleEarnFlexiblePreview.cs
+| | | | | | | |- BinanceSimpleEarnFlexibleProduct.cs
+| | | | | | | |- BinanceSimpleEarnFlexibleRecord.cs
+| | | | | | | |- BinanceSimpleEarnFlexibleRedemptionRecord.cs
+| | | | | | | |- BinanceSimpleEarnFlexibleRewardRecord.cs
+| | | | | | | |- BinanceSimpleEarnLockedPosition.cs
+| | | | | | | |- BinanceSimpleEarnLockedPreview.cs
+| | | | | | | |- BinanceSimpleEarnLockedProduct.cs
+| | | | | | | |- BinanceSimpleEarnLockedRecord.cs
+| | | | | | | |- BinanceSimpleEarnLockedRedemptionRecord.cs
+| | | | | | | |- BinanceSimpleEarnLockedRewardRecord.cs
+| | | | | | | |- BinanceSimpleEarnPersonalQuotaLeft.cs
+| | | | | | | |- BinanceSimpleEarnPurchase.cs
+| | | | | | | |- BinanceSimpleEarnRateRecord.cs
+| | | | | | | |- BinanceSimpleEarnRedemption.cs
+| | | | | | | `- BinanceSimpleEarnResult.cs
+| | | | | | |- Socket
+| | | | | | | |- BinanceStreamAggregatedTrade.cs
+| | | | | | | |- BinanceStreamBalanceLockUpdate.cs
+| | | | | | | |- BinanceStreamBalanceUpdate.cs
+| | | | | | | |- BinanceStreamBookPrice.cs
+| | | | | | | |- BinanceStreamKline.cs
+| | | | | | | |- BinanceStreamMiniTick.cs
+| | | | | | | |- BinanceStreamOrderList.cs
+| | | | | | | |- BinanceStreamOrderUpdate.cs
+| | | | | | | |- BinanceStreamPositionsUpdate.cs
+| | | | | | | |- BinanceStreamRollingWindowTick.cs
+| | | | | | | |- BinanceStreamTick.cs
+| | | | | | | `- BinanceStreamTrade.cs
+| | | | | | |- Staking
+| | | | | | | |- BinanceBethRateHistory.cs
+| | | | | | | |- BinanceBethWrapHistory.cs
+| | | | | | | |- BinanceBnsolRateHistory.cs
+| | | | | | | |- BinanceBnsolRewardHistory.cs
+| | | | | | | |- BinanceEthRewardsHistory.cs
+| | | | | | | |- BinanceEthStakingAccount.cs
+| | | | | | | |- BinanceEthStakingQuota.cs
+| | | | | | | |- BinanceRedemptionHistory.cs
+| | | | | | | |- BinanceSolRewards.cs
+| | | | | | | |- BinanceSolStakingAccount.cs
+| | | | | | | |- BinanceSolStakingQuota.cs
+| | | | | | | |- BinanceSolStakingResult.cs
+| | | | | | | |- BinanceSolUnclaimedReward.cs
+| | | | | | | |- BinanceStakingHistory.cs
+| | | | | | | `- BinanceStakingResult.cs
+| | | | | | |- SubAccountData
+| | | | | | | |- BinanceSubAccount.cs
+| | | | | | | |- BinanceSubAccountAsset.cs
+| | | | | | | |- BinanceSubAccountAssetTransferHistory.cs
+| | | | | | | |- BinanceSubAccountBlvt.cs
+| | | | | | | |- BinanceSubAccountDeposit.cs
+| | | | | | | |- BinanceSubAccountDepositAddress.cs
+| | | | | | | |- BinanceSubAccountEmail.cs
+| | | | | | | |- BinanceSubAccountFuturesDetails.cs
+| | | | | | | |- BinanceSubAccountFuturesDetailsV2.cs
+| | | | | | | |- BinanceSubAccountFuturesEnabled.cs
+| | | | | | | |- BinanceSubAccountFuturesPositionRisk.cs
+| | | | | | | |- BinanceSubAccountFuturesPositionRiskV2.cs
+| | | | | | | |- BinanceSubAccountMarginDetails.cs
+| | | | | | | |- BinanceSubAccountMarginEnabled.cs
+| | | | | | | |- BinanceSubAccountSpotAssetsSummary.cs
+| | | | | | | |- BinanceSubAccountStatus.cs
+| | | | | | | |- BinanceSubAccountTransaction.cs
+| | | | | | | |- BinanceSubAccountTransfer.cs
+| | | | | | | |- BinanceSubAccountTransferSubAccount.cs
+| | | | | | | |- BinanceSubAccountUniversalTransferTransaction.cs
+| | | | | | | |- BinanceSubAccountsFuturesSummary.cs
+| | | | | | | `- BinanceSubAccountsMarginSummary.cs
+| | | | | | |- VipLoans
+| | | | | | | |- BinanceVipLoanAccuredInterest.cs
+| | | | | | | |- BinanceVipLoanApplicationStatus.cs
+| | | | | | | |- BinanceVipLoanAsset.cs
+| | | | | | | |- BinanceVipLoanBorrowData.cs
+| | | | | | | |- BinanceVipLoanBorrowInterestRate.cs
+| | | | | | | |- BinanceVipLoanCollateralAccountLockedValue.cs
+| | | | | | | |- BinanceVipLoanCollateralAsset.cs
+| | | | | | | |- BinanceVipLoanInterestRate.cs
+| | | | | | | |- BinanceVipLoanOngoingOrderData.cs
+| | | | | | | |- BinanceVipLoanRenewData.cs
+| | | | | | | |- BinanceVipLoanRepayData.cs
+| | | | | | | `- BinanceVipLoanRepayHistoryData.cs
+| | | | | | |- Binance24hPrice.cs
+| | | | | | |- BinanceAPIKeyPermissions.cs
+| | | | | | |- BinanceAccountInfo.cs
+| | | | | | |- BinanceAccountStatus.cs
+| | | | | | |- BinanceAggregatedTrade.cs
+| | | | | | |- BinanceAveragePrice.cs
+| | | | | | |- BinanceBnbBurnStatus.cs
+| | | | | | |- BinanceBookPrice.cs
+| | | | | | |- BinanceBusdHistory.cs
+| | | | | | |- BinanceC2CUserTrade.cs
+| | | | | | |- BinanceCheckTime.cs
+| | | | | | |- BinanceCloudMiningHistory.cs
+| | | | | | |- BinanceCommissions.cs
+| | | | | | |- BinanceDelistSchedule.cs
+| | | | | | |- BinanceDepositAddress.cs
+| | | | | | |- BinanceDepositList.cs
+| | | | | | |- BinanceDividendRecords.cs
+| | | | | | |- BinanceDustLog.cs
+| | | | | | |- BinanceDustTransferResult.cs
+| | | | | | |- BinanceEligibleDust.cs
+| | | | | | |- BinanceEventOrderBook.cs
+| | | | | | |- BinanceExchangeInfo.cs
+| | | | | | |- BinanceFiatPayment.cs
+| | | | | | |- BinanceFiatWithdrawDeposit.cs
+| | | | | | |- BinanceFundingAsset.cs
+| | | | | | |- BinanceFuturesAccountSnapshot.cs
+| | | | | | |- BinanceIfNewUser.cs
+| | | | | | |- BinanceIpRestriction.cs
+| | | | | | |- BinanceListResult.cs
+| | | | | | |- BinanceListenKey.cs
+| | | | | | |- BinanceMarkIndexKline.cs
+| | | | | | |- BinanceOrder.cs
+| | | | | | |- BinanceOrderBook.cs
+| | | | | | |- BinanceOrderOcoList.cs
+| | | | | | |- BinanceOrderRateLimit.cs
+| | | | | | |- BinanceOrderTrade.cs
+| | | | | | |- BinancePayTrade.cs
+| | | | | | |- BinancePlacedOrder.cs
+| | | | | | |- BinancePreventedTrade.cs
+| | | | | | |- BinancePrice.cs
+| | | | | | |- BinanceProduct.cs
+| | | | | | |- BinanceRebate.cs
+| | | | | | |- BinanceRecentTrade.cs
+| | | | | | |- BinanceReplaceOrderResult.cs
+| | | | | | |- BinanceSpotAccountSnapshot.cs
+| | | | | | |- BinanceSpotFuturesTransfer.cs
+| | | | | | |- BinanceSpotKline.cs
+| | | | | | |- BinanceSymbol.cs
+| | | | | | |- BinanceSymbolFilter.cs
+| | | | | | |- BinanceSystemStatus.cs
+| | | | | | |- BinanceTestOrderCommission.cs
+| | | | | | |- BinanceTrade.cs
+| | | | | | |- BinanceTradeFee.cs
+| | | | | | |- BinanceTradingDayTicker.cs
+| | | | | | |- BinanceTradingStatus.cs
+| | | | | | |- BinanceTransfer.cs
+| | | | | | |- BinanceUserAsset.cs
+| | | | | | |- BinanceUserBalance.cs
+| | | | | | |- BinanceVipLevelAndStatus.cs
+| | | | | | |- BinanceWalletBalance.cs
+| | | | | | |- BinanceWithdrawal.cs
+| | | | | | |- BinanceWithdrawalAddress.cs
+| | | | | | |- BinanceWithdrawalFee.cs
+| | | | | | `- BinanceWithdrawalPlaced.cs
+| | | | | |- Binance24HPriceBase.cs
+| | | | | |- BinanceCombinedStream.cs
+| | | | | |- BinanceKlineBase.cs
+| | | | | |- BinanceListRecords.cs
+| | | | | |- BinanceOrderBase.cs
+| | | | | |- BinanceOrderBookEntry.cs
+| | | | | |- BinanceQueryRecords.cs
+| | | | | |- BinanceRateLimit.cs
+| | | | | |- BinanceResult.cs
+| | | | | |- BinanceRollingWindowTick.cs
+| | | | | `- BinanceStreamEvent.cs
+| | | | |- Options
+| | | | | |- BinanceOptions.cs
+| | | | | |- BinanceOrderBookOptions.cs
+| | | | | |- BinanceRestApiOptions.cs
+| | | | | |- BinanceRestOptions.cs
+| | | | | |- BinanceSocketApiOptions.cs
+| | | | | `- BinanceSocketOptions.cs
+| | | | |- Sockets
+| | | | | |- Subscriptions
+| | | | | | |- BinanceCoinFuturesUserDataSubscription.cs
+| | | | | | |- BinanceMarginRiskDataSubscription.cs
+| | | | | | |- BinanceSpotUserDataSubscription.cs
+| | | | | | |- BinanceSubscription.cs
+| | | | | | `- BinanceUsdFuturesUserDataSubscription.cs
+| | | | | |- BinanceSocketQueryResponse.cs
+| | | | | |- BinanceSpotOrderReplaceQuery.cs
+| | | | | |- BinanceSpotQuery.cs
+| | | | | `- BinanceSystemQuery.cs
+| | | | |- BinanceApiAddresses.cs
+| | | | |- BinanceRateLimitError.cs
+| | | | `- BinanceResponse.cs
+| | | |- Properties
+| | | | `- AssemblyInfo.cs
+| | | |- SymbolOrderBooks
+| | | | |- BinanceFuturesCoinSymbolOrderBook.cs
+| | | | |- BinanceFuturesUsdtSymbolOrderBook.cs
+| | | | |- BinanceOrderBookFactory.cs
+| | | | `- BinanceSpotSymbolOrderBook.cs
+| | | |- AssemblyInfo.cs
+| | | |- Binance.Net.csproj
+| | | |- Binance.Net.xml
+| | | |- BinanceAuthenticationProvider.cs
+| | | |- BinanceEnvironment.cs
+| | | |- BinanceErrors.cs
+| | | |- BinanceExchange.cs
+| | | |- BinanceHelpers.cs
+| | | |- BinanceTrackerFactory.cs
+| | | `- Usings.cs
+| | |- Binance.Net.UnitTests
+| | | |- Endpoints
+| | | | |- CoinFutures
+| | | | | |- Account
+| | | | | | |- ChangeInitialLeverage.txt
+| | | | | | |- ChangeMarginType.txt
+| | | | | | |- GetAccountInfo.txt
+| | | | | | |- GetBalances.txt
+| | | | | | |- GetBrackets.txt
+| | | | | | |- GetDownloadIdForTransactionHistory.txt
+| | | | | | |- GetDownloadLinkForTransactionHistory.txt
+| | | | | | |- GetIncomeHistory.txt
+| | | | | | |- GetMarginChangeHistory.txt
+| | | | | | |- GetPositionAdlQuantileEstimation.txt
+| | | | | | |- GetPositionInformation.txt
+| | | | | | |- GetPositionMode.txt
+| | | | | | |- GetUserCommissionRate.txt
+| | | | | | |- KeepAliveUserStream.txt
+| | | | | | |- ModifyPositionMargin.txt
+| | | | | | |- ModifyPositionMode.txt
+| | | | | | |- StartUserStream.txt
+| | | | | | `- StopUserStream.txt
+| | | | | |- ExchangeData
+| | | | | | |- GetAggregatedTradeHistory.txt
+| | | | | | |- GetBasis.txt
+| | | | | | |- GetBookPrices.txt
+| | | | | | |- GetContinuousContractKlines.txt
+| | | | | | |- GetExchangeInfo.txt
+| | | | | | |- GetFundingInfo.txt
+| | | | | | |- GetFundingRates.txt
+| | | | | | |- GetGlobalLongShortAccountRatio.txt
+| | | | | | |- GetIndexPriceConstituents.txt
+| | | | | | |- GetIndexPriceKlines.txt
+| | | | | | |- GetKlines.txt
+| | | | | | |- GetMarkPriceKlines.txt
+| | | | | | |- GetMarkPrices.txt
+| | | | | | |- GetOpenInterest.txt
+| | | | | | |- GetOpenInterestHistory.txt
+| | | | | | |- GetOrderBook.txt
+| | | | | | |- GetPremiumIndexKlines.txt
+| | | | | | |- GetPrices.txt
+| | | | | | |- GetRecentTrades.txt
+| | | | | | |- GetServerTime.txt
+| | | | | | |- GetTakerBuySellVolumeRatio.txt
+| | | | | | |- GetTickers.txt
+| | | | | | |- GetTopLongShortAccountRatio.txt
+| | | | | | |- GetTopLongShortPositionRatio.txt
+| | | | | | `- GetTradeHistory.txt
+| | | | | `- Trading
+| | | | |   |- CancelAllOrders.txt
+| | | | |   |- CancelAllOrdersAfterTimeout.txt
+| | | | |   |- CancelMultipleOrders.txt
+| | | | |   |- CancelOrder.txt
+| | | | |   |- GetForcedOrders.txt
+| | | | |   |- GetOpenOrder.txt
+| | | | |   |- GetOpenOrders.txt
+| | | | |   |- GetOrder.txt
+| | | | |   |- GetOrders.txt
+| | | | |   |- GetUserTrades.txt
+| | | | |   |- PlaceMultipleOrders.txt
+| | | | |   `- PlaceOrder.txt
+| | | | |- General
+| | | | | |- AutoInvest
+| | | | | | |- EditPlan.txt
+| | | | | | |- EditPlanStatus.txt
+| | | | | | |- GetIndexInfo.txt
+| | | | | | |- GetIndexLinkedPlanPositionDetails.txt
+| | | | | | |- GetIndexLinkedPlanRebalanceHistory.txt
+| | | | | | |- GetIndexLinkedPlanRedemptionHistory.txt
+| | | | | | |- GetOneTimeTransactionStatus.txt
+| | | | | | |- GetPlanHoldings.txt
+| | | | | | |- GetPlans.txt
+| | | | | | |- GetSourceAndTargetAssets.txt
+| | | | | | |- GetSourceAssets.txt
+| | | | | | |- GetSubscriptionTransactionHistory.txt
+| | | | | | |- GetTargetAssetRois.txt
+| | | | | | |- GetTargetAssets.txt
+| | | | | | |- OneTimeTransaction.txt
+| | | | | | `- RedeemIndexLinkedPlan.txt
+| | | | | |- Brokerage
+| | | | | | |- AddIpRestrictionForSubAccountApiKey.txt
+| | | | | | |- ChangeSubAccountApiKeyPermission.txt
+| | | | | | |- CreateApiKeyForSubAccount.txt
+| | | | | | |- CreateSubAccount.txt
+| | | | | | |- DeleteSubAccountApiKey.txt
+| | | | | | |- EnableMarginForSubAccount.txt
+| | | | | | |- GetSubAccountApiKey.txt
+| | | | | | `- GetSubAccounts.txt
+| | | | | |- CopyTrading
+| | | | | | |- GetLeadSymbol.txt
+| | | | | | `- GetUserStatus.txt
+| | | | | |- CryptoLoans
+| | | | | | |- AdjustLTV.txt
+| | | | | | |- Borrow.txt
+| | | | | | |- CustomizeMarginCall.txt
+| | | | | | |- GetBorrowHistory.txt
+| | | | | | |- GetCollateralAssets.txt
+| | | | | | |- GetCollateralRepayRate.txt
+| | | | | | |- GetIncomeHistory.txt
+| | | | | | |- GetLoanableAssets.txt
+| | | | | | |- GetLtvAdjustHistory.txt
+| | | | | | |- GetOpenBorrowOrders.txt
+| | | | | | |- GetRepayHistory.txt
+| | | | | | `- Repay.txt
+| | | | | |- Futures
+| | | | | | |- GetFuturesTransferHistory.txt
+| | | | | | `- TransferFuturesAccount.txt
+| | | | | |- GiftCard
+| | | | | | |- CreateDualTokenGiftCard.txt
+| | | | | | |- CreateSingleTokenGiftCard.txt
+| | | | | | |- GetRsaPublicKey.txt
+| | | | | | |- GetTokenLimit.txt
+| | | | | | |- RedeemGiftCard.txt
+| | | | | | `- VerifyGiftCardByNumber.txt
+| | | | | |- Mining
+| | | | | | |- CancelHashrateResaleRequest.txt
+| | | | | | |- GetHashrateResaleDetails.txt
+| | | | | | |- GetHashrateResaleList.txt
+| | | | | | |- GetMinerDetails.txt
+| | | | | | |- GetMinerList.txt
+| | | | | | |- GetMiningAccountEarnings.txt
+| | | | | | |- GetMiningAccountList.txt
+| | | | | | |- GetMiningAlgorithmList.txt
+| | | | | | |- GetMiningCoinList.txt
+| | | | | | |- GetMiningOtherRevenueList.txt
+| | | | | | |- GetMiningRevenueList.txt
+| | | | | | |- GetMiningStatistics.txt
+| | | | | | `- PlaceHashrateResaleRequest.txt
+| | | | | |- Nft
+| | | | | | |- GetNftAsset.txt
+| | | | | | |- GetNftDepositHistory.txt
+| | | | | | |- GetNftTransactionHistory.txt
+| | | | | | `- GetNftWithdrawHistory.txt
+| | | | | `- SimpleEarn
+| | | | |   |- GetAccount.txt
+| | | | |   |- GetCollateralRecords.txt
+| | | | |   |- GetFlexiblePersonalQuotaLeft.txt
+| | | | |   |- GetFlexibleProductPositions.txt
+| | | | |   |- GetFlexibleProducts.txt
+| | | | |   |- GetFlexibleRedemptionRecords.txt
+| | | | |   |- GetFlexibleRewardRecords.txt
+| | | | |   |- GetFlexibleSubscriptionPreview.txt
+| | | | |   |- GetFlexibleSubscriptionRecords.txt
+| | | | |   |- GetLockedPersonalQuotaLeft.txt
+| | | | |   |- GetLockedProductPositions.txt
+| | | | |   |- GetLockedProducts.txt
+| | | | |   |- GetLockedRedemptionRecords.txt
+| | | | |   |- GetLockedRewardRecords.txt
+| | | | |   |- GetLockedSubscriptionPreview.txt
+| | | | |   |- GetLockedSubscriptionRecords.txt
+| | | | |   |- GetRateHistory.txt
+| | | | |   |- RedeemFlexibleProduct.txt
+| | | | |   |- RedeemLockedProduct.txt
+| | | | |   |- SetFlexibleAutoSubscribe.txt
+| | | | |   |- SetLockedAutoSubscribe.txt
+| | | | |   |- SetLockedRedeemOption.txt
+| | | | |   |- SubscribeFlexibleProduct.txt
+| | | | |   `- SubscribeLockedProduct.txt
+| | | | |- Spot
+| | | | | |- Account
+| | | | | | |- ConvertBusd.txt
+| | | | | | |- CrossMarginAdjustMaxLeverage.txt
+| | | | | | |- CrossMarginSmallLiabilityExchange.txt
+| | | | | | |- DisableIsolatedMarginAccount.txt
+| | | | | | |- DustTransfer.txt
+| | | | | | |- EnableIsolatedMarginAccount.txt
+| | | | | | |- GetAPIKeyPermissions.txt
+| | | | | | |- GetAccountInfo.txt
+| | | | | | |- GetAccountStatus.txt
+| | | | | | |- GetAccountVipLevelAndStatus.txt
+| | | | | | |- GetAssetDividendRecords.txt
+| | | | | | |- GetAssetsForDustTransfer.txt
+| | | | | | |- GetAutoConvertStableCoinConfig.txt
+| | | | | | |- GetBalances.txt
+| | | | | | |- GetBnbBurnStatus.txt
+| | | | | | |- GetBusdConvertHistory.txt
+| | | | | | |- GetCloudMiningHistory.txt
+| | | | | | |- GetCommissionRates.txt
+| | | | | | |- GetCrossMarginSmallLiabilityExchangeAssets.txt
+| | | | | | |- GetCrossMarginSmallLiabilityExchangeHistory.txt
+| | | | | | |- GetDailyFutureAccountSnapshot.txt
+| | | | | | |- GetDailyMarginAccountSnapshot.txt
+| | | | | | |- GetDailySpotAccountSnapshot.txt
+| | | | | | |- GetDepositAddress.txt
+| | | | | | |- GetDepositAddressesList.txt
+| | | | | | |- GetDepositHistory.txt
+| | | | | | |- GetDustLog.txt
+| | | | | | |- GetEnabledIsolatedMarginAccountLimit.txt
+| | | | | | |- GetFiatDepositWithdrawHistory.txt
+| | | | | | |- GetFiatPaymentHistory.txt
+| | | | | | |- GetFundingWallet.txt
+| | | | | | |- GetInterestMarginData.txt
+| | | | | | |- GetIsolatedMarginAccount.txt
+| | | | | | |- GetIsolatedMarginFeeData.txt
+| | | | | | |- GetIsolatedMarginTierData.txt
+| | | | | | |- GetLeveragedTokensUserLimit.txt
+| | | | | | |- GetMarginAccountInfo.txt
+| | | | | | |- GetMarginForcedLiquidationHistory.txt
+| | | | | | |- GetMarginInterestHistory.txt
+| | | | | | |- GetMarginInterestRateHistory.txt
+| | | | | | |- GetMarginLevelInformation.txt
+| | | | | | |- GetMarginLoans.txt
+| | | | | | |- GetMarginMaxBorrowAmount.txt
+| | | | | | |- GetMarginMaxTransferAmount.txt
+| | | | | | |- GetMarginOrderRateLimitStatus.txt
+| | | | | | |- GetMarginRepays.txt
+| | | | | | |- GetMarginTransferHistory.txt
+| | | | | | |- GetOrderRateLimitStatus.txt
+| | | | | | |- GetPortfolioMarginAccountInfo.txt
+| | | | | | |- GetPortfolioMarginBankruptcyLoan.txt
+| | | | | | |- GetPortfolioMarginCollateralRate.txt
+| | | | | | |- GetRebateHistory.txt
+| | | | | | |- GetTradeFee.txt
+| | | | | | |- GetTradingStatus.txt
+| | | | | | |- GetTransfers.txt
+| | | | | | |- GetUserAssets.txt
+| | | | | | |- GetWalletBalances.txt
+| | | | | | |- GetWithdrawalAddresses.txt
+| | | | | | |- GetWithdrawalHistory.txt
+| | | | | | |- KeepAliveIsolatedMarginUserStream.txt
+| | | | | | |- KeepAliveMarginUserStream.txt
+| | | | | | |- KeepAliveUserStream.txt
+| | | | | | |- MarginBorrow.txt
+| | | | | | |- MarginRepay.txt
+| | | | | | |- PortfolioMarginBankruptcyLoanRepay.txt
+| | | | | | |- SetAutoConvertStableCoinConfig.txt
+| | | | | | |- SetBnbBurnStatus.txt
+| | | | | | |- StartIsolatedMarginUserStream.txt
+| | | | | | |- StartMarginUserStream.txt
+| | | | | | |- StartUserStream.txt
+| | | | | | |- StopIsolatedMarginUserStream.txt
+| | | | | | |- StopMarginUserStream.txt
+| | | | | | |- StopUserStream.txt
+| | | | | | |- Transfer.txt
+| | | | | | `- Withdraw.txt
+| | | | | |- ExchangeData
+| | | | | | |- GetAggregatedTradeHistory.txt
+| | | | | | |- GetAssetDetails.txt
+| | | | | | |- GetAvgPrice.txt
+| | | | | | |- GetBookPrice.txt
+| | | | | | |- GetConvertListAllPairs.txt
+| | | | | | |- GetConvertQuantityPrecisionPerAsset.txt
+| | | | | | |- GetCrossMarginCollateralRatio.txt
+| | | | | | |- GetDelistSchedule.txt
+| | | | | | |- GetExchangeInfo.txt
+| | | | | | |- GetFutureHourlyInterestRate.txt
+| | | | | | |- GetIsolatedMarginSymbols.txt
+| | | | | | |- GetKlines.txt
+| | | | | | |- GetLeveragedTokenInfo.txt
+| | | | | | |- GetMarginAssets.txt
+| | | | | | |- GetMarginDelistSchedule.txt
+| | | | | | |- GetMarginPriceIndex.txt
+| | | | | | |- GetMarginSymbols.txt
+| | | | | | |- GetPrice.txt
+| | | | | | |- GetRecentTrades.txt
+| | | | | | |- GetRollingWindowTicker.txt
+| | | | | | |- GetServerTime.txt
+| | | | | | |- GetSystemStatus.txt
+| | | | | | |- GetTicker.txt
+| | | | | | |- GetTradeHistory.txt
+| | | | | | |- GetTradingDayTicker.txt
+| | | | | | `- GetUiKlines.txt
+| | | | | `- Trading
+| | | | |   |- CancelAlgoOrder.txt
+| | | | |   |- CancelAllMarginOrders.txt
+| | | | |   |- CancelAllOrders.txt
+| | | | |   |- CancelMarginOcoOrder.txt
+| | | | |   |- CancelMarginOrder.txt
+| | | | |   |- CancelOcoOrder.txt
+| | | | |   |- CancelOrder.txt
+| | | | |   |- ConvertAcceptQuote.txt
+| | | | |   |- ConvertQuoteRequest.txt
+| | | | |   |- GetAlgoSubOrders.txt
+| | | | |   |- GetC2CTradeHistory.txt
+| | | | |   |- GetClosedAlgoOrders.txt
+| | | | |   |- GetConvertOrderStatus.txt
+| | | | |   |- GetConvertTradeHistory.txt
+| | | | |   |- GetLeveragedTokensRedemptionRecords.txt
+| | | | |   |- GetLeveragedTokensSubscriptionRecords.txt
+| | | | |   |- GetMarginOcoOrder.txt
+| | | | |   |- GetMarginOcoOrders.txt
+| | | | |   |- GetMarginOpenOcoOrders.txt
+| | | | |   |- GetMarginOrder.txt
+| | | | |   |- GetMarginOrders.txt
+| | | | |   |- GetMarginUserTrades.txt
+| | | | |   |- GetOcoOrder.txt
+| | | | |   |- GetOcoOrders.txt
+| | | | |   |- GetOpenAlgoOrders.txt
+| | | | |   |- GetOpenMarginOrders.txt
+| | | | |   |- GetOpenOcoOrders.txt
+| | | | |   |- GetOpenOrders.txt
+| | | | |   |- GetOrder.txt
+| | | | |   |- GetOrders.txt
+| | | | |   |- GetPayTradeHistory.txt
+| | | | |   |- GetPayTradeHistory2.txt
+| | | | |   |- GetPreventedTrades.txt
+| | | | |   |- GetUserTrades.txt
+| | | | |   |- PlaceMarginOCOOrder.txt
+| | | | |   |- PlaceMarginOrder.txt
+| | | | |   |- PlaceOcoOrderList.txt
+| | | | |   |- PlaceOrder.txt
+| | | | |   |- PlaceOtoOrderList.txt
+| | | | |   |- PlaceOtocoOrderList.txt
+| | | | |   |- PlaceTestOrder.txt
+| | | | |   |- PlaceTimeWeightedAveragePriceOrder.txt
+| | | | |   |- RedeemLeveragedToken.txt
+| | | | |   |- ReplaceOrder.txt
+| | | | |   `- SubscribeLeveragedToken.txt
+| | | | `- UsdFutures
+| | | |   |- Account
+| | | |   | |- ChangeInitialLeverage.txt
+| | | |   | |- ChangeMarginType.txt
+| | | |   | |- GetAccountConfiguration.txt
+| | | |   | |- GetAccountInfo.txt
+| | | |   | |- GetAccountInfoV3.txt
+| | | |   | |- GetBalances.txt
+| | | |   | |- GetBnbBurnStatus.txt
+| | | |   | |- GetBrackets.txt
+| | | |   | |- GetDownloadIdForOrderHistory.txt
+| | | |   | |- GetDownloadIdForTradeHistory.txt
+| | | |   | |- GetDownloadIdForTransactionHistory.txt
+| | | |   | |- GetDownloadLinkForOrderHistory.txt
+| | | |   | |- GetDownloadLinkForTradeHistory.txt
+| | | |   | |- GetDownloadLinkForTransactionHistory.txt
+| | | |   | |- GetIncomeHistory.txt
+| | | |   | |- GetMarginChangeHistory.txt
+| | | |   | |- GetMultiAssetsMode.txt
+| | | |   | |- GetOrderRateLimit.txt
+| | | |   | |- GetPositionAdlQuantileEstimation.txt
+| | | |   | |- GetPositionInformation.txt
+| | | |   | |- GetSymbolConfiguration.txt
+| | | |   | |- GetTradingStatus.txt
+| | | |   | |- GetUserCommissionRate.txt
+| | | |   | |- KeepAliveUserStream.txt
+| | | |   | |- ModifyPositionMargin.txt
+| | | |   | |- ModifyPositionMode.txt
+| | | |   | |- SetBnbBurnStatus.txt
+| | | |   | |- SetMultiAssetsMode.txt
+| | | |   | |- StartUserStream.txt
+| | | |   | `- StopUserStream.txt
+| | | |   |- ExchangeData
+| | | |   | |- GetAggregatedTradeHistory.txt
+| | | |   | |- GetAssetIndexes.txt
+| | | |   | |- GetBasis.txt
+| | | |   | |- GetBookPrice.txt
+| | | |   | |- GetCompositeIndexInfo.txt
+| | | |   | |- GetContinuousContractKlines.txt
+| | | |   | |- GetExchangeInfo.txt
+| | | |   | |- GetFundingInfo.txt
+| | | |   | |- GetFundingRates.txt
+| | | |   | |- GetGlobalLongShortAccountRatio.txt
+| | | |   | |- GetIndexPriceConstituents.txt
+| | | |   | |- GetIndexPriceKlines.txt
+| | | |   | |- GetInsuranceFundBalances.txt
+| | | |   | |- GetKlines.txt
+| | | |   | |- GetMarkPrice.txt
+| | | |   | |- GetMarkPriceKlines.txt
+| | | |   | |- GetOpenInterest.txt
+| | | |   | |- GetOpenInterestHistory.txt
+| | | |   | |- GetOrderBook.txt
+| | | |   | |- GetPremiumIndexKlines.txt
+| | | |   | |- GetPrice.txt
+| | | |   | |- GetRecentTrades.txt
+| | | |   | |- GetServerTime.txt
+| | | |   | |- GetTakerBuySellVolumeRatio.txt
+| | | |   | |- GetTicker.txt
+| | | |   | |- GetTopLongShortAccountRatio.txt
+| | | |   | |- GetTopLongShortPositionRatio.txt
+| | | |   | `- GetTradeHistory.txt
+| | | |   `- Trading
+| | | |     |- CancelAlgoOrder.txt
+| | | |     |- CancelAllConditionalOrders.txt
+| | | |     |- CancelAllOrders.txt
+| | | |     |- CancelAllOrdersAfterTimeout.txt
+| | | |     |- CancelConditionalOrder.txt
+| | | |     |- CancelMultipleOrders.txt
+| | | |     |- CancelOrder.txt
+| | | |     |- ConvertAcceptQuote.txt
+| | | |     |- ConvertQuoteRequest.txt
+| | | |     |- EditMultipleOrders.txt
+| | | |     |- EditOrder.txt
+| | | |     |- GetAlgoSubOrders.txt
+| | | |     |- GetClosedAlgoOrders.txt
+| | | |     |- GetConditionalOrder.txt
+| | | |     |- GetConditionalOrders.txt
+| | | |     |- GetConvertOrderStatus.txt
+| | | |     |- GetForcedOrders.txt
+| | | |     |- GetOpenAlgoOrders.txt
+| | | |     |- GetOpenConditionalOrders.txt
+| | | |     |- GetOpenOrder.txt
+| | | |     |- GetOpenOrders.txt
+| | | |     |- GetOrder.txt
+| | | |     |- GetOrderEditHistory.txt
+| | | |     |- GetOrders.txt
+| | | |     |- GetPositions.txt
+| | | |     |- GetUserTrades.txt
+| | | |     |- PlaceConditionalOrder.txt
+| | | |     |- PlaceMultipleOrders.txt
+| | | |     |- PlaceOrder.txt
+| | | |     |- PlaceTimeWeightedAveragePriceOrder.txt
+| | | |     `- PlaceVolumeParticipationOrder.txt
+| | | |- Properties
+| | | | `- AssemblyInfo.cs
+| | | |- Socket
+| | | | |- CoinFutures
+| | | | | |- Account
+| | | | | | |- GetAccountInfo.txt
+| | | | | | `- GetBalances.txt
+| | | | | `- Trading
+| | | | |   |- CancelOrder.txt
+| | | | |   |- EditOrder.txt
+| | | | |   |- GetOrder.txt
+| | | | |   |- GetPositions.txt
+| | | | |   `- PlaceOrder.txt
+| | | | |- Spot
+| | | | | |- Account
+| | | | | | |- GetAccountInfo.txt
+| | | | | | |- GetOrderRateLimits.txt
+| | | | | | |- KeepAliveUserStream.txt
+| | | | | | |- StartUserStream.txt
+| | | | | | `- StopUserStream.txt
+| | | | | |- ExchangeData
+| | | | | | |- GetAggregatedTradeHistory.txt
+| | | | | | |- GetBookTickers.txt
+| | | | | | |- GetCurrentAvgPrice.txt
+| | | | | | |- GetExchangeInfo.txt
+| | | | | | |- GetKlines.txt
+| | | | | | |- GetOrderBook.txt
+| | | | | | |- GetRecentTrades.txt
+| | | | | | |- GetRollingWindowTickers.txt
+| | | | | | |- GetTickers.txt
+| | | | | | |- GetTradeHistory.txt
+| | | | | | `- GetUIKlines.txt
+| | | | | `- Trading
+| | | | |   |- CancelAllOrders.txt
+| | | | |   |- CancelOcoOrder.txt
+| | | | |   |- CancelOrder.txt
+| | | | |   |- GetOcoOrder.txt
+| | | | |   |- GetOpenOcoOrders.txt
+| | | | |   |- GetOpenOrders.txt
+| | | | |   |- GetOrder.txt
+| | | | |   |- GetPreventedTrades.txt
+| | | | |   |- GetUserTrades.txt
+| | | | |   |- PlaceOcoOrder.txt
+| | | | |   |- PlaceOrder.txt
+| | | | |   |- PlaceTestOrder.txt
+| | | | |   `- ReplaceOrder.txt
+| | | | `- UsdFutures
+| | | |   |- Account
+| | | |   | |- GetAccountInfo.txt
+| | | |   | `- GetBalances.txt
+| | | |   |- ExchangeData
+| | | |   | |- GetBookPrice.txt
+| | | |   | |- GetBookPrices.txt
+| | | |   | |- GetOrderBook.txt
+| | | |   | |- GetPrice.txt
+| | | |   | `- GetPrices.txt
+| | | |   `- Trading
+| | | |     |- CancelConditionalOrder.txt
+| | | |     |- CancelOrder.txt
+| | | |     |- EditOrder.txt
+| | | |     |- GetOrder.txt
+| | | |     |- GetPositions.txt
+| | | |     |- PlaceConditionalOrder.txt
+| | | |     `- PlaceOrder.txt
+| | | |- Subscriptions
+| | | | |- Spot
+| | | | | |- Account
+| | | | | | |- AccountPosition.txt
+| | | | | | |- Balance.txt
+| | | | | | |- Liability.txt
+| | | | | | |- MarginCall.txt
+| | | | | | |- OcoOrder.txt
+| | | | | | `- Order.txt
+| | | | | `- ExchangeData
+| | | | |   |- AggregatedTrades.txt
+| | | | |   |- BookTicker.txt
+| | | | |   |- Klines.txt
+| | | | |   |- MiniTicker.txt
+| | | | |   |- PartialBook.txt
+| | | | |   |- RollingWindowTicker.txt
+| | | | |   |- Ticker.txt
+| | | | |   `- Trades.txt
+| | | | `- UsdFutures
+| | | |   |- AccountUpdate.txt
+| | | |   |- AggTrades.txt
+| | | |   |- AlgoOrderUpdate.txt
+| | | |   |- AssetIndex.txt
+| | | |   |- Book.txt
+| | | |   |- BookTicker.txt
+| | | |   |- CompositIndex.txt
+| | | |   |- ConditionalTrigger.txt
+| | | |   |- ContKlines.txt
+| | | |   |- GridUpdate.txt
+| | | |   |- Klines.txt
+| | | |   |- Leverage.txt
+| | | |   |- Liquidations.txt
+| | | |   |- MarginUpdate.txt
+| | | |   |- MarkPrice.txt
+| | | |   |- MiniTicker.txt
+| | | |   |- MultiAssetMode.txt
+| | | |   |- OrderUpdate.txt
+| | | |   |- PartialBook.txt
+| | | |   |- StrategyUpdate.txt
+| | | |   |- SymbolUpdates.txt
+| | | |   |- Ticker.txt
+| | | |   `- TradeUpdate.txt
+| | | |- TestImplementations
+| | | | |- BinanceRestApiClient.cs
+| | | | |- TestHelpers.cs
+| | | | `- TestSocket.cs
+| | | |- Binance.Net.UnitTests.csproj
+| | | |- BinanceClientTests.cs
+| | | |- BinanceRestIntegrationTests.cs
+| | | |- BinanceSocketClientTests.cs
+| | | |- BinanceSocketIntegrationTests.cs
+| | | |- RestRequestTests.cs
+| | | |- SocketRequestTests.cs
+| | | `- SocketSubscriptionTests.cs
+| | |- Examples
+| | | |- Asp.NetCore.MVC
+| | | | |- Controllers
+| | | | | `- HomeController.cs
+| | | | |- Models
+| | | | | `- ErrorViewModel.cs
+| | | | |- Views
+| | | | | |- Home
+| | | | | | `- Index.cshtml
+| | | | | |- Shared
+| | | | | | |- Error.cshtml
+| | | | | | |- _Layout.cshtml
+| | | | | | `- _ValidationScriptsPartial.cshtml
+| | | | | |- _ViewImports.cshtml
+| | | | | `- _ViewStart.cshtml
+| | | | |- wwwroot
+| | | | | |- css
+| | | | | | `- site.css
+| | | | | |- js
+| | | | | | `- site.js
+| | | | | |- lib
+| | | | | | |- bootstrap
+| | | | | | | `- LICENSE
+| | | | | | |- jquery
+| | | | | | | `- LICENSE.txt
+| | | | | | |- jquery-validation
+| | | | | | | `- LICENSE.md
+| | | | | | `- jquery-validation-unobtrusive
+| | | | | |   |- LICENSE.txt
+| | | | | |   |- jquery.validate.unobtrusive.js
+| | | | | |   `- jquery.validate.unobtrusive.min.js
+| | | | | `- favicon.ico
+| | | | |- Asp.Net.csproj
+| | | | |- BinanceDataProvider.cs
+| | | | |- Program.cs
+| | | | |- Startup.cs
+| | | | |- appsettings.Development.json
+| | | | `- appsettings.json
+| | | |- Binance.Examples.OrderBook
+| | | | |- Binance.Examples.OrderBook.csproj
+| | | | `- Program.cs
+| | | |- Binance.Examples.Tracker
+| | | | |- Binance.Examples.Tracker.csproj
+| | | | `- Program.cs
+| | | |- Blazor.ClientSide
+| | | | |- Pages
+| | | | | `- Index.razor
+| | | | |- Shared
+| | | | | |- MainLayout.razor
+| | | | | `- NavMenu.razor
+| | | | |- wwwroot
+| | | | | |- css
+| | | | | | |- bootstrap
+| | | | | | | |- bootstrap.min.css
+| | | | | | | `- bootstrap.min.css.map
+| | | | | | |- open-iconic
+| | | | | | | |- font
+| | | | | | | | |- css
+| | | | | | | | | `- open-iconic-bootstrap.min.css
+| | | | | | | | `- fonts
+| | | | | | | |   |- open-iconic.eot
+| | | | | | | |   |- open-iconic.otf
+| | | | | | | |   |- open-iconic.svg
+| | | | | | | |   |- open-iconic.ttf
+| | | | | | | |   `- open-iconic.woff
+| | | | | | | |- FONT-LICENSE
+| | | | | | | |- ICON-LICENSE
+| | | | | | | `- README.md
+| | | | | | `- app.css
+| | | | | |- favicon.ico
+| | | | | `- index.html
+| | | | |- App.razor
+| | | | |- Blazor.ClientSide.csproj
+| | | | |- Program.cs
+| | | | `- _Imports.razor
+| | | |- Blazor.DataProvider
+| | | | |- BinanceDataProvider.cs
+| | | | `- Blazor.DataProvider.csproj
+| | | |- Blazor.ServerSide
+| | | | |- Pages
+| | | | | |- Error.cshtml
+| | | | | |- Index.razor
+| | | | | `- _Host.cshtml
+| | | | |- Shared
+| | | | | |- MainLayout.razor
+| | | | | `- NavMenu.razor
+| | | | |- wwwroot
+| | | | | |- css
+| | | | | | |- bootstrap
+| | | | | | | |- bootstrap.min.css
+| | | | | | | `- bootstrap.min.css.map
+| | | | | | |- open-iconic
+| | | | | | | |- font
+| | | | | | | | |- css
+| | | | | | | | | `- open-iconic-bootstrap.min.css
+| | | | | | | | `- fonts
+| | | | | | | |   |- open-iconic.eot
+| | | | | | | |   |- open-iconic.otf
+| | | | | | | |   |- open-iconic.svg
+| | | | | | | |   |- open-iconic.ttf
+| | | | | | | |   `- open-iconic.woff
+| | | | | | | |- FONT-LICENSE
+| | | | | | | |- ICON-LICENSE
+| | | | | | | `- README.md
+| | | | | | `- site.css
+| | | | | `- favicon.ico
+| | | | |- App.razor
+| | | | |- Blazor.ServerSide.csproj
+| | | | |- Program.cs
+| | | | |- Startup.cs
+| | | | |- _Imports.razor
+| | | | |- appsettings.Development.json
+| | | | `- appsettings.json
+| | | |- ConsoleClient
+| | | | |- ConsoleClient.csproj
+| | | | `- Program.cs
+| | | |- Minimal WebApi
+| | | | |- Minimal WebApi.csproj
+| | | | |- Program.cs
+| | | | |- appsettings.Development.json
+| | | | `- appsettings.json
+| | | |- Serverless.BlazorWASM
+| | | | |- Pages
+| | | | | |- Counter.razor
+| | | | | |- FetchData.razor
+| | | | | `- Index.razor
+| | | | |- Shared
+| | | | | |- MainLayout.razor
+| | | | | |- NavMenu.razor
+| | | | | `- SurveyPrompt.razor
+| | | | |- wwwroot
+| | | | | |- css
+| | | | | | |- bootstrap
+| | | | | | | |- bootstrap.min.css
+| | | | | | | `- bootstrap.min.css.map
+| | | | | | |- open-iconic
+| | | | | | | |- font
+| | | | | | | | |- css
+| | | | | | | | | `- open-iconic-bootstrap.min.css
+| | | | | | | | `- fonts
+| | | | | | | |   |- open-iconic.eot
+| | | | | | | |   |- open-iconic.otf
+| | | | | | | |   |- open-iconic.svg
+| | | | | | | |   |- open-iconic.ttf
+| | | | | | | |   `- open-iconic.woff
+| | | | | | | |- FONT-LICENSE
+| | | | | | | |- ICON-LICENSE
+| | | | | | | `- README.md
+| | | | | | `- app.css
+| | | | | |- sample-data
+| | | | | | `- weather.json
+| | | | | |- favicon.ico
+| | | | | `- index.html
+| | | | |- App.razor
+| | | | |- Program.cs
+| | | | |- Serverless.BlazorWASM.csproj
+| | | | `- _Imports.razor
+| | | |- Serverless.FunctionApp
+| | | | |- Properties
+| | | | | |- serviceDependencies.json
+| | | | | `- serviceDependencies.local.json
+| | | | |- BTCUSDTFunction.cs
+| | | | |- BinanceDataProvider.cs
+| | | | |- Serverless.FunctionApp.csproj
+| | | | |- Startup.cs
+| | | | `- host.json
+| | | |- WpfClient
+| | | | |- MVVM
+| | | | | |- DelegateCommand.cs
+| | | | | `- ObservableObject.cs
+| | | | |- MessageBox
+| | | | | |- IMessageBoxService.cs
+| | | | | `- MessageBoxService.cs
+| | | | |- Resources
+| | | | | `- settings.png
+| | | | |- UserControls
+| | | | | |- SettingsWindow.xaml
+| | | | | |- SettingsWindow.xaml.cs
+| | | | | |- SymbolUserControl.xaml
+| | | | | `- SymbolUserControl.xaml.cs
+| | | | |- ViewModels
+| | | | | |- AssetViewModel.cs
+| | | | | |- BinanceSymbolViewModel.cs
+| | | | | |- MainViewModel.cs
+| | | | | `- OrderViewModel.cs
+| | | | |- App.xaml
+| | | | |- App.xaml.cs
+| | | | |- AssemblyInfo.cs
+| | | | |- MainWindow.xaml
+| | | | |- MainWindow.xaml.cs
+| | | | `- WpfClient.csproj
+| | | `- Examples.sln
+| | |- docs
+| | | |- assets
+| | | | |- css
+| | | | | |- color-blue.css
+| | | | | |- color-brown.css
+| | | | | |- color-cyan.css
+| | | | | |- color-green.css
+| | | | | |- color-indigo.css
+| | | | | |- color-orange.css
+| | | | | |- color-purple.css
+| | | | | |- color-red.css
+| | | | | |- color-teal.css
+| | | | | |- color-yellow.css
+| | | | | `- stylesheet.css
+| | | | |- images
+| | | | | `- logo.png
+| | | | |- js
+| | | | | `- theme.js
+| | | | |- sass
+| | | | | |- bootstrap
+| | | | | | |- mixins
+| | | | | | | |- _alert.scss
+| | | | | | | |- _background-variant.scss
+| | | | | | | |- _badge.scss
+| | | | | | | |- _border-radius.scss
+| | | | | | | |- _box-shadow.scss
+| | | | | | | |- _breakpoints.scss
+| | | | | | | |- _buttons.scss
+| | | | | | | |- _caret.scss
+| | | | | | | |- _clearfix.scss
+| | | | | | | |- _deprecate.scss
+| | | | | | | |- _float.scss
+| | | | | | | |- _forms.scss
+| | | | | | | |- _gradients.scss
+| | | | | | | |- _grid-framework.scss
+| | | | | | | |- _grid.scss
+| | | | | | | |- _hover.scss
+| | | | | | | |- _image.scss
+| | | | | | | |- _list-group.scss
+| | | | | | | |- _lists.scss
+| | | | | | | |- _nav-divider.scss
+| | | | | | | |- _pagination.scss
+| | | | | | | |- _reset-text.scss
+| | | | | | | |- _resize.scss
+| | | | | | | |- _screen-reader.scss
+| | | | | | | |- _size.scss
+| | | | | | | |- _table-row.scss
+| | | | | | | |- _text-emphasis.scss
+| | | | | | | |- _text-hide.scss
+| | | | | | | |- _text-truncate.scss
+| | | | | | | |- _transition.scss
+| | | | | | | `- _visibility.scss
+| | | | | | |- utilities
+| | | | | | | |- _align.scss
+| | | | | | | |- _background.scss
+| | | | | | | |- _borders.scss
+| | | | | | | |- _clearfix.scss
+| | | | | | | |- _display.scss
+| | | | | | | |- _embed.scss
+| | | | | | | |- _flex.scss
+| | | | | | | |- _float.scss
+| | | | | | | |- _interactions.scss
+| | | | | | | |- _overflow.scss
+| | | | | | | |- _position.scss
+| | | | | | | |- _screenreaders.scss
+| | | | | | | |- _shadows.scss
+| | | | | | | |- _sizing.scss
+| | | | | | | |- _spacing.scss
+| | | | | | | |- _stretched-link.scss
+| | | | | | | |- _text.scss
+| | | | | | | `- _visibility.scss
+| | | | | | |- vendor
+| | | | | | | `- _rfs.scss
+| | | | | | |- _alert.scss
+| | | | | | |- _badge.scss
+| | | | | | |- _breadcrumb.scss
+| | | | | | |- _button-group.scss
+| | | | | | |- _buttons.scss
+| | | | | | |- _card.scss
+| | | | | | |- _carousel.scss
+| | | | | | |- _close.scss
+| | | | | | |- _code.scss
+| | | | | | |- _custom-forms.scss
+| | | | | | |- _dropdown.scss
+| | | | | | |- _forms.scss
+| | | | | | |- _functions.scss
+| | | | | | |- _grid.scss
+| | | | | | |- _images.scss
+| | | | | | |- _input-group.scss
+| | | | | | |- _jumbotron.scss
+| | | | | | |- _list-group.scss
+| | | | | | |- _media.scss
+| | | | | | |- _mixins.scss
+| | | | | | |- _modal.scss
+| | | | | | |- _nav.scss
+| | | | | | |- _navbar.scss
+| | | | | | |- _pagination.scss
+| | | | | | |- _popover.scss
+| | | | | | |- _print.scss
+| | | | | | |- _progress.scss
+| | | | | | |- _reboot.scss
+| | | | | | |- _root.scss
+| | | | | | |- _spinners.scss
+| | | | | | |- _tables.scss
+| | | | | | |- _toasts.scss
+| | | | | | |- _tooltip.scss
+| | | | | | |- _transitions.scss
+| | | | | | |- _type.scss
+| | | | | | |- _utilities.scss
+| | | | | | |- _variables.scss
+| | | | | | |- bootstrap-grid.scss
+| | | | | | |- bootstrap-reboot.scss
+| | | | | | `- bootstrap.scss
+| | | | | |- _elements.scss
+| | | | | |- _extras.scss
+| | | | | |- _footer.scss
+| | | | | |- _header.scss
+| | | | | |- _helpers.scss
+| | | | | |- _layouts.scss
+| | | | | |- _mixins.scss
+| | | | | |- _reset.scss
+| | | | | |- _variables.scss
+| | | | | |- color-blue.scss
+| | | | | |- color-brown.scss
+| | | | | |- color-cyan.scss
+| | | | | |- color-green.scss
+| | | | | |- color-indigo.scss
+| | | | | |- color-orange.scss
+| | | | | |- color-purple.scss
+| | | | | |- color-red.scss
+| | | | | |- color-teal.scss
+| | | | | |- color-yellow.scss
+| | | | | `- stylesheet.scss
+| | | | `- vendor
+| | | |   |- bootstrap
+| | | |   | |- css
+| | | |   | | |- bootstrap-grid.css
+| | | |   | | |- bootstrap-grid.css.map
+| | | |   | | |- bootstrap-grid.min.css
+| | | |   | | |- bootstrap-grid.min.css.map
+| | | |   | | |- bootstrap-reboot.css
+| | | |   | | |- bootstrap-reboot.css.map
+| | | |   | | |- bootstrap-reboot.min.css
+| | | |   | | |- bootstrap-reboot.min.css.map
+| | | |   | | |- bootstrap.css
+| | | |   | | |- bootstrap.css.map
+| | | |   | | |- bootstrap.min.css
+| | | |   | | `- bootstrap.min.css.map
+| | | |   | `- js
+| | | |   |   |- bootstrap.bundle.js
+| | | |   |   |- bootstrap.bundle.js.map
+| | | |   |   |- bootstrap.bundle.min.js
+| | | |   |   |- bootstrap.bundle.min.js.map
+| | | |   |   |- bootstrap.js
+| | | |   |   |- bootstrap.js.map
+| | | |   |   |- bootstrap.min.js
+| | | |   |   `- bootstrap.min.js.map
+| | | |   |- font-awesome
+| | | |   | |- css
+| | | |   | | |- all.css
+| | | |   | | |- all.min.css
+| | | |   | | |- brands.css
+| | | |   | | |- brands.min.css
+| | | |   | | |- fontawesome.css
+| | | |   | | |- fontawesome.min.css
+| | | |   | | |- regular.css
+| | | |   | | |- regular.min.css
+| | | |   | | |- solid.css
+| | | |   | | |- solid.min.css
+| | | |   | | |- svg-with-js.css
+| | | |   | | |- svg-with-js.min.css
+| | | |   | | |- v4-shims.css
+| | | |   | | `- v4-shims.min.css
+| | | |   | |- js
+| | | |   | | |- all.js
+| | | |   | | |- all.min.js
+| | | |   | | |- brands.js
+| | | |   | | |- brands.min.js
+| | | |   | | |- conflict-detection.js
+| | | |   | | |- conflict-detection.min.js
+| | | |   | | |- fontawesome.js
+| | | |   | | |- fontawesome.min.js
+| | | |   | | |- regular.js
+| | | |   | | |- regular.min.js
+| | | |   | | |- solid.js
+| | | |   | | |- solid.min.js
+| | | |   | | |- v4-shims.js
+| | | |   | | `- v4-shims.min.js
+| | | |   | `- webfonts
+| | | |   |   |- fa-brands-400.eot
+| | | |   |   |- fa-brands-400.svg
+| | | |   |   |- fa-brands-400.ttf
+| | | |   |   |- fa-brands-400.woff
+| | | |   |   |- fa-brands-400.woff2
+| | | |   |   |- fa-regular-400.eot
+| | | |   |   |- fa-regular-400.svg
+| | | |   |   |- fa-regular-400.ttf
+| | | |   |   |- fa-regular-400.woff
+| | | |   |   |- fa-regular-400.woff2
+| | | |   |   |- fa-solid-900.eot
+| | | |   |   |- fa-solid-900.svg
+| | | |   |   |- fa-solid-900.ttf
+| | | |   |   |- fa-solid-900.woff
+| | | |   |   `- fa-solid-900.woff2
+| | | |   |- highlight.js
+| | | |   | |- languages
+| | | |   | | |- lib
+| | | |   | | | `- ecmascript.js
+| | | |   | | |- 1c.js
+| | | |   | | |- abnf.js
+| | | |   | | |- accesslog.js
+| | | |   | | |- actionscript.js
+| | | |   | | |- ada.js
+| | | |   | | |- angelscript.js
+| | | |   | | |- apache.js
+| | | |   | | |- applescript.js
+| | | |   | | |- arcade.js
+| | | |   | | |- arduino.js
+| | | |   | | |- armasm.js
+| | | |   | | |- asciidoc.js
+| | | |   | | |- aspectj.js
+| | | |   | | |- autohotkey.js
+| | | |   | | |- autoit.js
+| | | |   | | |- avrasm.js
+| | | |   | | |- awk.js
+| | | |   | | |- axapta.js
+| | | |   | | |- bash.js
+| | | |   | | |- basic.js
+| | | |   | | |- bnf.js
+| | | |   | | |- brainfuck.js
+| | | |   | | |- c-like.js
+| | | |   | | |- c.js
+| | | |   | | |- cal.js
+| | | |   | | |- capnproto.js
+| | | |   | | |- ceylon.js
+| | | |   | | |- clean.js
+| | | |   | | |- clojure-repl.js
+| | | |   | | |- clojure.js
+| | | |   | | |- cmake.js
+| | | |   | | |- coffeescript.js
+| | | |   | | |- coq.js
+| | | |   | | |- cos.js
+| | | |   | | |- cpp.js
+| | | |   | | |- crmsh.js
+| | | |   | | |- crystal.js
+| | | |   | | |- csharp.js
+| | | |   | | |- csp.js
+| | | |   | | |- css.js
+| | | |   | | |- d.js
+| | | |   | | |- dart.js
+| | | |   | | |- delphi.js
+| | | |   | | |- diff.js
+| | | |   | | |- django.js
+| | | |   | | |- dns.js
+| | | |   | | |- dockerfile.js
+| | | |   | | |- dos.js
+| | | |   | | |- dsconfig.js
+| | | |   | | |- dts.js
+| | | |   | | |- dust.js
+| | | |   | | |- ebnf.js
+| | | |   | | |- elixir.js
+| | | |   | | |- elm.js
+| | | |   | | |- erb.js
+| | | |   | | |- erlang-repl.js
+| | | |   | | |- erlang.js
+| | | |   | | |- excel.js
+| | | |   | | |- fix.js
+| | | |   | | |- flix.js
+| | | |   | | |- fortran.js
+| | | |   | | |- fsharp.js
+| | | |   | | |- gams.js
+| | | |   | | |- gauss.js
+| | | |   | | |- gcode.js
+| | | |   | | |- gherkin.js
+| | | |   | | |- glsl.js
+| | | |   | | |- gml.js
+| | | |   | | |- go.js
+| | | |   | | |- golo.js
+| | | |   | | |- gradle.js
+| | | |   | | |- groovy.js
+| | | |   | | |- haml.js
+| | | |   | | |- handlebars.js
+| | | |   | | |- haskell.js
+| | | |   | | |- haxe.js
+| | | |   | | |- hsp.js
+| | | |   | | |- htmlbars.js
+| | | |   | | |- http.js
+| | | |   | | |- hy.js
+| | | |   | | |- inform7.js
+| | | |   | | |- ini.js
+| | | |   | | |- irpf90.js
+| | | |   | | |- isbl.js
+| | | |   | | |- java.js
+| | | |   | | |- javascript.js
+| | | |   | | |- jboss-cli.js
+| | | |   | | |- json.js
+| | | |   | | |- julia-repl.js
+| | | |   | | |- julia.js
+| | | |   | | |- kotlin.js
+| | | |   | | |- lasso.js
+| | | |   | | |- latex.js
+| | | |   | | |- ldif.js
+| | | |   | | |- leaf.js
+| | | |   | | |- less.js
+| | | |   | | |- lisp.js
+| | | |   | | |- livecodeserver.js
+| | | |   | | |- livescript.js
+| | | |   | | |- llvm.js
+| | | |   | | |- lsl.js
+| | | |   | | |- lua.js
+| | | |   | | |- makefile.js
+| | | |   | | |- markdown.js
+| | | |   | | |- mathematica.js
+| | | |   | | |- matlab.js
+| | | |   | | |- maxima.js
+| | | |   | | |- mel.js
+| | | |   | | |- mercury.js
+| | | |   | | |- mipsasm.js
+| | | |   | | |- mizar.js
+| | | |   | | |- mojolicious.js
+| | | |   | | |- monkey.js
+| | | |   | | |- moonscript.js
+| | | |   | | |- n1ql.js
+| | | |   | | |- nginx.js
+| | | |   | | |- nim.js
+| | | |   | | |- nix.js
+| | | |   | | |- nsis.js
+| | | |   | | |- objectivec.js
+| | | |   | | |- ocaml.js
+| | | |   | | |- openscad.js
+| | | |   | | |- oxygene.js
+| | | |   | | |- parser3.js
+| | | |   | | |- perl.js
+| | | |   | | |- pf.js
+| | | |   | | |- pgsql.js
+| | | |   | | |- php-template.js
+| | | |   | | |- php.js
+| | | |   | | |- plaintext.js
+| | | |   | | |- pony.js
+| | | |   | | |- powershell.js
+| | | |   | | |- processing.js
+| | | |   | | |- profile.js
+| | | |   | | |- prolog.js
+| | | |   | | |- properties.js
+| | | |   | | |- protobuf.js
+| | | |   | | |- puppet.js
+| | | |   | | |- purebasic.js
+| | | |   | | |- python-repl.js
+| | | |   | | |- python.js
+| | | |   | | |- q.js
+| | | |   | | |- qml.js
+| | | |   | | |- r.js
+| | | |   | | |- reasonml.js
+| | | |   | | |- rib.js
+| | | |   | | |- roboconf.js
+| | | |   | | |- routeros.js
+| | | |   | | |- rsl.js
+| | | |   | | |- ruby.js
+| | | |   | | |- ruleslanguage.js
+| | | |   | | |- rust.js
+| | | |   | | |- sas.js
+| | | |   | | |- scala.js
+| | | |   | | |- scheme.js
+| | | |   | | |- scilab.js
+| | | |   | | |- scss.js
+| | | |   | | |- shell.js
+| | | |   | | |- smali.js
+| | | |   | | |- smalltalk.js
+| | | |   | | |- sml.js
+| | | |   | | |- sqf.js
+| | | |   | | |- sql.js
+| | | |   | | |- stan.js
+| | | |   | | |- stata.js
+| | | |   | | |- step21.js
+| | | |   | | |- stylus.js
+| | | |   | | |- subunit.js
+| | | |   | | |- swift.js
+| | | |   | | |- taggerscript.js
+| | | |   | | |- tap.js
+| | | |   | | |- tcl.js
+| | | |   | | |- thrift.js
+| | | |   | | |- tp.js
+| | | |   | | |- twig.js
+| | | |   | | |- typescript.js
+| | | |   | | |- vala.js
+| | | |   | | |- vbnet.js
+| | | |   | | |- vbscript-html.js
+| | | |   | | |- vbscript.js
+| | | |   | | |- verilog.js
+| | | |   | | |- vhdl.js
+| | | |   | | |- vim.js
+| | | |   | | |- x86asm.js
+| | | |   | | |- xl.js
+| | | |   | | |- xml.js
+| | | |   | | |- xquery.js
+| | | |   | | |- yaml.js
+| | | |   | | `- zephir.js
+| | | |   | |- lib
+| | | |   | | |- html_renderer.js
+| | | |   | | |- mode_compiler.js
+| | | |   | | |- modes.js
+| | | |   | | |- regex.js
+| | | |   | | |- response.js
+| | | |   | | |- token_tree.js
+| | | |   | | `- utils.js
+| | | |   | |- styles
+| | | |   | | |- a11y-dark.css
+| | | |   | | |- a11y-light.css
+| | | |   | | |- agate.css
+| | | |   | | |- an-old-hope.css
+| | | |   | | |- androidstudio.css
+| | | |   | | |- arduino-light.css
+| | | |   | | |- arta.css
+| | | |   | | |- ascetic.css
+| | | |   | | |- atelier-cave-dark.css
+| | | |   | | |- atelier-cave-light.css
+| | | |   | | |- atelier-dune-dark.css
+| | | |   | | |- atelier-dune-light.css
+| | | |   | | |- atelier-estuary-dark.css
+| | | |   | | |- atelier-estuary-light.css
+| | | |   | | |- atelier-forest-dark.css
+| | | |   | | |- atelier-forest-light.css
+| | | |   | | |- atelier-heath-dark.css
+| | | |   | | |- atelier-heath-light.css
+| | | |   | | |- atelier-lakeside-dark.css
+| | | |   | | |- atelier-lakeside-light.css
+| | | |   | | |- atelier-plateau-dark.css
+| | | |   | | |- atelier-plateau-light.css
+| | | |   | | |- atelier-savanna-dark.css
+| | | |   | | |- atelier-savanna-light.css
+| | | |   | | |- atelier-seaside-dark.css
+| | | |   | | |- atelier-seaside-light.css
+| | | |   | | |- atelier-sulphurpool-dark.css
+| | | |   | | |- atelier-sulphurpool-light.css
+| | | |   | | |- atom-one-dark-reasonable.css
+| | | |   | | |- atom-one-dark.css
+| | | |   | | |- atom-one-light.css
+| | | |   | | |- brown-paper.css
+| | | |   | | |- brown-papersq.png
+| | | |   | | |- codepen-embed.css
+| | | |   | | |- color-brewer.css
+| | | |   | | |- darcula.css
+| | | |   | | |- dark.css
+| | | |   | | |- default.css
+| | | |   | | |- docco.css
+| | | |   | | |- dracula.css
+| | | |   | | |- far.css
+| | | |   | | |- foundation.css
+| | | |   | | |- github-gist.css
+| | | |   | | |- github.css
+| | | |   | | |- gml.css
+| | | |   | | |- googlecode.css
+| | | |   | | |- gradient-dark.css
+| | | |   | | |- grayscale.css
+| | | |   | | |- gruvbox-dark.css
+| | | |   | | |- gruvbox-light.css
+| | | |   | | |- hopscotch.css
+| | | |   | | |- hybrid.css
+| | | |   | | |- idea.css
+| | | |   | | |- ir-black.css
+| | | |   | | |- isbl-editor-dark.css
+| | | |   | | |- isbl-editor-light.css
+| | | |   | | |- kimbie.dark.css
+| | | |   | | |- kimbie.light.css
+| | | |   | | |- lightfair.css
+| | | |   | | |- magula.css
+| | | |   | | |- mono-blue.css
+| | | |   | | |- monokai-sublime.css
+| | | |   | | |- monokai.css
+| | | |   | | |- night-owl.css
+| | | |   | | |- nord.css
+| | | |   | | |- obsidian.css
+| | | |   | | |- ocean.css
+| | | |   | | |- paraiso-dark.css
+| | | |   | | |- paraiso-light.css
+| | | |   | | |- pojoaque.css
+| | | |   | | |- pojoaque.jpg
+| | | |   | | |- purebasic.css
+| | | |   | | |- qtcreator_dark.css
+| | | |   | | |- qtcreator_light.css
+| | | |   | | |- railscasts.css
+| | | |   | | |- rainbow.css
+| | | |   | | |- routeros.css
+| | | |   | | |- school-book.css
+| | | |   | | |- school-book.png
+| | | |   | | |- shades-of-purple.css
+| | | |   | | |- solarized-dark.css
+| | | |   | | |- solarized-light.css
+| | | |   | | |- srcery.css
+| | | |   | | |- sunburst.css
+| | | |   | | |- tomorrow-night-blue.css
+| | | |   | | |- tomorrow-night-bright.css
+| | | |   | | |- tomorrow-night-eighties.css
+| | | |   | | |- tomorrow-night.css
+| | | |   | | |- tomorrow.css
+| | | |   | | |- vs.css
+| | | |   | | |- vs2015.css
+| | | |   | | |- xcode.css
+| | | |   | | |- xt256.css
+| | | |   | | `- zenburn.css
+| | | |   | |- vendor
+| | | |   | | `- deep_freeze.js
+| | | |   | |- highlight.js
+| | | |   | `- highlight.min.js
+| | | |   |- jquery
+| | | |   | `- jquery.min.js
+| | | |   |- jquery.easing
+| | | |   | |- jquery.easing.js
+| | | |   | `- jquery.easing.min.js
+| | | |   `- magnific-popup
+| | | |     |- jquery.magnific-popup.js
+| | | |     |- jquery.magnific-popup.min.js
+| | | |     |- magnific-popup.css
+| | | |     `- magnific-popup.min.css
+| | | |- Binance.gif
+| | | |- README.md
+| | | |- _config.yml
+| | | `- index.html
+| | |- Binance.Net.sln
+| | |- LICENSE
+| | `- README.md
+| |- proposals
 | |- GEMINI_DEV.md
+| |- context_for_new_chat.md
+| |- deviation_charts_issue_summary.md
 | `- project_structure.txt
 |- README.md
+|- TestContractProperties.cs
+|- TestFuturesApi.cs
 |- dotnet-install.sh
 `- get_structure.py
