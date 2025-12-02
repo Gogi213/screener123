@@ -137,7 +137,10 @@ public class DeviationAnalysisService : IDisposable
             "SOL_USDT",
             "DOGE_USDT",
             "LINK_USDT",
-            "SUI_USDT"
+            "SUI_USDT",
+            "ZEC_USDT",
+            "ASTER_USDT",
+            "HYPE_USDT"
         };
     }
     

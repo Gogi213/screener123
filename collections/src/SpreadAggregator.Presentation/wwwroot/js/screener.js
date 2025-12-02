@@ -75,7 +75,7 @@ function createAllCharts() {
 
         card.innerHTML = `
             <h3 style="margin:0 0 10px 0; color:#aaa; font-size:14px; font-family:monospace;">${symbol}: Binance/MEXC Bid Deviation</h3>
-            <div id="chart-${symbol}" style="width:100%; height:200px; background:#0a0a0a;"></div>
+            <div id="chart-${symbol}" style="width:100%; height:400px; background:#0a0a0a;"></div>
         `;
 
         grid.appendChild(card);
@@ -85,7 +85,7 @@ function createAllCharts() {
 
             charts[symbol] = new window.uPlot({
                 width: 1800,
-                height: 200,
+                height: 400,
 
                 scales: {
                     x: { time: true },
