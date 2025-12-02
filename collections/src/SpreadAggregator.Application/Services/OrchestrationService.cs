@@ -206,6 +206,34 @@ public class OrchestrationService
             }));
         }
 
+        // SPRINT-1.1: Subscribe to bookTicker stream for realtime bid/ask (Binance only)
+        if (exchangeName.Equals("Binance", StringComparison.OrdinalIgnoreCase))
+        {
+            // Check if this is BinanceFuturesExchangeClient (has native WebSocket with SubscribeToBookTickersAsync)
+            var binanceClient = exchangeClient as BinanceFuturesExchangeClient;
+            if (binanceClient != null)
+            {
+                Console.WriteLine($"[{exchangeName}] Adding bookTicker subscription for realtime bid/ask...");
+                // Note: We don't await this, it runs in background with trade subscription
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        // Subscribe using BinanceFuturesExchangeClient's method
+                        await binanceClient.SubscribeToBookTickersAsync(filteredSymbolNames, bookTickerData =>
+                        {
+                            _tradeAggregator.UpdateBookTickerData(bookTickerData, exchangeName);
+                            return Task.CompletedTask;
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[{exchangeName}] BookTicker subscription error: {ex.Message}");
+                    }
+                }, cancellationToken);
+            }
+        }
+
 
         Console.WriteLine($"[{exchangeName}] Subscription tasks started (running in background)...");
 
@@ -221,19 +249,8 @@ public class OrchestrationService
                     var freshTickers = await exchangeClient.GetTickersAsync();
                     _tradeAggregator.UpdateTickerData(freshTickers, exchangeName);
                     
-                    // BID/BID DEVIATION FIX: For Binance, also fetch book tickers (BestBid/BestAsk)
-                    if (exchangeName.Equals("Binance", StringComparison.OrdinalIgnoreCase))
-                    {
-                        var method = exchangeClient.GetType().GetMethod("GetBookTickersAsync");
-                        if (method != null)
-                        {
-                            var task = (Task<IEnumerable<TickerData>>)method.Invoke(exchangeClient, null);
-                            var bookTickers = await task;
-                            // Update ticker data again with book ticker info (BestBid/BestAsk will be merged)
-                            _tradeAggregator.UpdateTickerData(bookTickers, exchangeName);
-                            Console.WriteLine($"[{exchangeName}] Book tickers refreshed: BestBid/BestAsk for bid/bid deviation");
-                        }
-                    }
+                    // Note: BestBid/BestAsk now updated realtime via bookTicker WebSocket (see above)
+                    // No need for 10-second polling anymore!
                 }
                 catch (OperationCanceledException)
                 {

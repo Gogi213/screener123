@@ -79,6 +79,7 @@ public class DeviationAnalysisService : IDisposable
     
     /// <summary>
     /// Calculate deviations for all available symbols and exchange pairs.
+    /// Now calculates BOTH lastprice and bid deviations for multi-line charts.
     /// </summary>
     private async Task CalculateAndBroadcastDeviations()
     {
@@ -90,27 +91,43 @@ public class DeviationAnalysisService : IDisposable
         
         foreach (var symbol in symbols)
         {
-            // Get all aligned pairs for this symbol
+            // Get all aligned pairs for this symbol (lastprice deviation)
             var alignedPairs = _alignmentService.GetAllAlignedPairs(symbol, now);
             
             foreach (var (ex1, ex2, price1, price2) in alignedPairs)
             {
-                // Calculate deviation
-                var deviation = DeviationCalculator.CalculateDeviation(price1, price2);
+                // Calculate lastprice deviation
+                var deviationLastPrice = DeviationCalculator.CalculateDeviation(price1, price2);
                 
-                // Store current deviation
+                // Calculate bid deviation using BestBid prices
+                var bidPrices = _alignmentService.GetAlignedBidPrices(symbol, ex1, ex2);
+                decimal? deviationBid = null;
+                decimal? bid1 = null;
+                decimal? bid2 = null;
+                
+                if (bidPrices.HasValue)
+                {
+                    bid1 = bidPrices.Value.bid1;
+                    bid2 = bidPrices.Value.bid2;
+                    deviationBid = DeviationCalculator.CalculateDeviation(bid1.Value, bid2.Value);
+                }
+                
+                // Store current lastprice deviation
                 var pairKey = $"{symbol}_{ex1}_{ex2}";
-                _currentDeviations[pairKey] = deviation;
+                _currentDeviations[pairKey] = deviationLastPrice;
                 
-                // Add to broadcast list
+                // Add to broadcast list with BOTH deviations
                 deviations.Add(new DeviationData
                 {
                     Symbol = symbol,
                     Exchange1 = ex1,
                     Exchange2 = ex2,
-                    Deviation = deviation,
+                    Deviation = deviationLastPrice,
+                    DeviationBid = deviationBid,
                     Price1 = price1,
                     Price2 = price2,
+                    Bid1 = bid1,
+                    Bid2 = bid2,
                     Timestamp = now
                 });
             }
@@ -146,6 +163,7 @@ public class DeviationAnalysisService : IDisposable
     
     /// <summary>
     /// Broadcast deviation updates to WebSocket clients.
+    /// Enhanced to include BOTH lastprice and bid deviations.
     /// </summary>
     private async Task BroadcastDeviations(List<DeviationData> deviations)
     {
@@ -159,9 +177,12 @@ public class DeviationAnalysisService : IDisposable
                 symbol = d.Symbol,
                 exchange1 = d.Exchange1,
                 exchange2 = d.Exchange2,
-                deviation_pct = d.Deviation,
+                deviation_lastprice_pct = d.Deviation,
+                deviation_bid_pct = d.DeviationBid,
                 price1 = d.Price1,
                 price2 = d.Price2,
+                bid1 = d.Bid1,
+                bid2 = d.Bid2,
                 is_significant = DeviationCalculator.IsSignificantDeviation(d.Deviation, 0.2m),
                 is_near_parity = DeviationCalculator.IsNearParity(d.Deviation, 0.05m)
             })
@@ -192,14 +213,18 @@ public class DeviationAnalysisService : IDisposable
 
 /// <summary>
 /// Deviation data structure for broadcasting.
+/// Enhanced to include bid deviation alongside lastprice deviation.
 /// </summary>
 internal class DeviationData
 {
     public required string Symbol { get; set; }
     public required string Exchange1 { get; set; }
     public required string Exchange2 { get; set; }
-    public required decimal Deviation { get; set; }
+    public required decimal Deviation { get; set; }  // LastPrice deviation
+    public decimal? DeviationBid { get; set; }  // Bid deviation (nullable if no ticker data)
     public required decimal Price1 { get; set; }
     public required decimal Price2 { get; set; }
+    public decimal? Bid1 { get; set; }  // BestBid from exchange1
+    public decimal? Bid2 { get; set; }  // BestBid from exchange2
     public required DateTime Timestamp { get; set; }
 }

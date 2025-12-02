@@ -540,6 +540,42 @@ public class TradeAggregatorService : IDisposable
     }
 
     /// <summary>
+    /// SPRINT-1.1: Update bid/ask from realtime bookTicker WebSocket stream (zero latency)
+    /// Merges with existing TickerData to keep volume24h/priceChange metrics
+    /// </summary>
+    public void UpdateBookTickerData(BookTickerData bookTicker, string exchangeName)
+    {
+        var key = $"{exchangeName}_{bookTicker.Symbol}";
+
+        // Update or create TickerData with realtime bid/ask
+        _tickerData.AddOrUpdate(key,
+            // Add: Create new TickerData if not exists
+            new TickerData
+            {
+                Symbol = bookTicker.Symbol,
+                BestBid = bookTicker.BestBid,
+                BestAsk = bookTicker.BestAsk,
+                Timestamp = bookTicker.Timestamp,
+                QuoteVolume = 0,
+                Volume24h = 0,
+                PriceChangePercent24h = 0,
+                LastPrice = (bookTicker.BestBid + bookTicker.BestAsk) / 2
+            },
+            // Update: Merge bid/ask while keeping existing volume/priceChange
+            (_, existing) => new TickerData
+            {
+                Symbol = existing.Symbol,
+                BestBid = bookTicker.BestBid,      // Update from bookTicker
+                BestAsk = bookTicker.BestAsk,      // Update from bookTicker
+                Timestamp = bookTicker.Timestamp,  // Update timestamp
+                QuoteVolume = existing.QuoteVolume,  // Keep from ticker API
+                Volume24h = existing.Volume24h,      // Keep from ticker API
+                PriceChangePercent24h = existing.PriceChangePercent24h, // Keep from ticker API
+                LastPrice = (bookTicker.BestBid + bookTicker.BestAsk) / 2  // Mid price
+            });
+    }
+
+    /// <summary>
     /// SPRINT-12: Get active symbols (those with recent trades) for orderbook updates
     /// Separated by activity level for different refresh frequencies
     /// </summary>
