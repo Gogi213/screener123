@@ -15,7 +15,7 @@ namespace SpreadAggregator.Infrastructure.Services.Exchanges;
 /// REST API: HttpClient + JSON for symbols/tickers
 /// WebSocket: BinanceFuturesNativeWebSocketClient for real-time trades
 /// </summary>
-public class BinanceFuturesExchangeClient : IExchangeClient
+public class BinanceFuturesExchangeClient : IExchangeClient, IBookTickerProvider
 {
     private readonly HttpClient _httpClient;
     private BinanceFuturesNativeWebSocketClient? _nativeWebSocket;
@@ -280,6 +280,50 @@ public class BinanceFuturesExchangeClient : IExchangeClient
             Console.WriteLine($"[{ExchangeName}] GetBookTickersAsync error: {ex.Message}");
             return Enumerable.Empty<TickerData>();
         }
+    }
+
+    /// <summary>
+    /// Subscribe to bookTicker stream for realtime bid/ask prices (zero latency)
+    /// Uses native WebSocket client for maximum performance
+    /// </summary>
+    public async Task SubscribeToBookTickersAsync(IEnumerable<string> symbols, Func<BookTickerData, Task> onData)
+    {
+        if (_nativeWebSocket == null)
+        {
+            throw new InvalidOperationException("WebSocket not initialized. Call SubscribeToTradesAsync first or ensure ConnectAsync was called.");
+        }
+
+        var symbolsList = symbols.Where(s => WHITELISTED_SYMBOLS.Contains(s)).ToList();
+        
+        Console.WriteLine($"[{ExchangeName}] SubscribeToBookTickersAsync called with {symbolsList.Count} symbols");
+
+        if (symbolsList.Count == 0)
+        {
+            Console.WriteLine($"[{ExchangeName}] No whitelisted symbols to subscribe for bookTicker");
+            return;
+        }
+
+        // Denormalize symbols for Binance API (BTC_USDT → BTCUSDT)
+        var binanceSymbols = symbolsList.Select(DenormalizeSymbol).ToList();
+
+        // Subscribe to bookTicker stream
+        await _nativeWebSocket.SubscribeToBookTickersAsync(binanceSymbols, async bookTicker =>
+        {
+            // Create new BookTickerData with normalized symbol
+            var normalizedBookTicker = new BookTickerData
+            {
+                Exchange = bookTicker.Exchange,
+                Symbol = NormalizeSymbol(bookTicker.Symbol),
+                BestBid = bookTicker.BestBid,
+                BestAsk = bookTicker.BestAsk,
+                BestBidQty = bookTicker.BestBidQty,
+                BestAskQty = bookTicker.BestAskQty,
+                Timestamp = bookTicker.Timestamp
+            };
+            await onData(normalizedBookTicker);
+        });
+
+        Console.WriteLine($"[{ExchangeName}] ✅ Subscribed to bookTicker for {symbolsList.Count} symbols");
     }
 
     /// <summary>
