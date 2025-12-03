@@ -42,11 +42,17 @@
 |- collections
 | |- TestBuild
 | |- docs
-| | `- sprints
-| |   |- SPRINT-11-NATR.md
-| |   |- SPRINT-12-SPREAD.md
-| |   |- SPRINT-13-VOLUME-SPIKE.md
-| |   `- SPRINT-14-LARGE-PRINTS.md
+| | |- sprints
+| | | |- SPRINT-11-NATR.md
+| | | |- SPRINT-12-SPREAD.md
+| | | |- SPRINT-13-VOLUME-SPIKE.md
+| | | `- SPRINT-14-LARGE-PRINTS.md
+| | |- deviation_charts_master_plan.md
+| | |- deviation_charts_tasks.md
+| | |- lastprice_fix_walkthrough.md
+| | |- root_cause_lastprice_bug.md
+| | |- trade_based_deviation_plan.md
+| | `- trade_based_deviation_task.md
 | |- src
 | | |- SpreadAggregator.Application
 | | | |- Abstractions
@@ -68,6 +74,7 @@
 | | | `- build.binlog
 | | |- SpreadAggregator.Domain
 | | | |- Entities
+| | | | |- BookTickerData.cs
 | | | | |- MarketData.cs
 | | | | |- SymbolInfo.cs
 | | | | `- TradeData.cs
@@ -88,28 +95,29 @@
 | | | | |- FleckWebSocketServer.cs
 | | | | `- WebSocketLogger.cs
 | | | `- SpreadAggregator.Infrastructure.csproj
-| | `- SpreadAggregator.Presentation
-| |   |- Controllers
-| |   | |- HealthController.cs
-| |   | `- TradeController.cs
-| |   |- Diagnostics
-| |   | `- MexcHealthCheck.cs
-| |   |- Protos
-| |   | `- trades.proto
-| |   |- wwwroot
-| |   | |- css
-| |   | | |- screener.css
-| |   | | `- styles.css
-| |   | |- js
-| |   | | |- screener.js
-| |   | | `- websocket-worker.js
-| |   | |- index.html
-| |   | `- package.json
-| |   |- DeviationAnalysisServiceHost.cs
-| |   |- Program.cs
-| |   |- SpreadAggregator.Presentation.csproj
-| |   |- appsettings.json
-| |   `- output.log
+| | |- SpreadAggregator.Presentation
+| | | |- Controllers
+| | | | |- HealthController.cs
+| | | | `- TradeController.cs
+| | | |- Diagnostics
+| | | | `- MexcHealthCheck.cs
+| | | |- Protos
+| | | | `- trades.proto
+| | | |- wwwroot
+| | | | |- css
+| | | | | |- screener.css
+| | | | | `- styles.css
+| | | | |- js
+| | | | | |- screener.js
+| | | | | `- websocket-worker.js
+| | | | |- index.html
+| | | | `- package.json
+| | | |- DeviationAnalysisServiceHost.cs
+| | | |- Program.cs
+| | | |- SpreadAggregator.Presentation.csproj
+| | | |- appsettings.json
+| | | `- output.log
+| | `- SpreadAggregator.Tests
 | |- tests
 | | `- SpreadAggregator.Tests
 | |   |- Application
@@ -2040,8 +2048,6 @@
 | | `- README.md
 | |- proposals
 | |- GEMINI_DEV.md
-| |- context_for_new_chat.md
-| |- deviation_charts_issue_summary.md
 | `- project_structure.txt
 |- README.md
 |- TestContractProperties.cs

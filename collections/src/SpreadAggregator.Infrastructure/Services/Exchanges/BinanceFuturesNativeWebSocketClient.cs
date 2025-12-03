@@ -13,9 +13,9 @@ using SpreadAggregator.Domain.Entities;
 namespace SpreadAggregator.Infrastructure.Services.Exchanges;
 
 /// <summary>
-/// Native WebSocket client for Binance Futures aggTrade stream.
+/// Native WebSocket client for Binance Futures trade stream.
 /// Binance Futures WebSocket endpoint: wss://fstream.binance.com/ws
-/// Stream format: symbol@aggTrade (e.g., btcusdt@aggTrade)
+/// Stream format: symbol@trade (e.g., btcusdt@trade)
 /// </summary>
 public class BinanceFuturesNativeWebSocketClient : IDisposable
 {
@@ -52,12 +52,12 @@ public class BinanceFuturesNativeWebSocketClient : IDisposable
         // Store callback for this symbol
         _symbolCallbacks[symbol] = onTrade;
 
-        // Binance Futures subscription format for aggTrade
-        // {"method":"SUBSCRIBE","params":["btcusdt@aggTrade"],"id":1}
+        // Binance Futures subscription format for trade
+        // {"method":"SUBSCRIBE","params":["btcusdt@trade"],"id":1}
         var subscriptionMessage = new
         {
             method = "SUBSCRIBE",
-            @params = new[] { $"{symbol.ToLowerInvariant()}@aggTrade" },
+            @params = new[] { $"{symbol.ToLowerInvariant()}@trade" },
             id = Interlocked.Increment(ref _requestId)
         };
 
@@ -180,11 +180,11 @@ public class BinanceFuturesNativeWebSocketClient : IDisposable
 
             var eventTypeName = eventType.GetString();
 
-            // Handle aggTrade messages
-            if (eventTypeName == "aggTrade")
+            // Handle trade messages
+            if (eventTypeName == "trade")
             {
-                // Parse aggTrade data
-                // Format: {"e":"aggTrade","s":"BTCUSDT","p":"43250.50","q":"0.125","T":1701234567890,"m":false}
+                // Parse trade data
+                // Format: {"e":"trade","s":"BTCUSDT","p":"43250.50","q":"0.125","T":1701234567890,"m":false}
                 if (root.TryGetProperty("s", out var symbolProp) &&
                     root.TryGetProperty("p", out var priceProp) &&
                     root.TryGetProperty("q", out var qtyProp) &&

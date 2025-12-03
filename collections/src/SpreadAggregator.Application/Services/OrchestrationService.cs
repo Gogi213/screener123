@@ -209,9 +209,8 @@ public class OrchestrationService
         // SPRINT-1.1: Subscribe to bookTicker stream for realtime bid/ask (Binance only)
         if (exchangeName.Equals("Binance", StringComparison.OrdinalIgnoreCase))
         {
-            // Check if this is BinanceFuturesExchangeClient (has native WebSocket with SubscribeToBookTickersAsync)
-            var binanceClient = exchangeClient as BinanceFuturesExchangeClient;
-            if (binanceClient != null)
+            // Check if this client supports book ticker subscriptions (via IBookTickerProvider)
+            if (exchangeClient is IBookTickerProvider bookTickerProvider)
             {
                 Console.WriteLine($"[{exchangeName}] Adding bookTicker subscription for realtime bid/ask...");
                 // Note: We don't await this, it runs in background with trade subscription
@@ -219,8 +218,8 @@ public class OrchestrationService
                 {
                     try
                     {
-                        // Subscribe using BinanceFuturesExchangeClient's method
-                        await binanceClient.SubscribeToBookTickersAsync(filteredSymbolNames, bookTickerData =>
+                        // Subscribe using the interface method
+                        await bookTickerProvider.SubscribeToBookTickersAsync(filteredSymbolNames, bookTickerData =>
                         {
                             _tradeAggregator.UpdateBookTickerData(bookTickerData, exchangeName);
                             return Task.CompletedTask;

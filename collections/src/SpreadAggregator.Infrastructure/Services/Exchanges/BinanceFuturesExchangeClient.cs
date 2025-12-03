@@ -15,7 +15,7 @@ namespace SpreadAggregator.Infrastructure.Services.Exchanges;
 /// REST API: HttpClient + JSON for symbols/tickers
 /// WebSocket: BinanceFuturesNativeWebSocketClient for real-time trades
 /// </summary>
-public class BinanceFuturesExchangeClient : IExchangeClient
+public class BinanceFuturesExchangeClient : IExchangeClient, IBookTickerProvider
 {
     private readonly HttpClient _httpClient;
     private BinanceFuturesNativeWebSocketClient? _nativeWebSocket;
