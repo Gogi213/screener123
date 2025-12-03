@@ -91,43 +91,27 @@ public class DeviationAnalysisService : IDisposable
         
         foreach (var symbol in symbols)
         {
-            // Get all aligned pairs for this symbol (lastprice deviation)
+            // Get all aligned pairs for this symbol
             var alignedPairs = _alignmentService.GetAllAlignedPairs(symbol, now);
             
             foreach (var (ex1, ex2, price1, price2) in alignedPairs)
             {
-                // Calculate lastprice deviation
-                var deviationLastPrice = DeviationCalculator.CalculateDeviation(price1, price2);
+                // Calculate deviation
+                var deviation = DeviationCalculator.CalculateDeviation(price1, price2);
                 
-                // Calculate bid deviation using BestBid prices
-                var bidPrices = _alignmentService.GetAlignedBidPrices(symbol, ex1, ex2);
-                decimal? deviationBid = null;
-                decimal? bid1 = null;
-                decimal? bid2 = null;
-                
-                if (bidPrices.HasValue)
-                {
-                    bid1 = bidPrices.Value.bid1;
-                    bid2 = bidPrices.Value.bid2;
-                    deviationBid = DeviationCalculator.CalculateDeviation(bid1.Value, bid2.Value);
-                }
-                
-                // Store current lastprice deviation
+                // Store current deviation
                 var pairKey = $"{symbol}_{ex1}_{ex2}";
-                _currentDeviations[pairKey] = deviationLastPrice;
+                _currentDeviations[pairKey] = deviation;
                 
-                // Add to broadcast list with BOTH deviations
+                // Add to broadcast list
                 deviations.Add(new DeviationData
                 {
                     Symbol = symbol,
                     Exchange1 = ex1,
                     Exchange2 = ex2,
-                    Deviation = deviationLastPrice,
-                    DeviationBid = deviationBid,
+                    Deviation = deviation,
                     Price1 = price1,
                     Price2 = price2,
-                    Bid1 = bid1,
-                    Bid2 = bid2,
                     Timestamp = now
                 });
             }
@@ -177,12 +161,9 @@ public class DeviationAnalysisService : IDisposable
                 symbol = d.Symbol,
                 exchange1 = d.Exchange1,
                 exchange2 = d.Exchange2,
-                deviation_lastprice_pct = d.Deviation,
-                deviation_bid_pct = d.DeviationBid,
+                deviation_pct = d.Deviation,
                 price1 = d.Price1,
                 price2 = d.Price2,
-                bid1 = d.Bid1,
-                bid2 = d.Bid2,
                 is_significant = DeviationCalculator.IsSignificantDeviation(d.Deviation, 0.2m),
                 is_near_parity = DeviationCalculator.IsNearParity(d.Deviation, 0.05m)
             })
@@ -220,11 +201,8 @@ internal class DeviationData
     public required string Symbol { get; set; }
     public required string Exchange1 { get; set; }
     public required string Exchange2 { get; set; }
-    public required decimal Deviation { get; set; }  // LastPrice deviation
-    public decimal? DeviationBid { get; set; }  // Bid deviation (nullable if no ticker data)
+    public required decimal Deviation { get; set; }
     public required decimal Price1 { get; set; }
     public required decimal Price2 { get; set; }
-    public decimal? Bid1 { get; set; }  // BestBid from exchange1
-    public decimal? Bid2 { get; set; }  // BestBid from exchange2
     public required DateTime Timestamp { get; set; }
 }

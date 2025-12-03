@@ -206,32 +206,7 @@ public class OrchestrationService
             }));
         }
 
-        // SPRINT-1.1: Subscribe to bookTicker stream for realtime bid/ask (Binance only)
-        if (exchangeName.Equals("Binance", StringComparison.OrdinalIgnoreCase))
-        {
-            // Check if this client supports book ticker subscriptions (via IBookTickerProvider)
-            if (exchangeClient is IBookTickerProvider bookTickerProvider)
-            {
-                Console.WriteLine($"[{exchangeName}] Adding bookTicker subscription for realtime bid/ask...");
-                // Note: We don't await this, it runs in background with trade subscription
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        // Subscribe using the interface method
-                        await bookTickerProvider.SubscribeToBookTickersAsync(filteredSymbolNames, bookTickerData =>
-                        {
-                            _tradeAggregator.UpdateBookTickerData(bookTickerData, exchangeName);
-                            return Task.CompletedTask;
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[{exchangeName}] BookTicker subscription error: {ex.Message}");
-                    }
-                }, cancellationToken);
-            }
-        }
+
 
 
         Console.WriteLine($"[{exchangeName}] Subscription tasks started (running in background)...");
