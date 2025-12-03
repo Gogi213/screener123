@@ -29,6 +29,20 @@ public class MexcFuturesNativeWebSocketClient : IDisposable
     private Task? _pingTask;
     private bool _disposed;
 
+    /// <summary>
+    /// Normalize MEXC symbol names to match Binance naming convention.
+    /// BUILDONBOB_USDT -> BOB_USDT
+    /// </summary>
+    private static string NormalizeSymbol(string mexcSymbol)
+    {
+        // Special mappings for symbols with different names on different exchanges
+        return mexcSymbol switch
+        {
+            "BUILDONBOB_USDT" => "BOB_USDT",
+            _ => mexcSymbol // Return original if no mapping needed
+        };
+    }
+
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
         _webSocket = new ClientWebSocket();
@@ -166,7 +180,7 @@ public class MexcFuturesNativeWebSocketClient : IDisposable
                             var tradeData = new TradeData
                             {
                                 Exchange = "MexcFutures",
-                                Symbol = symbol,
+                                Symbol = NormalizeSymbol(symbol),
                                 Price = priceProp.GetDecimal(),
                                 Quantity = volumeProp.GetDecimal(),
                                 Side = tradeProp.GetInt32() == 1 ? "Buy" : "Sell",

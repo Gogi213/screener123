@@ -20,7 +20,7 @@ public class TradeAggregatorService : IDisposable
 {
     private const int MAX_TRADES_PER_SYMBOL = 5000; // FIXED: Increased from 1000 to allow accurate statistics for active pairs
     private const int MAX_SYMBOLS = 5000; // LRU safety margin
-    private readonly TimeSpan WINDOW_SIZE = TimeSpan.FromMinutes(5); // 5-minute rolling window
+    private readonly TimeSpan WINDOW_SIZE = TimeSpan.FromMinutes(2); // 2-minute rolling window
     private const int BATCH_INTERVAL_MS = 200; // SPRINT-8: 200ms batching for reduced CPU (~50% fewer broadcasts)
 
     private readonly ChannelReader<MarketData> _channelReader;

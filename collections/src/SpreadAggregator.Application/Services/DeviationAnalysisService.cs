@@ -29,7 +29,7 @@ public class DeviationAnalysisService : IDisposable
     private readonly System.Threading.PeriodicTimer _deviationTimer;
     private bool _disposed;
     
-    private const int DEVIATION_UPDATE_INTERVAL_MS = 100; // 100ms updates (only 9 charts)
+    private const int DEVIATION_UPDATE_INTERVAL_MS = 100; // 100ms updates (10 charts)
     
     public DeviationAnalysisService(
         PriceAlignmentService alignmentService,

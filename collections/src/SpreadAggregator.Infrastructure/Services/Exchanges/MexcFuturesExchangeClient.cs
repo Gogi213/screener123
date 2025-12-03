@@ -26,6 +26,20 @@ public class MexcFuturesExchangeClient : IExchangeClient
     }
 
     /// <summary>
+    /// Normalize MEXC symbol names to match Binance naming convention.
+    /// BUILDONBOB_USDT -> BOB_USDT
+    /// </summary>
+    private static string NormalizeSymbol(string mexcSymbol)
+    {
+        // Special mappings for symbols with different names on different exchanges
+        return mexcSymbol switch
+        {
+            "BUILDONBOB_USDT" => "BOB_USDT",
+            _ => mexcSymbol // Return original if no mapping needed
+        };
+    }
+
+    /// <summary>
     /// Get Futures symbols/contracts via REST API
     /// </summary>
     public async Task<IEnumerable<SymbolInfo>> GetSymbolsAsync()
@@ -39,7 +53,7 @@ public class MexcFuturesExchangeClient : IExchangeClient
         return symbolsData.Data.Select(s => new SymbolInfo
         {
             Exchange = ExchangeName,
-            Name = s.Symbol,  // Contract symbol name (e.g., "BTC_USDT")
+            Name = NormalizeSymbol(s.Symbol),  // Normalized symbol name (e.g., "BTC_USDT", "BOB_USDT")
             PriceStep = s.PriceUnit,  // Price increment
             QuantityStep = s.VolumeUnit,  // Volume/quantity step
             MinNotional = s.MinQuantity  // Minimum order quantity
@@ -67,7 +81,7 @@ public class MexcFuturesExchangeClient : IExchangeClient
 
                 var ticker = new TickerData
                 {
-                    Symbol = t.Symbol,
+                    Symbol = NormalizeSymbol(t.Symbol),
                     QuoteVolume = t.QuoteVolume24h,
                     Volume24h = t.QuoteVolume24h,  // 24h quote volume
                     PriceChangePercent24h = priceChangePercent,
